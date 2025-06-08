@@ -17,6 +17,7 @@
     "test:watch": "vitest --watch",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --pool threads --poolOptions.threads.singleThread",
+    "test:integration": "vitest run test/integration",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
   },
   "dependencies": {

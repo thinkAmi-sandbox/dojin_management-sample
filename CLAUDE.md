@@ -29,7 +29,8 @@ pnpm start:prod       # プロダクションビルドの実行
 pnpm test             # ユニットテストの実行（Vitest）
 pnpm test:watch       # ウォッチモードでテスト実行
 pnpm test:cov         # カバレッジ付きでテスト実行
-pnpm test:e2e         # E2Eテストの実行
+pnpm test:integration # 統合テストの実行（HTTPテスト）
+pnpm test:e2e         # E2Eテストの実行（将来実装予定）
 ```
 
 ### コード品質
@@ -63,7 +64,7 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 - **デコレータ**: ルーティング、バリデーション、DIに広く使用
 - **DTO**: リクエストバリデーションにclass-validatorを使用
 - **Prisma**: データベースモデルは`prisma/schema.prisma`で定義
-- **テスト**: 各controller/serviceには`.spec.ts`ファイルを作成
+- **テスト**: 詳細は`docs/02_test.md`を参照。ユニット/統合/E2Eの3層構造
 
 ### 設定
 - **TypeScript**: ES2023ターゲットでStrictモード有効
@@ -95,6 +96,11 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 - 現在実装済みのテーブル：
   - `Book`: 書籍情報の管理（タイトル、サブタイトル、説明、ページ数）
 
+### テスト設計
+- 詳細は`docs/02_test.md`を参照
+- 3層構造：ユニットテスト、統合テスト、E2Eテスト
+- 統合テストはRSpecのrequest specに相当
+
 ## 開発環境のセットアップ
 
 ### 初回セットアップ
@@ -121,3 +127,4 @@ pnpm start:dev
 - データベース名: dojin_management
 - ユーザー名: dojin_user
 - パスワード: dojin_password
+```
