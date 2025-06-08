@@ -10,6 +10,8 @@
 - **データベース**: PostgreSQL + Prisma ORM
 - **テスト**: Vitest（ユニットテスト/E2Eテスト）、Supertest（HTTPテスト）
 - **コード品質**: Biome（リンティング/フォーマット）
+- **ビューテンプレート**: EJS（MPA構成）
+- **HTTPメソッドオーバーライド**: @nest-middlewares/method-override
 
 ## 必須コマンド
 
@@ -73,3 +75,14 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 - **行幅**: 80文字
 - **末尾カンマ**: 必須
 - Biomeで統一されたコード品質管理
+
+## アプリケーション設計
+
+### UI構成
+- MPA（Multi Page Application）として実装
+- サーバーサイドでEJSを使用してHTMLをレンダリング
+- RESTfulなURL設計を採用
+
+### URL設計
+- 詳細は`docs/01_url.md`を参照
+- HTTPメソッドオーバーライドでPUT/DELETEをサポート（_methodパラメータ使用）
