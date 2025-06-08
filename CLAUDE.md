@@ -40,6 +40,8 @@ pnpm format           # Biomeでコードをフォーマット
 
 ### データベース
 ```bash
+docker compose up -d  # PostgreSQLコンテナの起動
+docker compose down   # PostgreSQLコンテナの停止
 pnpm prisma generate  # Prismaクライアントの生成
 pnpm prisma migrate dev # 開発環境でマイグレーション実行
 pnpm prisma studio    # Prisma Studio GUIを開く
@@ -66,8 +68,9 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 ### 設定
 - **TypeScript**: ES2023ターゲットでStrictモード有効
 - **ポート**: `process.env.PORT`で設定可能（デフォルト: 3000）
-- **データベース**: `DATABASE_URL`環境変数で接続
+- **データベース**: `DATABASE_URL`環境変数で接続（PostgreSQL on Docker、ポート: 15432）
 - **Prismaクライアント**: `../generated/prisma`に生成
+- **環境変数**: `.env.example`をコピーして`.env`を作成
 
 ### コードスタイル
 - **インデント**: スペース2つ
