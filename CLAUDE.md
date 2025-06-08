@@ -89,3 +89,35 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 ### URL設計
 - 詳細は`docs/01_url.md`を参照
 - HTTPメソッドオーバーライドでPUT/DELETEをサポート（_methodパラメータ使用）
+
+### データベース設計
+- 詳細は`docs/db/`ディレクトリを参照
+- 現在実装済みのテーブル：
+  - `Book`: 書籍情報の管理（タイトル、サブタイトル、説明、ページ数）
+
+## 開発環境のセットアップ
+
+### 初回セットアップ
+```bash
+# 1. 環境変数の設定
+cp .env.example .env
+
+# 2. 依存関係のインストール
+pnpm install
+
+# 3. PostgreSQLの起動
+docker compose up -d
+
+# 4. データベースのマイグレーション
+pnpm prisma migrate dev
+
+# 5. 開発サーバーの起動
+pnpm start:dev
+```
+
+### データベース接続情報
+- ホスト: localhost
+- ポート: 15432
+- データベース名: dojin_management
+- ユーザー名: dojin_user
+- パスワード: dojin_password
