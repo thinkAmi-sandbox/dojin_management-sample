@@ -9,7 +9,7 @@
 - **パッケージマネージャー**: pnpm
 - **データベース**: PostgreSQL + Prisma ORM
 - **テスト**: Vitest（ユニットテスト/E2Eテスト）、Supertest（HTTPテスト）
-- **コード品質**: ESLint 9 + Biome（リンティング/フォーマット）
+- **コード品質**: Biome（リンティング/フォーマット）
 
 ## 必須コマンド
 
@@ -32,8 +32,8 @@ pnpm test:e2e         # E2Eテストの実行
 
 ### コード品質
 ```bash
-pnpm lint             # ESLintを自動修正付きで実行
-pnpm format           # Prettierでコードをフォーマット
+pnpm lint             # Biomeでコードをチェック・修正
+pnpm format           # Biomeでコードをフォーマット
 ```
 
 ### データベース
@@ -72,4 +72,4 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 - **クォート**: JS/TSではシングルクォート
 - **行幅**: 80文字
 - **末尾カンマ**: 必須
-- ESLintとBiomeの両方が設定済み - 完全準拠のため両方を実行すること
+- Biomeで統一されたコード品質管理
