@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "type-check": "tsc --noEmit",
     "lint": "biome check --write .",
     "test": "vitest",
     "test:watch": "vitest --watch",
