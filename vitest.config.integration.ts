@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['test/integration/**/*.integration.spec.ts'],
-    setupFiles: ['reflect-metadata'],
+    setupFiles: ['test/setup.ts'],
     testTimeout: 30000, // 統合テストは時間がかかる可能性があるため
   },
   resolve: {
