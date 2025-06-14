@@ -1,18 +1,32 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BooksController } from './books.controller';
+import { Test, TestingModule } from '@nestjs/testing'
+import { vi } from 'vitest'
+import { BooksController } from './books.controller'
+import { BooksService } from './books.service'
 
 describe('BooksController', () => {
-  let controller: BooksController;
+  let controller: BooksController
+  let _service: BooksService
+
+  const mockBooksService = {
+    findAll: vi.fn(),
+  }
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BooksController],
-    }).compile();
+      providers: [
+        {
+          provide: BooksService,
+          useValue: mockBooksService,
+        },
+      ],
+    }).compile()
 
-    controller = module.get<BooksController>(BooksController);
-  });
+    controller = module.get<BooksController>(BooksController)
+    _service = module.get<BooksService>(BooksService)
+  })
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+    expect(controller).toBeDefined()
+  })
+})

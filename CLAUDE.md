@@ -7,7 +7,7 @@
 これは同人誌（自費出版物）を管理するためのNestJSアプリケーションです。使用技術：
 - **ランタイム**: Node.js 22.16.0 (miseで管理)
 - **パッケージマネージャー**: pnpm
-- **データベース**: PostgreSQL + Prisma ORM
+- **データベース**: PostgreSQL + Drizzle ORM
 - **テスト**: Vitest（ユニットテスト/E2Eテスト）、Supertest（HTTPテスト）
 - **コード品質**: Biome（リンティング/フォーマット）
 - **ビューテンプレート**: EJS（MPA構成）
@@ -43,9 +43,10 @@ pnpm format           # Biomeでコードをフォーマット
 ```bash
 docker compose up -d  # PostgreSQLコンテナの起動
 docker compose down   # PostgreSQLコンテナの停止
-pnpm prisma generate  # Prismaクライアントの生成
-pnpm prisma migrate dev # 開発環境でマイグレーション実行
-pnpm prisma studio    # Prisma Studio GUIを開く
+pnpm drizzle:generate # マイグレーションファイルの生成
+pnpm drizzle:migrate  # マイグレーションの実行
+pnpm drizzle:push     # スキーマをデータベースに直接反映
+pnpm drizzle:studio   # Drizzle Studio GUIを開く
 ```
 
 ## アーキテクチャ
@@ -63,14 +64,14 @@ pnpm prisma studio    # Prisma Studio GUIを開く
 - **依存性注入**: サービスはコンストラクタ経由で注入
 - **デコレータ**: ルーティング、バリデーション、DIに広く使用
 - **DTO**: リクエストバリデーションにclass-validatorを使用
-- **Prisma**: データベースモデルは`prisma/schema.prisma`で定義
+- **Drizzle**: データベーススキーマは`src/db/schema.ts`で定義
 - **テスト**: 詳細は`docs/02_test.md`を参照。ユニット/統合/E2Eの3層構造
 
 ### 設定
 - **TypeScript**: ES2023ターゲットでStrictモード有効
 - **ポート**: `process.env.PORT`で設定可能（デフォルト: 3000）
 - **データベース**: `DATABASE_URL`環境変数で接続（PostgreSQL on Docker、ポート: 15432）
-- **Prismaクライアント**: `../generated/prisma`に生成
+- **Drizzle設定**: `drizzle.config.ts`でデータベース接続設定
 - **環境変数**: `.env.example`をコピーして`.env`を作成
 
 ### コードスタイル
@@ -115,7 +116,7 @@ pnpm install
 docker compose up -d
 
 # 4. データベースのマイグレーション
-pnpm prisma migrate dev
+pnpm drizzle:migrate
 
 # 5. 開発サーバーの起動
 pnpm start:dev
