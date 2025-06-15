@@ -1,0 +1,61 @@
+<div class="page-header">
+  <h1><%= title %></h1>
+  <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs }) %>
+</div>
+
+<div class="book-detail" style="max-width: 800px;">
+  <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    
+    <div class="book-info" style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 20px 0; font-size: 28px; color: #333;">
+        <%= book.title %>
+        <% if (book.subtitle) { %>
+          <span style="display: block; font-size: 18px; color: #666; margin-top: 5px;">
+            <%= book.subtitle %>
+          </span>
+        <% } %>
+      </h2>
+
+      <div class="book-meta" style="display: grid; grid-template-columns: 120px 1fr; gap: 15px; color: #666;">
+        <div style="font-weight: bold;">説明:</div>
+        <div>
+          <% if (book.description) { %>
+            <%= book.description %>
+          <% } else { %>
+            <span style="color: #999;">説明なし</span>
+          <% } %>
+        </div>
+
+        <div style="font-weight: bold;">ページ数:</div>
+        <div>
+          <% if (book.pageCount) { %>
+            <%= book.pageCount %>ページ
+          <% } else { %>
+            <span style="color: #999;">ページ数未設定</span>
+          <% } %>
+        </div>
+
+        <div style="font-weight: bold;">作成日時:</div>
+        <div><%= book.createdAt %></div>
+
+        <div style="font-weight: bold;">更新日時:</div>
+        <div><%= book.updatedAt %></div>
+      </div>
+    </div>
+
+    <div class="book-actions" style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #eee;">
+      <a 
+        href="/books"
+        style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        一覧に戻る
+      </a>
+      <a 
+        href="/books/<%= book.id %>/edit"
+        style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        編集
+      </a>
+    </div>
+  </div>
+</div>

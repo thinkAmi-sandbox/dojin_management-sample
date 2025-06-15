@@ -158,7 +158,9 @@ describe('Books Creation', () => {
         .expect(400)
 
       // Assert: バリデーションエラーメッセージを確認
-      expect(response.text).toMatch(/タイトルは255文字以下である必要があります|title.*too long/i)
+      expect(response.text).toMatch(
+        /タイトルは255文字以下である必要があります|title.*too long/i,
+      )
 
       // データベースに保存されていないことを確認
       const savedBooks = await drizzleService.db.select().from(schema.books)
@@ -203,7 +205,7 @@ describe('Books Creation', () => {
 
       // Assert: リダイレクト先を確認
       expect(response.headers.location).toBe('/books')
-      
+
       // データベースに保存されていることを確認
       const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(1)
@@ -229,7 +231,7 @@ describe('Books Creation', () => {
       // Assert: 成功することを確認
       expect(response.status).toBe(302)
       expect(response.headers.location).toBe('/books')
-      
+
       // データベースに保存されていることを確認
       const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(1)

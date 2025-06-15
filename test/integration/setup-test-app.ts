@@ -20,6 +20,10 @@ export function setupTestApp(app: INestApplication): void {
   expressApp.setBaseViewsDir(join(__dirname, '..', '..', 'src', 'views'))
   expressApp.setViewEngine('ejs')
 
+  // HTTPメソッドオーバーライドの設定
+  const methodOverride = require('method-override')
+  expressApp.use(methodOverride('_method'))
+
   // express-ejs-layoutsの設定
   const expressLayouts = require('express-ejs-layouts')
   expressApp.use(expressLayouts)

@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import { join } from 'path'
 import * as dotenv from 'dotenv'
 import * as expressLayouts from 'express-ejs-layouts'
+import * as methodOverride from 'method-override'
 import { AppModule } from './app.module'
 
 // 環境変数を読み込み
@@ -26,6 +27,9 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'))
   app.setBaseViewsDir(join(__dirname, 'views'))
   app.setViewEngine('ejs')
+
+  // HTTPメソッドオーバーライドの設定
+  app.use(methodOverride('_method'))
 
   // express-ejs-layoutsの設定
   app.use(expressLayouts)

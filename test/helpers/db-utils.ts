@@ -8,7 +8,8 @@ export class TestDbUtils {
   private db: ReturnType<typeof drizzle>
 
   constructor() {
-    const databaseUrl = process.env.DATABASE_URL_TEST || process.env.DATABASE_URL
+    const databaseUrl =
+      process.env.DATABASE_URL_TEST || process.env.DATABASE_URL
     this.pool = new Pool({ connectionString: databaseUrl })
     this.db = drizzle(this.pool, { schema })
   }
@@ -17,7 +18,10 @@ export class TestDbUtils {
     try {
       await this.db.execute(sql`TRUNCATE TABLE "Book" RESTART IDENTITY CASCADE`)
     } catch (error) {
-      console.error('データベースのクリーンアップでエラーが発生しました:', error)
+      console.error(
+        'データベースのクリーンアップでエラーが発生しました:',
+        error,
+      )
       throw error
     }
   }

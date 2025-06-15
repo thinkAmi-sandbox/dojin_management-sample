@@ -18,9 +18,9 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
 
   private getDatabaseUrl(): string {
     if (process.env.NODE_ENV === 'test') {
-      return process.env.DATABASE_URL_TEST || process.env.DATABASE_URL
+      return process.env.DATABASE_URL_TEST || process.env.DATABASE_URL || ''
     }
-    return process.env.DATABASE_URL
+    return process.env.DATABASE_URL || ''
   }
 
   async onModuleDestroy() {
