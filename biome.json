@@ -110,6 +110,11 @@
   "overrides": [
     {
       "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "javascript": {
+        "parser": {
+          "unsafeParameterDecoratorsEnabled": true
+        }
+      },
       "linter": {
         "rules": {
           "complexity": { "noWith": "off" },
