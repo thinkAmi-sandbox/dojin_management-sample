@@ -4,6 +4,7 @@ import { Book, NewBook, books } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
+import { UpdateBookStatusDto } from './dto/update-book-status.dto'
 
 @Injectable()
 export class BooksService {
@@ -71,5 +72,20 @@ export class BooksService {
     await this.findOne(id)
 
     await this.drizzleService.db.delete(books).where(eq(books.id, id))
+  }
+
+  async updateStatus(
+    id: number,
+    updateBookStatusDto: UpdateBookStatusDto,
+  ): Promise<Book> {
+    await this.findOne(id)
+
+    const result = await this.drizzleService.db
+      .update(books)
+      .set({ status: updateBookStatusDto.status })
+      .where(eq(books.id, id))
+      .returning()
+
+    return result[0]
   }
 }

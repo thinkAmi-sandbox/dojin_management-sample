@@ -7,20 +7,20 @@
 - [x] `src/db/schema.ts`にstatusカラム追加
 - [x] マイグレーションファイル生成（`pnpm drizzle:generate`）
 - [x] マイグレーション実行（`pnpm drizzle:migrate`）
-- [ ] 🔒 スキーマ変更コミット
+- [x] 🔒 スキーマ変更コミット
 
 ### フェーズ2: テストファースト開発
-- [ ] 統合テストコード作成（`test/integration/books/status-update.integration.spec.ts`）
-- [ ] テスト失敗確認
-- [ ] ステータス更新DTO作成
-- [ ] BooksController拡張
-  - [ ] `renderStatusEditForm()` - GET `/books/:bookId/status/edit`
-  - [ ] `updateStatus()` - PUT `/books/:bookId/status`
-- [ ] BooksService拡張
-- [ ] EJSビューテンプレート作成
-- [ ] 型チェック（`pnpm type-check`）
-- [ ] Linter実行（`pnpm format`）
-- [ ] テスト実行（`pnpm test:integration`）
+- [x] 統合テストコード作成（`test/integration/books/status-update.integration.spec.ts`）
+- [x] テスト失敗確認（404エラー：ルーティング未実装）
+- [x] ステータス更新DTO作成
+- [x] BooksController拡張
+  - [x] `renderStatusEditForm()` - GET `/books/:bookId/status/edit`
+  - [x] `updateStatus()` - PUT `/books/:bookId/status`
+- [x] BooksService拡張
+- [x] EJSビューテンプレート作成
+- [x] 型チェック（`pnpm type-check`）
+- [x] Linter実行（`pnpm format`）
+- [x] テスト実行（`pnpm test:integration`）
 - [ ] 最終コミット
 
 ## 📝 実装メモ

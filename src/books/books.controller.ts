@@ -15,6 +15,7 @@ import type { Response } from 'express'
 import { BooksService } from './books.service'
 import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
+import { UpdateBookStatusDto } from './dto/update-book-status.dto'
 import { BooksListView } from './views/books-list.view'
 
 @Controller('books')
@@ -157,5 +158,110 @@ export class BooksController {
   async removeViaPost(id: number, res: Response) {
     await this.booksService.remove(id)
     res.redirect('/books')
+  }
+
+  @Get(':bookId/status/edit')
+  @Render('books/status-edit')
+  async renderStatusEditForm(@Param('bookId', ParseIntPipe) bookId: number) {
+    const book = await this.booksService.findOne(bookId)
+
+    const statusOptions = [
+      { value: 'planning', label: '企画中' },
+      { value: 'writing', label: '執筆中' },
+      { value: 'editing', label: '校正中' },
+      { value: 'completed', label: '完成' },
+    ]
+
+    return {
+      title: 'ステータス変更',
+      book: {
+        id: book.id,
+        title: book.title,
+        status: book.status,
+      },
+      statusOptions,
+      errors: {},
+      breadcrumbs: [
+        { name: '書籍一覧', url: '/books' },
+        { name: book.title, url: `/books/${book.id}` },
+        { name: 'ステータス変更', url: null },
+      ],
+    }
+  }
+
+  @Post(':bookId/status')
+  async updateStatusViaPost(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Body() body: any,
+    @Res() res: Response,
+  ) {
+    if (body._method === 'PUT') {
+      return this.updateStatus(bookId, body, res)
+    }
+
+    res.status(404).send('Not Found')
+  }
+
+  @Put(':bookId/status')
+  async updateStatus(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Body() updateBookStatusDto: UpdateBookStatusDto,
+    @Res() res: Response,
+  ) {
+    if (!updateBookStatusDto.status) {
+      const book = await this.booksService.findOne(bookId)
+      const statusOptions = [
+        { value: 'planning', label: '企画中' },
+        { value: 'writing', label: '執筆中' },
+        { value: 'editing', label: '校正中' },
+        { value: 'completed', label: '完成' },
+      ]
+
+      return res.status(200).render('books/status-edit', {
+        title: 'ステータス変更',
+        book: {
+          id: book.id,
+          title: book.title,
+          status: book.status,
+        },
+        statusOptions,
+        errors: { status: 'ステータスは必須です' },
+        breadcrumbs: [
+          { name: '書籍一覧', url: '/books' },
+          { name: book.title, url: `/books/${book.id}` },
+          { name: 'ステータス変更', url: null },
+        ],
+      })
+    }
+
+    const validStatuses = ['planning', 'writing', 'editing', 'completed']
+    if (!validStatuses.includes(updateBookStatusDto.status)) {
+      const book = await this.booksService.findOne(bookId)
+      const statusOptions = [
+        { value: 'planning', label: '企画中' },
+        { value: 'writing', label: '執筆中' },
+        { value: 'editing', label: '校正中' },
+        { value: 'completed', label: '完成' },
+      ]
+
+      return res.status(200).render('books/status-edit', {
+        title: 'ステータス変更',
+        book: {
+          id: book.id,
+          title: book.title,
+          status: book.status,
+        },
+        statusOptions,
+        errors: { status: '有効なステータスを選択してください' },
+        breadcrumbs: [
+          { name: '書籍一覧', url: '/books' },
+          { name: book.title, url: `/books/${book.id}` },
+          { name: 'ステータス変更', url: null },
+        ],
+      })
+    }
+
+    await this.booksService.updateStatus(bookId, updateBookStatusDto)
+    res.redirect(`/books/${bookId}`)
   }
 }
