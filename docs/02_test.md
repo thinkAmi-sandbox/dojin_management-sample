@@ -129,8 +129,18 @@ describe('BooksService', () => {
 ### 統合テストの例
 ```typescript
 // create-book.integration.spec.ts
+import { type INestApplication } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import request from 'supertest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { AppModule } from '../../../src/app.module'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
+import * as schema from '../../../src/db/schema'
+import { setupTestApp } from '../setup-test-app'
+
 describe('POST /books', () => {
   let app: INestApplication;
+  let drizzleService: DrizzleService;
   
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -138,11 +148,18 @@ describe('POST /books', () => {
     }).compile();
     
     app = moduleRef.createNestApplication();
+    setupTestApp(app);
+    drizzleService = moduleRef.get<DrizzleService>(DrizzleService);
     await app.init();
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(async () => {
+    // 重要：NestJSアプリ内のDrizzleServiceを使ってクリーンアップ
+    await drizzleService.db.delete(schema.books);
   });
 
   it('should create a new book', async () => {
@@ -156,17 +173,14 @@ describe('POST /books', () => {
     const response = await request(app.getHttpServer())
       .post('/books')
       .send(bookData)
-      .expect(201);
+      .expect(302); // MPAではリダイレクト
 
-    expect(response.body).toMatchObject({
-      id: expect.any(Number),
-      title: bookData.title,
-      subtitle: bookData.subtitle,
-      description: bookData.description,
-      pageCount: bookData.pageCount,
-      createdAt: expect.any(String),
-      updatedAt: expect.any(String)
-    });
+    expect(response.headers.location).toBe('/books');
+
+    // データベースに保存されていることを確認
+    const savedBooks = await drizzleService.db.select().from(schema.books);
+    expect(savedBooks).toHaveLength(1);
+    expect(savedBooks[0].title).toBe(bookData.title);
   });
 
   it('should return 400 when title is missing', async () => {
@@ -178,6 +192,10 @@ describe('POST /books', () => {
       .post('/books')
       .send(invalidData)
       .expect(400);
+
+    // データベースに保存されていないことを確認
+    const savedBooks = await drizzleService.db.select().from(schema.books);
+    expect(savedBooks).toHaveLength(0);
   });
 });
 ```
@@ -208,12 +226,57 @@ export const bookFixtures = {
 
 ## ベストプラクティス
 
+### 基本的なテスト原則
 1. **テストの独立性**: 各テストは他のテストに依存しない
 2. **明確な命名**: テスト名は「何をテストしているか」が明確にわかるように
 3. **AAA パターン**: Arrange（準備）、Act（実行）、Assert（検証）の構造を守る
 4. **適切なモック**: ユニットテストでは外部依存をモック化、統合テストでは実際のDBを使用
 5. **エラーケースのテスト**: 正常系だけでなく異常系も必ずテスト
 6. **テストデータの再利用**: fixtureを活用してテストデータを管理
+
+### 統合テスト固有のベストプラクティス
+
+#### 1. 一貫したデータベース接続の使用
+```typescript
+// ❌ 悪い例：独立したデータベース接続を作成
+const testDb = drizzle(new Pool({ connectionString: process.env.DATABASE_URL_TEST }));
+
+// ✅ 良い例：NestJSアプリ内のDrizzleServiceを使用
+const drizzleService = moduleRef.get<DrizzleService>(DrizzleService);
+```
+
+**理由**: 複数のデータベース接続は競合状態を引き起こし、テストが不安定になる
+
+#### 2. 適切なテストデータのクリーンアップ
+```typescript
+afterEach(async () => {
+  // NestJSアプリと同じDrizzleServiceインスタンスでクリーンアップ
+  await drizzleService.db.delete(schema.books);
+});
+```
+
+#### 3. テストデータの挿入もアプリ内サービスを使用
+```typescript
+// テストデータの作成時もDrizzleServiceを使用
+await drizzleService.db.insert(schema.books).values([testData]);
+```
+
+#### 4. 順次実行の設定（重要）
+```typescript
+// vitest.config.integration.ts
+export default defineConfig({
+  test: {
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true, // 並行実行を防ぐ
+      },
+    },
+  },
+});
+```
+
+**理由**: 並行実行時のデータベースアクセス競合を防ぐため
 
 ## テスト戦略の方針
 
@@ -288,9 +351,66 @@ NODE_ENV=development  # 開発時、テスト時は自動的に'test'に設定
 
 統合テストでは、各テストケース実行後に`test/helpers/db-utils.ts`の`cleanupDatabase()`が自動実行され、テストデータベースをクリーンな状態に保ちます。
 
+## トラブルシューティング
+
+### よくある問題と解決策
+
+#### 1. テストが不安定（時々失敗する）
+**症状**: 同じテストが成功したり失敗したりする
+
+**原因**: 並行実行時の競合状態
+- 複数のテストが同時にデータベースにアクセス
+- 一方のテストでデータを挿入した直後に他方のテストがクリーンアップを実行
+
+**解決策**: 
+```typescript
+// vitest.config.integration.tsで順次実行を設定
+pool: 'forks',
+poolOptions: {
+  forks: {
+    singleFork: true,
+  },
+},
+```
+
+#### 2. テストデータが表示されない
+**症状**: データを挿入してもHTTPレスポンスに反映されない
+
+**原因**: 異なるデータベース接続インスタンス
+- testDbUtilsとNestJSアプリが別々のデータベース接続を使用
+
+**解決策**:
+```typescript
+// NestJSアプリ内のDrizzleServiceを直接使用
+const drizzleService = moduleRef.get<DrizzleService>(DrizzleService);
+await drizzleService.db.insert(schema.books).values([testData]);
+```
+
+#### 3. 初期化スクリプトが実行されない
+**症状**: テスト用データベースが作成されない
+
+**原因**: Docker ボリュームに既存のデータが存在
+
+**解決策**:
+```bash
+# ボリュームを削除して再作成
+docker compose down -v
+docker compose up -d
+```
+
+#### 4. 環境変数が正しく設定されない
+**症状**: 開発用DBがテストでも使われる
+
+**確認方法**:
+```typescript
+// DrizzleServiceにログを追加して確認
+console.log(`NODE_ENV=${process.env.NODE_ENV}, DATABASE_URL=${databaseUrl}`);
+```
+
 ## 注意事項
 
 - 統合テストではテスト用のデータベースを使用する
 - テスト実行前後でデータベースのクリーンアップを行う
 - CIでは全てのテストが自動実行されるように設定する
 - 開発用とテスト用データベースは完全に分離されており、相互に影響しない
+- **重要**: 統合テストは順次実行を推奨（並行実行時の競合を避けるため）
