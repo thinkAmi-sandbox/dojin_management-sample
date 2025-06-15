@@ -75,6 +75,16 @@ export class BooksController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const book = await this.booksService.findOne(id)
 
+    const getStatusLabel = (status: string) => {
+      const statusMap: { [key: string]: string } = {
+        planning: '企画中',
+        writing: '執筆中',
+        editing: '校正中',
+        completed: '完成',
+      }
+      return statusMap[status] || status
+    }
+
     return {
       title: '書籍詳細',
       book: {
@@ -85,9 +95,12 @@ export class BooksController {
         pageCount: book.pageCount
           ? `${book.pageCount}ページ`
           : 'ページ数未設定',
+        status: book.status,
+        statusLabel: getStatusLabel(book.status),
         formattedCreatedAt: book.createdAt.toLocaleDateString('ja-JP'),
         formattedUpdatedAt: book.updatedAt.toLocaleDateString('ja-JP'),
         editUrl: `/books/${book.id}/edit`,
+        statusEditUrl: `/books/${book.id}/status/edit`,
       },
       breadcrumbs: [
         { name: '書籍一覧', url: '/books' },

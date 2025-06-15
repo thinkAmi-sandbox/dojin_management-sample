@@ -44,6 +44,7 @@ describe('Books Show (Integration)', () => {
           description:
             'これはテスト用の説明文です。詳細な内容が含まれています。',
           pageCount: 200,
+          status: 'writing',
           createdAt: testDate,
           updatedAt: testDate,
         })
@@ -65,10 +66,15 @@ describe('Books Show (Integration)', () => {
         'これはテスト用の説明文です。詳細な内容が含まれています。',
       )
       expect(response.text).toContain('200ページ')
+      expect(response.text).toContain('執筆中')
 
       // アクションボタン
       expect(response.text).toContain(`href="/books/${testBook.id}/edit"`)
       expect(response.text).toContain('編集')
+      expect(response.text).toContain(
+        `href="/books/${testBook.id}/status/edit"`,
+      )
+      expect(response.text).toContain('ステータス変更')
     })
 
     it('サブタイトルがない場合も正常に表示すること', async () => {
@@ -78,6 +84,7 @@ describe('Books Show (Integration)', () => {
           title: 'サブタイトルなし書籍',
           description: '説明文',
           pageCount: 100,
+          status: 'planning',
         })
         .returning()
 
@@ -86,6 +93,7 @@ describe('Books Show (Integration)', () => {
         .expect(200)
 
       expect(response.text).toContain('サブタイトルなし書籍')
+      expect(response.text).toContain('企画中')
       expect(response.text).not.toContain('undefined')
       expect(response.text).not.toContain('null')
     })
@@ -95,6 +103,7 @@ describe('Books Show (Integration)', () => {
         .insert(books)
         .values({
           title: '最小限の書籍',
+          status: 'completed',
         })
         .returning()
 
@@ -103,6 +112,7 @@ describe('Books Show (Integration)', () => {
         .expect(200)
 
       expect(response.text).toContain('最小限の書籍')
+      expect(response.text).toContain('完成')
       expect(response.text).toContain('説明なし')
       expect(response.text).toContain('ページ数未設定')
     })

@@ -29,17 +29,38 @@
         <div style="font-weight: bold;">ページ数:</div>
         <div>
           <% if (book.pageCount) { %>
-            <%= book.pageCount %>ページ
+            <%= book.pageCount %>
           <% } else { %>
             <span style="color: #999;">ページ数未設定</span>
           <% } %>
         </div>
 
+        <div style="font-weight: bold;">ステータス:</div>
+        <div>
+          <span style="
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 14px;
+            font-weight: bold;
+            <% if (book.status === 'planning') { %>
+              background-color: #ffeaa7; color: #d63031;
+            <% } else if (book.status === 'writing') { %>
+              background-color: #74b9ff; color: white;
+            <% } else if (book.status === 'editing') { %>
+              background-color: #fdcb6e; color: #2d3436;
+            <% } else if (book.status === 'completed') { %>
+              background-color: #00b894; color: white;
+            <% } %>
+          ">
+            <%= book.statusLabel %>
+          </span>
+        </div>
+
         <div style="font-weight: bold;">作成日時:</div>
-        <div><%= book.createdAt %></div>
+        <div><%= book.formattedCreatedAt %></div>
 
         <div style="font-weight: bold;">更新日時:</div>
-        <div><%= book.updatedAt %></div>
+        <div><%= book.formattedUpdatedAt %></div>
       </div>
     </div>
 
@@ -49,6 +70,12 @@
         style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;"
       >
         一覧に戻る
+      </a>
+      <a 
+        href="<%= book.statusEditUrl %>"
+        style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        ステータス変更
       </a>
       <a 
         href="/books/<%= book.id %>/edit"
