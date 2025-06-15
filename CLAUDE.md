@@ -89,7 +89,44 @@ pnpm drizzle:studio   # Drizzle Studio GUIを開く
 - ESモジュール (import/export)構文を使用する
 - 可能な場合はimportを分解する
   - 例
-    - import { foo } from 'bar' 
+    - import { foo } from 'bar'
+
+### コントローラーメソッド命名規則
+
+- **YOU MUST**: NestJSコントローラーのメソッド名は以下の規則に従うこと
+- **YOU MUST NOT**: Railsスタイルの命名（index, show, create, updateなど）は使用しない
+
+#### 必須のメソッド名規則：
+- **`findAll()`** - リソースの一覧取得 (GET /resources)
+- **`findOne()`** - 単一リソースの取得 (GET /resources/:id)
+- **`create()`** - 新規リソースの作成 (POST /resources)
+- **`update()`** - リソースの更新 (PUT /resources/:id)
+- **`remove()`** - リソースの削除 (DELETE /resources/:id)
+
+#### フォーム表示用メソッド（MPA構成時）：
+- **`renderNewForm()`** - 新規作成フォームの表示 (GET /resources/new)
+- **`renderEditForm()`** - 編集フォームの表示 (GET /resources/:id/edit)
+
+#### 例：
+```typescript
+@Controller('books')
+export class BooksController {
+  @Get()
+  async findAll() { /* 一覧表示 */ }
+  
+  @Get(':id')
+  async findOne(@Param('id') id: string) { /* 詳細表示 */ }
+  
+  @Post()
+  async create(@Body() createBookDto: CreateBookDto) { /* 作成処理 */ }
+  
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() updateBookDto: UpdateBookDto) { /* 更新処理 */ }
+  
+  @Delete(':id')
+  async remove(@Param('id') id: string) { /* 削除処理 */ }
+}
+``` 
 
 ## アプリケーション設計
 
