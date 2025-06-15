@@ -1,0 +1,30 @@
+<div class="book-card" style="background-color: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 20px; height: 100%; display: flex; flex-direction: column;">
+  <div class="book-card__header">
+    <h3 style="margin-top: 0; margin-bottom: 10px;">
+      <a href="<%= book.detailUrl %>" style="color: #333; text-decoration: none;">
+        <%= book.title %>
+      </a>
+    </h3>
+    <% if (book.subtitle) { %>
+      <p style="color: #6c757d; margin: 0 0 15px 0;"><%= book.subtitle %></p>
+    <% } %>
+  </div>
+  
+  <div class="book-card__body" style="flex: 1;">
+    <% if (book.description) { %>
+      <p style="color: #666; line-height: 1.5;"><%= book.description %></p>
+    <% } %>
+    
+    <div class="book-card__meta" style="display: flex; gap: 15px; font-size: 14px; color: #6c757d;">
+      <% if (book.pageCount) { %>
+        <span><%= book.pageCount %> ページ</span>
+      <% } %>
+      <span>作成日: <%= book.formattedCreatedAt %></span>
+    </div>
+  </div>
+  
+  <div class="book-card__actions" style="margin-top: 20px; display: flex; gap: 10px;">
+    <a href="<%= book.detailUrl %>" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">詳細</a>
+    <a href="<%= book.editUrl %>" style="padding: 8px 16px; border: 1px solid #6c757d; color: #6c757d; text-decoration: none; border-radius: 4px;">編集</a>
+  </div>
+</div>

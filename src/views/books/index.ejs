@@ -1,0 +1,25 @@
+<div class="page-header">
+  <h1><%= title %></h1>
+  <%- include('../shared/breadcrumbs', { breadcrumbs }) %>
+</div>
+
+<div class="actions" style="margin-bottom: 20px;">
+  <a href="/books/new" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">新しい書籍を追加</a>
+</div>
+
+<% if (hasBooks) { %>
+  <div class="books-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+    <% books.forEach(book => { %>
+      <%- include('_book-card', { book }) %>
+    <% }) %>
+  </div>
+  
+  <div class="summary" style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+    <p style="margin: 0;">合計 <%= totalCount %> 件の書籍が登録されています。</p>
+  </div>
+<% } else { %>
+  <div class="empty-state" style="text-align: center; padding: 60px 0;">
+    <p style="font-size: 18px; color: #6c757d; margin-bottom: 20px;">書籍が登録されていません</p>
+    <a href="/books/new" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">最初の書籍を追加する</a>
+  </div>
+<% } %>

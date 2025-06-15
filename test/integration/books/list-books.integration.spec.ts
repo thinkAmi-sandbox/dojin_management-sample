@@ -7,6 +7,7 @@ import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
+import { setupTestApp } from '../setup-test-app'
 
 describe('GET /books', () => {
   let app: INestApplication
@@ -19,6 +20,7 @@ describe('GET /books', () => {
     }).compile()
 
     app = moduleRef.createNestApplication()
+    setupTestApp(app)
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
     })

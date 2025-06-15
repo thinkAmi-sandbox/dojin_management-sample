@@ -23,6 +23,9 @@ importers:
       ejs:
         specifier: ^3.1.10
         version: 3.1.10
+      express-ejs-layouts:
+        specifier: ^2.5.1
+        version: 2.5.1
       pg:
         specifier: ^8.16.0
         version: 8.16.0
@@ -51,12 +54,18 @@ importers:
       '@swc/core':
         specifier: ^1.10.7
         version: 1.11.31
+      '@types/dotenv':
+        specifier: ^8.2.3
+        version: 8.2.3
       '@types/ejs':
         specifier: ^3.1.5
         version: 3.1.5
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.3
+      '@types/express-ejs-layouts':
+        specifier: ^2.5.4
+        version: 2.5.4
       '@types/node':
         specifier: ^22.10.7
         version: 22.15.30
@@ -1148,6 +1157,10 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/dotenv@8.2.3':
+    resolution: {integrity: sha512-g2FXjlDX/cYuc5CiQvyU/6kkbP1JtmGzh0obW50zD7OKeILVL0NSpPWLXVfqoAGQjom2/SLLx9zHq0KXvD6mbw==}
+    deprecated: This is a stub types definition. dotenv provides its own type definitions, so you do not need this installed.
+
   '@types/ejs@3.1.5':
     resolution: {integrity: sha512-nv+GSx77ZtXiJzwKdsASqi+YQ5Z7vwHsTP0JY2SiQgjGckkBRKZnk8nIM+7oUZ1VCtuTz0+By4qVR7fqzp/Dfg==}
 
@@ -1162,6 +1175,9 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/express-ejs-layouts@2.5.4':
+    resolution: {integrity: sha512-d093IgtrNO3fD5Xm4+zh5F4E4sTxUsMbfYm7Vx40QdQ1qYTn4NIRCmatU8kqGRt09ojf3KKigtEehUeQUCE4fA==}
 
   '@types/express-serve-static-core@5.0.6':
     resolution: {integrity: sha512-3xhRnjJPkULekpSzgtoNYYcTWgEZkp4myc+Saevii5JPnHNvHMRlBSHDbs7Bh1iPPoVTERHEZXyhyLbMEsExsA==}
@@ -1925,6 +1941,9 @@ packages:
   expect-type@1.2.1:
     resolution: {integrity: sha512-/kP8CAwxzLVEeFrMm4kMmy4CCDlpipyA7MYLVrdJIkV0fYF0UaigQHRsxHiuY/GEea+bh4KSv3TIlgr+2UL6bw==}
     engines: {node: '>=12.0.0'}
+
+  express-ejs-layouts@2.5.1:
+    resolution: {integrity: sha512-IXROv9n3xKga7FowT06n1Qn927JR8ZWDn5Dc9CJQoiiaaDqbhW5PDmWShzbpAa2wjWT1vJqaIM1S6vJwwX11gA==}
 
   express@5.1.0:
     resolution: {integrity: sha512-DT9ck5YIRU+8GYzzU5kT3eHGA5iL+1Zd0EutOmTE9Dtk+Tvuzd23VBU+ec7HPNSTxXYO55gPV/hq4pSBJDjFpA==}
@@ -4084,6 +4103,10 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/dotenv@8.2.3':
+    dependencies:
+      dotenv: 16.5.0
+
   '@types/ejs@3.1.5': {}
 
   '@types/eslint-scope@3.7.7':
@@ -4099,6 +4122,11 @@ snapshots:
   '@types/estree@1.0.7': {}
 
   '@types/estree@1.0.8': {}
+
+  '@types/express-ejs-layouts@2.5.4':
+    dependencies:
+      '@types/express': 5.0.3
+      '@types/node': 22.15.30
 
   '@types/express-serve-static-core@5.0.6':
     dependencies:
@@ -4872,6 +4900,8 @@ snapshots:
       strip-final-newline: 2.0.0
 
   expect-type@1.2.1: {}
+
+  express-ejs-layouts@2.5.1: {}
 
   express@5.1.0:
     dependencies:
