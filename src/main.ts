@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // EJSの設定
   app.useStaticAssets(join(__dirname, '..', 'public'))
-  app.setBaseViewsDir(join(__dirname, '..', 'src', 'views'))
+  app.setBaseViewsDir(join(__dirname, 'views'))
   app.setViewEngine('ejs')
 
   // express-ejs-layoutsの設定
