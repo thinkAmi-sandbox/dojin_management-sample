@@ -1,18 +1,16 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { eq } from 'drizzle-orm'
-import { NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
 import { setupTestApp } from '../setup-test-app'
+import { testDbUtils } from '../../helpers/db-utils'
 
 describe('Books Creation', () => {
   let app: INestApplication
-  let pool: Pool
-  let db: NodePgDatabase<typeof schema>
+  let drizzleService: DrizzleService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -21,20 +19,18 @@ describe('Books Creation', () => {
 
     app = moduleRef.createNestApplication()
     setupTestApp(app)
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    })
-    db = drizzle(pool, { schema })
+    drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
   })
 
   afterAll(async () => {
-    await pool.end()
+    await testDbUtils.closeConnection()
     await app.close()
   })
 
   afterEach(async () => {
-    await db.delete(schema.books)
+    // NestJSアプリ内のDrizzleServiceを使ってクリーンアップ
+    await drizzleService.db.delete(schema.books)
   })
 
   describe('GET /books/new', () => {
@@ -94,7 +90,7 @@ describe('Books Creation', () => {
       expect(response.headers.location).toBe('/books')
 
       // データベースに保存されていることを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(1)
       expect(savedBooks[0].title).toBe(bookData.title)
       expect(savedBooks[0].subtitle).toBe(bookData.subtitle)
@@ -115,7 +111,7 @@ describe('Books Creation', () => {
         .expect(302)
 
       // Assert: データベースに保存されていることを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(1)
       expect(savedBooks[0].title).toBe(bookData.title)
       expect(savedBooks[0].subtitle).toBeNull()
@@ -141,7 +137,7 @@ describe('Books Creation', () => {
       expect(response.text).toMatch(/タイトル.*必須|title.*required/i)
 
       // データベースに保存されていないことを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(0)
     })
 
@@ -165,7 +161,7 @@ describe('Books Creation', () => {
       expect(response.text).toMatch(/タイトルは255文字以下である必要があります|title.*too long/i)
 
       // データベースに保存されていないことを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(0)
     })
 
@@ -186,7 +182,7 @@ describe('Books Creation', () => {
       expect(response.text).toMatch(/ページ数.*正の数|pageCount.*positive/i)
 
       // データベースに保存されていないことを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(0)
     })
 
@@ -209,7 +205,7 @@ describe('Books Creation', () => {
       expect(response.headers.location).toBe('/books')
       
       // データベースに保存されていることを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(1)
       expect(savedBooks[0].title).toBe(bookData.title)
       expect(savedBooks[0].pageCount).toBe(bookData.pageCount)
@@ -235,7 +231,7 @@ describe('Books Creation', () => {
       expect(response.headers.location).toBe('/books')
       
       // データベースに保存されていることを確認
-      const savedBooks = await db.select().from(schema.books)
+      const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(1)
       expect(savedBooks[0].title).toBe('ページ数40の書籍（フォーム）')
       expect(savedBooks[0].pageCount).toBe(40)

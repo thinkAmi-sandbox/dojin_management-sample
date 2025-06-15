@@ -22,7 +22,9 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:migrate": "drizzle-kit migrate",
+    "drizzle:migrate:test": "DATABASE_URL=\"$DATABASE_URL_TEST\" drizzle-kit migrate",
     "drizzle:push": "drizzle-kit push",
+    "drizzle:push:test": "DATABASE_URL=\"$DATABASE_URL_TEST\" drizzle-kit push",
     "drizzle:studio": "drizzle-kit studio"
   },
   "dependencies": {

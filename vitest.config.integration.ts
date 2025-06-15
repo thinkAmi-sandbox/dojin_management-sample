@@ -9,6 +9,12 @@ export default defineConfig({
     include: ['test/integration/**/*.integration.spec.ts'],
     setupFiles: ['test/setup.ts'],
     testTimeout: 30000, // 統合テストは時間がかかる可能性があるため
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
   },
   resolve: {
     alias: {

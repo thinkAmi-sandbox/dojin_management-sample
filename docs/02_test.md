@@ -241,8 +241,56 @@ export const bookFixtures = {
    - モックだらけになり、実装の詳細に依存しすぎる
    - 統合テストで十分カバー可能
 
+## データベース環境の分離
+
+### 開発用とテスト用データベースの設定
+
+このプロジェクトでは、Railsと同様に開発環境とテスト環境で異なるデータベースを使用します。
+
+#### 環境変数設定
+`.env`ファイルに以下の環境変数を設定：
+
+```bash
+# 開発用データベース（デフォルト）
+DATABASE_URL=postgresql://dojin_user:dojin_password@localhost:15432/dojin_management
+
+# テスト用データベース
+DATABASE_URL_TEST=postgresql://dojin_user:dojin_password@localhost:15432/dojin_management_test
+
+# 環境識別子
+NODE_ENV=development  # 開発時、テスト時は自動的に'test'に設定
+```
+
+#### データベースの初期化と作成
+
+1. **PostgreSQLコンテナの起動**
+   ```bash
+   docker compose up -d
+   ```
+   初期化スクリプト（`docker/postgres/init-multiple-databases.sh`）により、開発用とテスト用の両方のデータベースが自動作成されます。
+
+2. **マイグレーションの実行**
+   ```bash
+   # 開発用データベース
+   pnpm drizzle:migrate
+   
+   # テスト用データベース
+   pnpm drizzle:migrate:test
+   ```
+
+#### 自動的な環境切り替え
+
+- **開発時**: `NODE_ENV=development`で`dojin_management`データベースを使用
+- **テスト時**: `NODE_ENV=test`で`dojin_management_test`データベースを自動使用
+- テスト実行時は`test/setup.ts`で自動的に`NODE_ENV=test`が設定される
+
+#### データクリーンアップ
+
+統合テストでは、各テストケース実行後に`test/helpers/db-utils.ts`の`cleanupDatabase()`が自動実行され、テストデータベースをクリーンな状態に保ちます。
+
 ## 注意事項
 
 - 統合テストではテスト用のデータベースを使用する
 - テスト実行前後でデータベースのクリーンアップを行う
 - CIでは全てのテストが自動実行されるように設定する
+- 開発用とテスト用データベースは完全に分離されており、相互に影響しない

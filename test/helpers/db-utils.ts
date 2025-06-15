@@ -1,0 +1,34 @@
+import { sql } from 'drizzle-orm'
+import { Pool } from 'pg'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import * as schema from '../../src/db/schema'
+
+export class TestDbUtils {
+  private pool: Pool
+  private db: ReturnType<typeof drizzle>
+
+  constructor() {
+    const databaseUrl = process.env.DATABASE_URL_TEST || process.env.DATABASE_URL
+    this.pool = new Pool({ connectionString: databaseUrl })
+    this.db = drizzle(this.pool, { schema })
+  }
+
+  async cleanupDatabase(): Promise<void> {
+    try {
+      await this.db.execute(sql`TRUNCATE TABLE "Book" RESTART IDENTITY CASCADE`)
+    } catch (error) {
+      console.error('データベースのクリーンアップでエラーが発生しました:', error)
+      throw error
+    }
+  }
+
+  async closeConnection(): Promise<void> {
+    await this.pool.end()
+  }
+
+  getDb() {
+    return this.db
+  }
+}
+
+export const testDbUtils = new TestDbUtils()

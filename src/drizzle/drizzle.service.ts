@@ -9,10 +9,18 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
   public db: NodePgDatabase<typeof schema>
 
   onModuleInit() {
+    const databaseUrl = this.getDatabaseUrl()
     this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: databaseUrl,
     })
     this.db = drizzle(this.pool, { schema })
+  }
+
+  private getDatabaseUrl(): string {
+    if (process.env.NODE_ENV === 'test') {
+      return process.env.DATABASE_URL_TEST || process.env.DATABASE_URL
+    }
+    return process.env.DATABASE_URL
   }
 
   async onModuleDestroy() {

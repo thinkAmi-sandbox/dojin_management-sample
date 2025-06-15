@@ -1,18 +1,16 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { eq } from 'drizzle-orm'
-import { NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
 import { setupTestApp } from '../setup-test-app'
+import { testDbUtils } from '../../helpers/db-utils'
 
 describe('GET /books', () => {
   let app: INestApplication
-  let pool: Pool
-  let db: NodePgDatabase<typeof schema>
+  let drizzleService: DrizzleService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -21,25 +19,23 @@ describe('GET /books', () => {
 
     app = moduleRef.createNestApplication()
     setupTestApp(app)
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    })
-    db = drizzle(pool, { schema })
+    drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
   })
 
   afterAll(async () => {
-    await pool.end()
+    await testDbUtils.closeConnection()
     await app.close()
   })
 
   afterEach(async () => {
-    await db.delete(schema.books)
+    // NestJSアプリ内のDrizzleServiceを使ってクリーンアップ
+    await drizzleService.db.delete(schema.books)
   })
 
   it('書籍が存在する場合、全件を一覧表示する', async () => {
-    // Arrange: テストデータを作成
-    await db.insert(schema.books).values([
+    // Arrange: NestJSアプリ内のDrizzleServiceを使ってテストデータを作成
+    await drizzleService.db.insert(schema.books).values([
       {
         title: 'NestJS入門',
         subtitle: '基礎編',
