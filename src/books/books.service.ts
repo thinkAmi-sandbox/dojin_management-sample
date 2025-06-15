@@ -66,4 +66,10 @@ export class BooksService {
 
     return result[0]
   }
+
+  async remove(id: number): Promise<void> {
+    await this.findOne(id)
+
+    await this.drizzleService.db.delete(books).where(eq(books.id, id))
+  }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -109,6 +110,9 @@ export class BooksController {
     if (body._method === 'PUT') {
       return this.update(id, body, res)
     }
+    if (body._method === 'DELETE') {
+      return this.removeViaPost(id, res)
+    }
 
     res.status(404).send('Not Found')
   }
@@ -142,5 +146,16 @@ export class BooksController {
 
     await this.booksService.update(id, updateBookDto)
     res.redirect(`/books/${id}`)
+  }
+
+  @Delete(':id')
+  @Redirect('/books')
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.booksService.remove(id)
+  }
+
+  async removeViaPost(id: number, res: Response) {
+    await this.booksService.remove(id)
+    res.redirect('/books')
   }
 }
