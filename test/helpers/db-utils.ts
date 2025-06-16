@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm'
-import { Pool } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
+import { Pool } from 'pg'
 import * as schema from '../../src/db/schema'
 
 export class TestDbUtils {
@@ -46,6 +46,39 @@ export class TestDbUtils {
         'データベースのクリーンアップでエラーが発生しました:',
         error,
       )
+      throw error
+    }
+  }
+
+  async cleanupRelationalData(): Promise<void> {
+    try {
+      // 中間テーブルのみクリーンアップ（基本データは残す）
+      try {
+        await this.db.execute(sql`DELETE FROM "BookAuthor"`)
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
+      try {
+        await this.db.execute(sql`DELETE FROM "Deadline"`)
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
+    } catch (error) {
+      console.error('関連データのクリーンアップでエラーが発生しました:', error)
+      throw error
+    }
+  }
+
+  async cleanupDeadlines(): Promise<void> {
+    try {
+      // Deadlineテーブルのみクリーンアップ
+      try {
+        await this.db.execute(sql`DELETE FROM "Deadline"`)
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
+    } catch (error) {
+      console.error('締切データのクリーンアップでエラーが発生しました:', error)
       throw error
     }
   }

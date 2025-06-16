@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('GET /books', () => {
   let app: INestApplication
@@ -29,8 +29,8 @@ describe('GET /books', () => {
   })
 
   afterEach(async () => {
-    // NestJSアプリ内のDrizzleServiceを使ってクリーンアップ
-    await drizzleService.db.delete(schema.books)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   it('書籍が存在する場合、全件を一覧表示する', async () => {

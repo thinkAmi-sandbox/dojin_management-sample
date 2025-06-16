@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Authors creation', () => {
   let app: INestApplication
@@ -29,7 +29,8 @@ describe('Authors creation', () => {
   })
 
   afterEach(async () => {
-    await drizzleService.db.delete(schema.authors)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /authors/new', () => {
@@ -154,9 +155,7 @@ describe('Authors creation', () => {
         .expect('Content-Type', /html/)
 
       // Assert: エラーメッセージが表示されることを確認
-      expect(response.text).toMatch(
-        /このメールアドレスは既に使用されています/,
-      )
+      expect(response.text).toMatch(/このメールアドレスは既に使用されています/)
 
       // データベースに新しい執筆者が追加されていないことを確認
       const authors = await drizzleService.db.select().from(schema.authors)

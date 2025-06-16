@@ -1,12 +1,20 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('List Book Authors', () => {
   let app: INestApplication
@@ -24,11 +32,6 @@ describe('List Book Authors', () => {
     setupTestApp(app)
     drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
-
-    // テストデータを完全にクリアしてから開始
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.books)
-    await drizzleService.db.delete(schema.authors)
   })
 
   afterAll(async () => {
@@ -37,16 +40,14 @@ describe('List Book Authors', () => {
   })
 
   beforeEach(async () => {
-    // 各テスト前にクリーンアップ
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.books)
-    await drizzleService.db.delete(schema.authors)
+    // 各テスト前にタイムスタンプベースのユニークなデータを作成
+    const timestamp = Date.now()
 
     // テスト用の書籍を作成
     const bookResult = await drizzleService.db
       .insert(schema.books)
       .values({
-        title: 'テスト書籍',
+        title: `テスト書籍_${timestamp}`,
         subtitle: 'テスト用サブタイトル',
         description: 'テスト用の説明',
         pageCount: 100,
@@ -58,8 +59,8 @@ describe('List Book Authors', () => {
     const author1Result = await drizzleService.db
       .insert(schema.authors)
       .values({
-        name: 'テスト執筆者1',
-        email: 'test1-list@example.com',
+        name: `テスト執筆者1_${timestamp}`,
+        email: `test-author-1-${timestamp}@example.com`,
         bio: 'テスト用執筆者1の経歴',
       })
       .returning()
@@ -68,12 +69,17 @@ describe('List Book Authors', () => {
     const author2Result = await drizzleService.db
       .insert(schema.authors)
       .values({
-        name: 'テスト執筆者2',
-        email: 'test2-list@example.com',
+        name: `テスト執筆者2_${timestamp}`,
+        email: `test-author-2-${timestamp}@example.com`,
         bio: 'テスト用執筆者2の経歴',
       })
       .returning()
     testAuthor2Id = author2Result[0].id
+  })
+
+  afterEach(async () => {
+    // 各テスト後に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /books/:bookId/authors', () => {
@@ -97,13 +103,13 @@ describe('List Book Authors', () => {
         .expect('Content-Type', /html/)
 
       // Assert: 両方の執筆者が表示されていることを確認
-      expect(response.text).toContain('テスト執筆者1')
-      expect(response.text).toContain('test1-list@example.com')
-      expect(response.text).toContain('テスト執筆者2')
-      expect(response.text).toContain('test2-list@example.com')
+      expect(response.text).toContain('テスト執筆者1_')
+      expect(response.text).toMatch(/test-author-1-\d+@example\.com/)
+      expect(response.text).toContain('テスト執筆者2_')
+      expect(response.text).toMatch(/test-author-2-\d+@example\.com/)
 
       // 書籍情報も表示されていることを確認
-      expect(response.text).toContain('テスト書籍')
+      expect(response.text).toContain('テスト書籍_')
     })
 
     it('執筆者の詳細情報（名前、メール、経歴）が表示される', async () => {
@@ -119,8 +125,8 @@ describe('List Book Authors', () => {
         .expect(200)
 
       // Assert: 執筆者の詳細情報が表示されていることを確認
-      expect(response.text).toContain('テスト執筆者1')
-      expect(response.text).toContain('test1-list@example.com')
+      expect(response.text).toContain('テスト執筆者1_')
+      expect(response.text).toMatch(/test-author-1-\d+@example\.com/)
       expect(response.text).toContain('テスト用執筆者1の経歴')
     })
 
@@ -163,7 +169,7 @@ describe('List Book Authors', () => {
 
       // Assert: パンくずリストの各要素が含まれていることを確認
       expect(response.text).toContain('書籍一覧')
-      expect(response.text).toContain('テスト書籍')
+      expect(response.text).toContain('テスト書籍_')
       expect(response.text).toContain('執筆者')
       expect(response.text).toMatch(/href="\/books"/i)
       expect(response.text).toMatch(new RegExp(`href="/books/${testBookId}"`))
@@ -203,8 +209,8 @@ describe('List Book Authors', () => {
         .expect(200)
 
       // Assert: 名前順で表示されていることを確認
-      const author1Index = response.text.indexOf('テスト執筆者1')
-      const author2Index = response.text.indexOf('テスト執筆者2')
+      const author1Index = response.text.indexOf('テスト執筆者1_')
+      const author2Index = response.text.indexOf('テスト執筆者2_')
       expect(author1Index).toBeLessThan(author2Index)
     })
 

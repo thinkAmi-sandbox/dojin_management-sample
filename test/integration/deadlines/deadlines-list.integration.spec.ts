@@ -5,8 +5,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import { type Book, books, deadlines } from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
-import { setupTestApp } from '../setup-test-app'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Deadlines (Integration)', () => {
   let app: INestApplication
@@ -26,6 +26,7 @@ describe('Deadlines (Integration)', () => {
   })
 
   beforeEach(async () => {
+    // 各テストで書籍を新規作成するため、全テーブルをクリーンアップ
     await testDbUtils.cleanupDatabase()
 
     // テスト用の書籍を作成

@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
-import { AuthorsService } from './authors.service'
 import { AuthorsController } from './authors.controller'
-import { AuthorsListView } from './views/authors-list.view'
+import { AuthorsService } from './authors.service'
 import { AuthorDetailView } from './views/author-detail.view'
 import { AuthorEditView } from './views/author-edit.view'
+import { AuthorsListView } from './views/authors-list.view'
 
 @Module({
   controllers: [AuthorsController],

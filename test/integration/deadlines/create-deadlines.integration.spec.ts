@@ -1,12 +1,20 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Deadlines Creation', () => {
   let app: INestApplication
@@ -22,18 +30,6 @@ describe('Deadlines Creation', () => {
     setupTestApp(app)
     drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
-
-    // テスト用の書籍を事前に作成
-    const bookResult = await drizzleService.db
-      .insert(schema.books)
-      .values({
-        title: 'テスト書籍',
-        subtitle: 'テスト用サブタイトル',
-        description: 'テスト用の説明',
-        pageCount: 100,
-      })
-      .returning()
-    testBookId = bookResult[0].id
   })
 
   afterAll(async () => {
@@ -41,9 +37,27 @@ describe('Deadlines Creation', () => {
     await app.close()
   })
 
+  beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
+
+    // 各テストで必要なテストデータを作成（ユニークなデータ）
+    const timestamp = Date.now()
+    const bookResult = await drizzleService.db
+      .insert(schema.books)
+      .values({
+        title: `テスト書籍_${timestamp}`,
+        subtitle: `テスト用サブタイトル_${timestamp}`,
+        description: `テスト用の説明_${timestamp}`,
+        pageCount: 100,
+      })
+      .returning()
+    testBookId = bookResult[0].id
+  })
+
   afterEach(async () => {
-    // NestJSアプリ内のDrizzleServiceを使ってクリーンアップ
-    await drizzleService.db.delete(schema.deadlines)
+    // 各テスト後に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('POST /books/:bookId/deadlines', () => {

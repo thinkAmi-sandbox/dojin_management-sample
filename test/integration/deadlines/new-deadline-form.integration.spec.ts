@@ -1,12 +1,20 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Deadlines New Form', () => {
   let app: INestApplication
@@ -22,28 +30,31 @@ describe('Deadlines New Form', () => {
     setupTestApp(app)
     drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
+  })
 
-    // テスト用の書籍を事前に作成
+  beforeEach(async () => {
+    // 各テストで新しいテストデータを作成
+    const timestamp = Date.now()
     const bookResult = await drizzleService.db
       .insert(schema.books)
       .values({
-        title: 'テスト書籍',
-        subtitle: 'テスト用サブタイトル',
-        description: 'テスト用の説明',
+        title: `テスト書籍_${timestamp}`,
+        subtitle: `テスト用サブタイトル_${timestamp}`,
+        description: `テスト用の説明_${timestamp}`,
         pageCount: 100,
       })
       .returning()
     testBookId = bookResult[0].id
   })
 
+  afterEach(async () => {
+    // すべてのテストデータをクリーンアップ
+    await testDbUtils.cleanupDatabase()
+  })
+
   afterAll(async () => {
     await testDbUtils.closeConnection()
     await app.close()
-  })
-
-  afterEach(async () => {
-    // NestJSアプリ内のDrizzleServiceを使ってクリーンアップ
-    await drizzleService.db.delete(schema.deadlines)
   })
 
   describe('GET /books/:bookId/deadlines/new', () => {
@@ -124,7 +135,7 @@ describe('Deadlines New Form', () => {
 
       // Assert: パンくずリストが含まれている
       expect(response.text).toMatch(/書籍一覧/)
-      expect(response.text).toMatch(/テスト書籍/)
+      expect(response.text).toMatch(/テスト書籍_\d+/)
       expect(response.text).toMatch(/締切一覧/)
       expect(response.text).toMatch(/締切追加/)
     })
@@ -149,7 +160,7 @@ describe('Deadlines New Form', () => {
         .expect(200)
 
       // Assert: 書籍タイトルが表示されている
-      expect(response.text).toContain('テスト書籍')
+      expect(response.text).toMatch(/テスト書籍_\d+/)
     })
 
     it('存在しない書籍IDの場合、404エラーが発生する', async () => {

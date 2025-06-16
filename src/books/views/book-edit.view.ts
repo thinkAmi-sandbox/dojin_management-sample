@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { Book } from '../../db/schema'
 import { ValidationError } from 'class-validator'
+import { Book } from '../../db/schema'
 
 export interface BookEditViewModel {
   title: string

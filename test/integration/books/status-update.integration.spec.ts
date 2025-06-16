@@ -4,10 +4,10 @@ import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { books } from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Books Status Update (Integration)', () => {
   let app: INestApplication
@@ -30,7 +30,8 @@ describe('Books Status Update (Integration)', () => {
   })
 
   afterEach(async () => {
-    await drizzleService.db.delete(books)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /books/:bookId/status/edit', () => {

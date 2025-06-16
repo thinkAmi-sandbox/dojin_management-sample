@@ -1,7 +1,7 @@
+import { join } from 'path'
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { join } from 'path'
 import * as dotenv from 'dotenv'
 import * as expressLayouts from 'express-ejs-layouts'
 import * as methodOverride from 'method-override'

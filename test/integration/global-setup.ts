@@ -1,25 +1,14 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
 import * as dotenv from 'dotenv'
-import * as schema from '../../src/db/schema'
+import { testDbUtils } from '../helpers/db-utils'
 
 // 環境変数を読み込み
 dotenv.config()
 
-let globalPool: Pool
-let globalDb: ReturnType<typeof drizzle>
-
 export async function setupGlobalDatabase() {
   console.log('Setting up global test database...')
 
-  globalPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
-  globalDb = drizzle(globalPool, { schema })
-
-  // テスト開始前に全データを削除
-  await globalDb.delete(schema.books)
+  // testDbUtilsを使用して全テーブルをクリーンアップ
+  await testDbUtils.cleanupDatabase()
 
   console.log('Global test database setup complete')
 }
@@ -27,11 +16,9 @@ export async function setupGlobalDatabase() {
 export async function teardownGlobalDatabase() {
   console.log('Tearing down global test database...')
 
-  if (globalDb && globalPool) {
-    // テスト終了後も全データを削除
-    await globalDb.delete(schema.books)
-    await globalPool.end()
-  }
+  // testDbUtilsを使用して全テーブルをクリーンアップ
+  await testDbUtils.cleanupDatabase()
+  await testDbUtils.closeConnection()
 
   console.log('Global test database teardown complete')
 }

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { eq } from 'drizzle-orm'
-import { DrizzleService } from '../drizzle/drizzle.service'
 import * as schema from '../db/schema'
+import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateAuthorDto } from './dto/create-author.dto'
 import { UpdateAuthorDto } from './dto/update-author.dto'
 

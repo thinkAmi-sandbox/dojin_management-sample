@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { books } from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Books Show (Integration)', () => {
   let app: INestApplication
@@ -29,7 +29,8 @@ describe('Books Show (Integration)', () => {
   })
 
   afterEach(async () => {
-    await drizzleService.db.delete(books)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /books/:id', () => {

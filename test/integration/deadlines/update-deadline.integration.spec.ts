@@ -2,16 +2,26 @@ import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { eq } from 'drizzle-orm'
 import request from 'supertest'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { books, deadlines } from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Deadlines Update (Integration)', () => {
   let app: INestApplication
   let drizzleService: DrizzleService
+  let testBookId: number
+  let testDeadlineId: number
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -24,44 +34,49 @@ describe('Deadlines Update (Integration)', () => {
     await app.init()
   })
 
+  beforeEach(async () => {
+    // 各テストで新しいテストデータを作成
+    const timestamp = Date.now()
+    const [testBook] = await drizzleService.db
+      .insert(books)
+      .values({
+        title: `テスト書籍_${timestamp}`,
+      })
+      .returning()
+    testBookId = testBook.id
+
+    const [testDeadline] = await drizzleService.db
+      .insert(deadlines)
+      .values({
+        bookId: testBookId,
+        title: `テスト締切_${timestamp}`,
+        dueDate: new Date('2024-12-31'),
+        description: `テスト説明_${timestamp}`,
+      })
+      .returning()
+    testDeadlineId = testDeadline.id
+  })
+
+  afterEach(async () => {
+    // すべてのテストデータをクリーンアップ
+    await testDbUtils.cleanupDatabase()
+  })
+
   afterAll(async () => {
     await testDbUtils.closeConnection()
     await app.close()
   })
 
-  afterEach(async () => {
-    await drizzleService.db.delete(deadlines)
-    await drizzleService.db.delete(books)
-  })
-
   describe('GET /deadlines/:id/edit', () => {
     it('既存の締切の編集フォームを表示すること', async () => {
-      // テストデータの準備
-      const [testBook] = await drizzleService.db
-        .insert(books)
-        .values({
-          title: 'テスト書籍',
-        })
-        .returning()
-
-      const [testDeadline] = await drizzleService.db
-        .insert(deadlines)
-        .values({
-          bookId: testBook.id,
-          title: 'テスト締切',
-          dueDate: new Date('2024-12-31'),
-          description: 'テスト説明',
-        })
-        .returning()
-
       const response = await request(app.getHttpServer())
-        .get(`/deadlines/${testDeadline.id}/edit`)
+        .get(`/deadlines/${testDeadlineId}/edit`)
         .expect(200)
 
       expect(response.text).toContain('締切編集')
-      expect(response.text).toContain(testDeadline.title)
+      expect(response.text).toMatch(/テスト締切_\d+/)
       expect(response.text).toContain('2024-12-31')
-      expect(response.text).toContain(testDeadline.description)
+      expect(response.text).toMatch(/テスト説明_\d+/)
       expect(response.text).toContain('name="_method" value="PUT"')
     })
 
@@ -74,24 +89,6 @@ describe('Deadlines Update (Integration)', () => {
 
   describe('PUT /deadlines/:id', () => {
     it('締切情報を正常に更新すること', async () => {
-      // テストデータの準備
-      const [testBook] = await drizzleService.db
-        .insert(books)
-        .values({
-          title: 'テスト書籍',
-        })
-        .returning()
-
-      const [testDeadline] = await drizzleService.db
-        .insert(deadlines)
-        .values({
-          bookId: testBook.id,
-          title: '更新前タイトル',
-          dueDate: new Date('2024-06-30'),
-          description: '更新前説明',
-        })
-        .returning()
-
       const updateData = {
         title: '更新後タイトル',
         dueDate: '2024-12-31',
@@ -100,16 +97,16 @@ describe('Deadlines Update (Integration)', () => {
       }
 
       await request(app.getHttpServer())
-        .post(`/deadlines/${testDeadline.id}`)
+        .post(`/deadlines/${testDeadlineId}`)
         .send(updateData)
         .expect(302)
-        .expect('Location', `/books/${testBook.id}/deadlines`)
+        .expect('Location', `/books/${testBookId}/deadlines`)
 
       // 更新されたデータを確認
       const [updatedDeadline] = await drizzleService.db
         .select()
         .from(deadlines)
-        .where(eq(deadlines.id, testDeadline.id))
+        .where(eq(deadlines.id, testDeadlineId))
 
       expect(updatedDeadline.title).toBe('更新後タイトル')
       expect(updatedDeadline.dueDate.toISOString().split('T')[0]).toBe(
@@ -119,22 +116,6 @@ describe('Deadlines Update (Integration)', () => {
     })
 
     it('必須フィールドが空の場合はバリデーションエラーとなること', async () => {
-      const [testBook] = await drizzleService.db
-        .insert(books)
-        .values({
-          title: 'テスト書籍',
-        })
-        .returning()
-
-      const [testDeadline] = await drizzleService.db
-        .insert(deadlines)
-        .values({
-          bookId: testBook.id,
-          title: 'テスト締切',
-          dueDate: new Date('2024-12-31'),
-        })
-        .returning()
-
       const updateData = {
         title: '',
         dueDate: '',
@@ -142,7 +123,7 @@ describe('Deadlines Update (Integration)', () => {
       }
 
       const response = await request(app.getHttpServer())
-        .post(`/deadlines/${testDeadline.id}`)
+        .post(`/deadlines/${testDeadlineId}`)
         .send(updateData)
         .expect(200)
 

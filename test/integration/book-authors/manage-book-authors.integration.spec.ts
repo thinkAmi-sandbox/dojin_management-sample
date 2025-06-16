@@ -1,12 +1,20 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Book Authors Management (Integration)', () => {
   let app: INestApplication
@@ -24,38 +32,45 @@ describe('Book Authors Management (Integration)', () => {
     setupTestApp(app)
     drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
+  })
 
-    // 既存データをクリーンアップ（外部キー制約の順序に注意）
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.deadlines) // 書籍に依存
-    await drizzleService.db.delete(schema.authors)
-    await drizzleService.db.delete(schema.books)
+  afterAll(async () => {
+    await testDbUtils.closeConnection()
+    await app.close()
+  })
 
-    // テスト用の書籍を事前に作成
+  beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
+
+    // 各テストで必要なテストデータを作成（ユニークなデータ）
+    const timestamp = Date.now()
+
+    // テスト用の書籍を作成
     const bookResult = await drizzleService.db
       .insert(schema.books)
       .values({
-        title: 'テスト書籍',
-        subtitle: 'テスト用サブタイトル',
-        description: 'テスト用の説明',
+        title: `テスト書籍_${timestamp}`,
+        subtitle: `テスト用サブタイトル_${timestamp}`,
+        description: `テスト用の説明_${timestamp}`,
         pageCount: 100,
       })
       .returning()
     testBookId = bookResult[0].id
 
-    // テスト用の執筆者を事前に作成
+    // テスト用の執筆者を作成
     const authorsResult = await drizzleService.db
       .insert(schema.authors)
       .values([
         {
-          name: 'テスト執筆者1',
-          email: 'manage-test-author1@example.com',
-          bio: 'テスト用執筆者1のプロフィール',
+          name: `テスト執筆者1_${timestamp}`,
+          email: `manage-test-author1-${timestamp}@example.com`,
+          bio: `テスト用執筆者1のプロフィール_${timestamp}`,
         },
         {
-          name: 'テスト執筆者2',
-          email: 'manage-test-author2@example.com',
-          bio: 'テスト用執筆者2のプロフィール',
+          name: `テスト執筆者2_${timestamp}`,
+          email: `manage-test-author2-${timestamp}@example.com`,
+          bio: `テスト用執筆者2のプロフィール_${timestamp}`,
         },
       ])
       .returning()
@@ -63,25 +78,9 @@ describe('Book Authors Management (Integration)', () => {
     testAuthor2Id = authorsResult[1].id
   })
 
-  afterAll(async () => {
-    // テストデータをクリーンアップ（外部キー制約の順序に注意）
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.deadlines) // 書籍に依存
-    await drizzleService.db.delete(schema.authors)
-    await drizzleService.db.delete(schema.books)
-    
-    await testDbUtils.closeConnection()
-    await app.close()
-  })
-
-  beforeEach(async () => {
-    // 中間テーブルのデータをクリーンアップ（テスト前）
-    await drizzleService.db.delete(schema.bookAuthors)
-  })
-
   afterEach(async () => {
-    // 中間テーブルのデータをクリーンアップ（テスト後）
-    await drizzleService.db.delete(schema.bookAuthors)
+    // 各テスト後に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /books/:bookId/authors', () => {

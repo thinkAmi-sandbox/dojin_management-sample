@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { describe, beforeEach, it, expect, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BooksController } from './books.controller'
 import { BooksService } from './books.service'
 import { BooksListView } from './views/books-list.view'

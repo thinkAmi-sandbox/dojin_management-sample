@@ -1,6 +1,6 @@
+import { join } from 'path'
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { join } from 'path'
 
 export function setupTestApp(app: INestApplication): void {
   const expressApp = app as NestExpressApplication

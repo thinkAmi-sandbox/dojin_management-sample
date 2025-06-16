@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthorsService } from './authors.service'
 import { DrizzleService } from '../drizzle/drizzle.service'
+import { AuthorsService } from './authors.service'
 
 describe('AuthorsService', () => {
   let service: AuthorsService

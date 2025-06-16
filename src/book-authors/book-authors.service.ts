@@ -4,8 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { and, eq } from 'drizzle-orm'
-import { DrizzleService } from '../drizzle/drizzle.service'
 import * as schema from '../db/schema'
+import { DrizzleService } from '../drizzle/drizzle.service'
 import { AddAuthorToBookDto } from './dto/add-author-to-book.dto'
 
 @Injectable()

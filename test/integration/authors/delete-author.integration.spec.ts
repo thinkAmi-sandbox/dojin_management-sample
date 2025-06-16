@@ -1,13 +1,13 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { eq } from 'drizzle-orm'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('DELETE /authors/:id', () => {
   let app: INestApplication
@@ -30,9 +30,8 @@ describe('DELETE /authors/:id', () => {
   })
 
   afterEach(async () => {
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.authors)
-    await drizzleService.db.delete(schema.books)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('DELETE /authors/:id (via POST with _method=DELETE)', () => {

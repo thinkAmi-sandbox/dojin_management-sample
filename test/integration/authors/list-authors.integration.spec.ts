@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('GET /authors', () => {
   let app: INestApplication
@@ -29,7 +29,8 @@ describe('GET /authors', () => {
   })
 
   afterEach(async () => {
-    await drizzleService.db.delete(schema.authors)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   it('執筆者が存在する場合、全件を一覧表示する', async () => {

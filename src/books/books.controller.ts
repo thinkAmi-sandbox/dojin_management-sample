@@ -14,8 +14,8 @@ import {
 import type { Response } from 'express'
 import { BooksService } from './books.service'
 import { CreateBookDto } from './dto/create-book.dto'
-import { UpdateBookDto } from './dto/update-book.dto'
 import { UpdateBookStatusDto } from './dto/update-book-status.dto'
+import { UpdateBookDto } from './dto/update-book.dto'
 import { BooksListView } from './views/books-list.view'
 
 @Controller('books')

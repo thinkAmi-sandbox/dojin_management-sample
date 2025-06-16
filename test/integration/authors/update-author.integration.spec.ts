@@ -1,13 +1,13 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { eq } from 'drizzle-orm'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Authors update', () => {
   let app: INestApplication
@@ -30,7 +30,8 @@ describe('Authors update', () => {
   })
 
   afterEach(async () => {
-    await drizzleService.db.delete(schema.authors)
+    // testDbUtilsを使用して全テーブルをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /authors/:id/edit', () => {
@@ -234,9 +235,7 @@ describe('Authors update', () => {
         .expect('Content-Type', /html/)
 
       // Assert: エラーメッセージが表示されることを確認
-      expect(response.text).toMatch(
-        /このメールアドレスは既に使用されています/,
-      )
+      expect(response.text).toMatch(/このメールアドレスは既に使用されています/)
 
       // データベースが更新されていないことを確認
       const unchangedAuthor = await drizzleService.db

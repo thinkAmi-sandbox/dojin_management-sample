@@ -1,12 +1,20 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import * as schema from '../../../src/db/schema'
-import { setupTestApp } from '../setup-test-app'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Add Author to Book', () => {
   let app: INestApplication
@@ -23,11 +31,6 @@ describe('Add Author to Book', () => {
     setupTestApp(app)
     drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
-
-    // テストデータを完全にクリアしてから開始
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.books)
-    await drizzleService.db.delete(schema.authors)
   })
 
   afterAll(async () => {
@@ -36,18 +39,19 @@ describe('Add Author to Book', () => {
   })
 
   beforeEach(async () => {
-    // 各テスト前にクリーンアップ
-    await drizzleService.db.delete(schema.bookAuthors)
-    await drizzleService.db.delete(schema.books)
-    await drizzleService.db.delete(schema.authors)
+    // 各テスト前に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
+
+    // 各テストで必要なテストデータを作成（ユニークなデータ）
+    const timestamp = Date.now()
 
     // テスト用の書籍を作成
     const bookResult = await drizzleService.db
       .insert(schema.books)
       .values({
-        title: 'テスト書籍',
-        subtitle: 'テスト用サブタイトル',
-        description: 'テスト用の説明',
+        title: `テスト書籍_${timestamp}`,
+        subtitle: `テスト用サブタイトル_${timestamp}`,
+        description: `テスト用の説明_${timestamp}`,
         pageCount: 100,
       })
       .returning()
@@ -57,12 +61,17 @@ describe('Add Author to Book', () => {
     const authorResult = await drizzleService.db
       .insert(schema.authors)
       .values({
-        name: 'テスト執筆者',
-        email: 'test-add-author-to-book@example.com',
-        bio: 'テスト用執筆者の経歴',
+        name: `テスト執筆者_${timestamp}`,
+        email: `test-add-author-${timestamp}@example.com`,
+        bio: `テスト用執筆者の経歴_${timestamp}`,
       })
       .returning()
     testAuthorId = authorResult[0].id
+  })
+
+  afterEach(async () => {
+    // 各テスト後に全データをクリーンアップ
+    await testDbUtils.cleanupDatabase()
   })
 
   describe('GET /books/:bookId/authors', () => {

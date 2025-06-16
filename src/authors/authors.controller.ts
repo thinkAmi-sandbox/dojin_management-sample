@@ -15,9 +15,9 @@ import type { Response } from 'express'
 import { AuthorsService } from './authors.service'
 import { CreateAuthorDto } from './dto/create-author.dto'
 import { UpdateAuthorDto } from './dto/update-author.dto'
-import { AuthorsListView } from './views/authors-list.view'
 import { AuthorDetailView } from './views/author-detail.view'
 import { AuthorEditView } from './views/author-edit.view'
+import { AuthorsListView } from './views/authors-list.view'
 
 @Controller('authors')
 export class AuthorsController {

@@ -3,8 +3,8 @@ import { eq } from 'drizzle-orm'
 import { Book, NewBook, books } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateBookDto } from './dto/create-book.dto'
-import { UpdateBookDto } from './dto/update-book.dto'
 import { UpdateBookStatusDto } from './dto/update-book-status.dto'
+import { UpdateBookDto } from './dto/update-book.dto'
 
 @Injectable()
 export class BooksService {
