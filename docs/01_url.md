@@ -1,7 +1,7 @@
-# 執筆管理機能 URL設計
+# 同人誌管理アプリケーション URL設計
 
 ## 概要
-本ドキュメントは、同人誌管理Webアプリケーションの執筆管理機能におけるURL設計を定義します。
+本ドキュメントは、同人誌管理Webアプリケーションの全体的なURL設計を定義します。
 
 ### 基本方針
 - MPA（Multi Page Application）として実装
@@ -56,6 +56,39 @@
 | GET | `/books/:bookId/authors/add` | 執筆者追加フォーム |
 | POST | `/books/:bookId/authors` | 執筆者追加処理 |
 | DELETE | `/books/:bookId/authors/:authorId` | 執筆者削除処理（_method=DELETE） |
+
+### 印刷所（Printing Companies）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/printing-companies` | 印刷所一覧ページ |
+| GET | `/printing-companies/new` | 新規印刷所登録フォーム |
+| POST | `/printing-companies` | 印刷所作成処理 |
+| GET | `/printing-companies/:id` | 印刷所詳細ページ（入稿履歴含む） |
+| GET | `/printing-companies/:id/edit` | 印刷所編集フォーム |
+| PUT | `/printing-companies/:id` | 印刷所更新処理（_method=PUT） |
+| DELETE | `/printing-companies/:id` | 印刷所削除処理（_method=DELETE） |
+
+### 入稿（Submissions）- 基本機能
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/submissions` | 全入稿一覧ページ |
+| GET | `/submissions/in-progress` | 進行中の入稿一覧 |
+| GET | `/submissions/costs` | コスト一覧・簡易集計 |
+| GET | `/books/:bookId/submissions` | 書籍の入稿履歴一覧 |
+| GET | `/books/:bookId/submissions/new` | 新規入稿作成フォーム |
+| POST | `/books/:bookId/submissions` | 入稿作成処理 |
+| GET | `/submissions/:id` | 入稿詳細ページ |
+| GET | `/submissions/:id/edit` | 入稿編集フォーム |
+| PUT | `/submissions/:id` | 入稿更新処理（_method=PUT） |
+| DELETE | `/submissions/:id` | 入稿削除処理（_method=DELETE） |
+
+### 入稿（Submissions）- 段階的更新
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/submissions/:id/status/edit` | ステータス更新フォーム |
+| PUT | `/submissions/:id/status` | ステータス更新処理（_method=PUT） |
+| GET | `/submissions/:id/costs/edit` | コスト情報更新フォーム |
+| PUT | `/submissions/:id/costs` | コスト情報更新処理（_method=PUT） |
 
 ## 実装時の注意事項
 
