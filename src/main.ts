@@ -25,7 +25,12 @@ async function bootstrap() {
 
   // EJSの設定
   app.useStaticAssets(join(__dirname, '..', 'public'))
-  app.setBaseViewsDir(join(__dirname, 'views'))
+  // __dirnameがdist/srcを含むかどうかでビルド後か判定
+  const isBuilt = __dirname.includes('dist')
+  const viewsPath = isBuilt
+    ? join(__dirname, '..', 'views') // dist/views
+    : join(__dirname, 'views') // src/views
+  app.setBaseViewsDir(viewsPath)
   app.setViewEngine('ejs')
 
   // HTTPメソッドオーバーライドの設定
