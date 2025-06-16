@@ -1,5 +1,15 @@
-import { Controller, Get, Param, ParseIntPipe, Render } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Redirect,
+  Render,
+} from '@nestjs/common'
 import { DeadlinesService } from './deadlines.service'
+import { CreateDeadlineDto } from './dto/create-deadline.dto'
 
 @Controller('books/:bookId/deadlines')
 export class DeadlinesController {
@@ -33,5 +43,15 @@ export class DeadlinesController {
         { name: '締切一覧', url: null },
       ],
     }
+  }
+
+  @Post()
+  @Redirect()
+  async create(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Body() createDeadlineDto: CreateDeadlineDto,
+  ) {
+    await this.deadlinesService.create(bookId, createDeadlineDto)
+    return { url: `/books/${bookId}/deadlines` }
   }
 }

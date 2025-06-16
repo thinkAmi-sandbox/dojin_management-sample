@@ -17,7 +17,7 @@ export class DeadlinesService {
       .limit(1)
 
     if (!book) {
-      throw new NotFoundException(`Book with ID ${bookId} not found`)
+      throw new NotFoundException(`書籍ID ${bookId} が見つかりません`)
     }
 
     // 締切一覧を取得
@@ -36,7 +36,7 @@ export class DeadlinesService {
       .limit(1)
 
     if (!book) {
-      throw new NotFoundException(`Book with ID ${bookId} not found`)
+      throw new NotFoundException(`書籍ID ${bookId} が見つかりません`)
     }
 
     return book
