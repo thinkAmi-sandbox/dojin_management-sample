@@ -124,12 +124,8 @@
           "name": "Deadline_bookId_Book_id_fk",
           "tableFrom": "Deadline",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -145,12 +141,7 @@
     "public.writing_status": {
       "name": "writing_status",
       "schema": "public",
-      "values": [
-        "planning",
-        "writing",
-        "editing",
-        "completed"
-      ]
+      "values": ["planning", "writing", "editing", "completed"]
     }
   },
   "schemas": {},

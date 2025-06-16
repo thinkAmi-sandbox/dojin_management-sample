@@ -17,6 +17,14 @@ export class TestDbUtils {
   async cleanupDatabase(): Promise<void> {
     try {
       await this.db.execute(sql`TRUNCATE TABLE "Book" RESTART IDENTITY CASCADE`)
+      // Deadlineテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "Deadline" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
     } catch (error) {
       console.error(
         'データベースのクリーンアップでエラーが発生しました:',
