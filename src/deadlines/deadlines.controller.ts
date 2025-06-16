@@ -45,6 +45,32 @@ export class DeadlinesController {
     }
   }
 
+  @Get('new')
+  @Render('deadlines/new')
+  async renderNewForm(@Param('bookId', ParseIntPipe) bookId: number) {
+    const book = await this.deadlinesService.findBook(bookId)
+
+    return {
+      title: '締切追加',
+      book: {
+        id: book.id,
+        title: book.title,
+      },
+      deadline: {
+        title: '',
+        dueDate: '',
+        description: '',
+      },
+      errors: {},
+      breadcrumbs: [
+        { name: '書籍一覧', url: '/books', isLast: false },
+        { name: book.title, url: `/books/${book.id}`, isLast: false },
+        { name: '締切一覧', url: `/books/${book.id}/deadlines`, isLast: false },
+        { name: '締切追加', url: null, isLast: true },
+      ],
+    }
+  }
+
   @Post()
   @Redirect()
   async create(
