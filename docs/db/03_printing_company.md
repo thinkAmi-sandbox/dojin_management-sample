@@ -1,5 +1,25 @@
 # 印刷所（PrintingCompanies）テーブル設計
 
+## 実装状況
+
+**実装完了日**: 2025/06/16  
+**実装状況**: ✅ 完了（Phase 1-1）  
+**テスト状況**: 統合テスト4件実装済み・全通過  
+**動作確認**: 開発・本番環境両方で動作確認済み
+
+### 実装済み機能
+- ✅ PrintingCompanyテーブル実装・マイグレーション完了
+- ✅ 印刷所一覧表示（GET /printing-companies）
+- ✅ 印刷所詳細表示（GET /printing-companies/:id）
+- ✅ レスポンシブ対応のEJSビューファイル
+- ✅ 統合テストスイート
+- ✅ ビューファイル設定（開発・本番環境対応）
+
+### 実装中/予定機能
+- 🚧 新規印刷所登録（Phase 1-2）
+- ⏳ 印刷所編集機能（Phase 2）
+- ⏳ 印刷所削除機能（Phase 3）
+
 ## テーブル定義
 
 ```typescript
@@ -129,16 +149,18 @@ export class UpdatePrintingCompanyDto {
 }
 ```
 
-## 実装予定機能
+## APIエンドポイント
 
-### API エンドポイント
-- `GET /printing-companies` - 印刷所一覧取得
-- `GET /printing-companies/new` - 印刷所追加フォーム表示
-- `POST /printing-companies` - 印刷所作成処理
-- `GET /printing-companies/:id` - 印刷所詳細表示
-- `GET /printing-companies/:id/edit` - 印刷所編集フォーム表示
-- `PUT /printing-companies/:id` - 印刷所更新処理
-- `DELETE /printing-companies/:id` - 印刷所削除処理
+### 実装済み
+- ✅ `GET /printing-companies` - 印刷所一覧取得
+- ✅ `GET /printing-companies/:id` - 印刷所詳細表示
+
+### 実装予定
+- 🚧 `GET /printing-companies/new` - 印刷所追加フォーム表示
+- 🚧 `POST /printing-companies` - 印刷所作成処理  
+- ⏳ `GET /printing-companies/:id/edit` - 印刷所編集フォーム表示
+- ⏳ `PUT /printing-companies/:id` - 印刷所更新処理
+- ⏳ `DELETE /printing-companies/:id` - 印刷所削除処理
 
 ### 関連機能
 - **入稿履歴表示**: 印刷所ごとの入稿履歴一覧

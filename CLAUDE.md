@@ -146,6 +146,7 @@ export class BooksController {
   - `Deadline`: 締切情報の管理（タイトル、締切日、説明、書籍との関連）
   - `Author`: 執筆者情報の管理（名前、メールアドレス、プロフィール）
   - `BookAuthor`: 書籍と執筆者の多対多関連テーブル
+  - `PrintingCompany`: 印刷所情報の管理（印刷所名、公式サイト、備考）
 
 ### テスト設計
 - 詳細は`docs/test/overview.md`を参照
@@ -259,6 +260,36 @@ EJSテンプレートシステムやビューファイルを扱う機能を実�
 - `nest-cli.json` の `assets` 設定でビューファイルが適切にコピーされるか確認
 - ビルド後の `dist/` ディレクトリ構造とアプリケーションのパス設定が整合しているか確認
 
+#### **YOU MUST**: 正しいnest-cli.json設定
+```json
+{
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "assets": ["views/**/*"]
+  }
+}
+```
+- **注意**: `"src/views/**/*"` ではなく `"views/**/*"` を使用
+- **注意**: 複雑なoutDir指定は避け、シンプルな形式を使用
+
+#### **YOU MUST**: 環境対応のmain.ts設定
+```typescript
+// __dirnameがdist/srcを含むかどうかでビルド後か判定
+const isBuilt = __dirname.includes('dist')
+const viewsPath = isBuilt
+  ? join(__dirname, '..', 'views')  // dist/views
+  : join(__dirname, 'views')        // src/views
+app.setBaseViewsDir(viewsPath)
+```
+
+#### よくある設定エラーと対処法
+- **エラー**: "Failed to lookup view" in views directory "/path/to/dist/src/views"
+  - **原因**: nest-cli.jsonでビューファイルがコピーされていない
+  - **対処**: assets設定を `"views/**/*"` に修正
+- **エラー**: 開発環境では動作するが本番ビルドでエラー
+  - **原因**: main.tsで環境別パス設定ができていない
+  - **対処**: 上記の環境判定ロジックを追加
+
 #### 複数環境での動作確認
 - **YOU MUST**: 開発サーバーでの動作確認はユーザーが行います
 - **YOU MUST**: ビルド後の実行での動作確認はユーザーが行います  
@@ -268,8 +299,9 @@ EJSテンプレートシステムやビューファイルを扱う機能を実�
 #### パス設定の論理的検証
 - `__dirname` とビルド後のディレクトリ構造の関係を理解
 - `setBaseViewsDir()` で指定するパスが実際のファイル配置と一致するか確認
+- 開発時: `src/views/` → 本番時: `dist/views/` となることを確認
 
-これらの検証を怠ると、開発環境では動作するが本番ビルドやIDE実行で失敗する問題が発生する可能性があります。
+これらの検証を怠ると、開発環境では動作するが本番ビルドやIDE実行で失敗する問題が発生する可能性があります。詳細は `docs/02_view_configuration.md` を参照してください。
 
 
 ### **YOU MUST**: Gitコミット時の必須ルール
