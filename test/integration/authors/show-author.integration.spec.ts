@@ -78,8 +78,8 @@ describe('GET /authors/:id', () => {
     // Assert: HTML内容を確認
     expect(response.text).toContain('佐藤次郎')
     // emailとbioがnullの場合の表示を確認
-    expect(response.text).toMatch(/メール.*未設定|メールアドレス.*なし/i)
-    expect(response.text).toMatch(/自己紹介.*未設定|プロフィール.*なし/i)
+    expect(response.text).toMatch(/メール未設定/i)
+    expect(response.text).toMatch(/自己紹介未設定/i)
   })
 
   it('存在しない執筆者IDの場合、404エラーを返す', async () => {

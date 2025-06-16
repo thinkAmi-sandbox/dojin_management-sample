@@ -1,0 +1,93 @@
+<div class="page-header">
+  <h1><%= title %></h1>
+  <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs }) %>
+</div>
+
+<div class="authors-list" style="max-width: 1000px;">
+  <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    
+    <div class="book-info" style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+      <h2 style="margin: 0; font-size: 18px; color: #333;">
+        書籍: <%= book.title %>
+      </h2>
+    </div>
+
+    <div class="authors-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0; color: #333;">
+        執筆者一覧 (<%= authors.length %>人)
+      </h3>
+      <a 
+        href="/books/<%= book.id %>/authors/add"
+        style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        執筆者を追加
+      </a>
+    </div>
+
+    <% if (authors.length === 0) { %>
+      <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 16px; margin-bottom: 20px;">
+          この書籍には執筆者が登録されていません
+        </p>
+        <a 
+          href="/books/<%= book.id %>/authors/add"
+          style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 16px;"
+        >
+          最初の執筆者を追加
+        </a>
+      </div>
+    <% } else { %>
+      <div class="authors-grid" style="display: grid; gap: 20px;">
+        <% authors.forEach(function(author) { %>
+          <div class="author-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="author-info" style="flex: 1;">
+              <h4 style="margin: 0 0 10px 0; color: #333; font-size: 18px;">
+                <%= author.name %>
+              </h4>
+              
+              <% if (author.email) { %>
+                <p style="margin: 5px 0; color: #666;">
+                  <strong>メール:</strong> <%= author.email %>
+                </p>
+              <% } %>
+              
+              <% if (author.bio) { %>
+                <p style="margin: 10px 0 0 0; color: #555; line-height: 1.5;">
+                  <%= author.bio %>
+                </p>
+              <% } %>
+            </div>
+            
+            <div class="author-actions" style="margin-left: 20px;">
+              <a 
+                href="/authors/<%= author.id %>"
+                style="display: inline-block; padding: 8px 16px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-right: 10px; font-size: 14px;"
+              >
+                詳細
+              </a>
+              <form method="post" action="/books/<%= book.id %>/authors/<%= author.id %>" style="display: inline;">
+                <input type="hidden" name="_method" value="DELETE">
+                <button 
+                  type="submit"
+                  onclick="return confirm('この執筆者を書籍から削除しますか？')"
+                  style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;"
+                >
+                  削除
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <div class="actions" style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #eee; margin-top: 30px;">
+      <a 
+        href="/books/<%= book.id %>"
+        style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        書籍詳細に戻る
+      </a>
+    </div>
+  </div>
+</div>

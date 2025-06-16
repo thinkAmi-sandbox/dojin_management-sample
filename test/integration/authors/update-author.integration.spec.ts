@@ -235,7 +235,7 @@ describe('Authors update', () => {
 
       // Assert: エラーメッセージが表示されることを確認
       expect(response.text).toMatch(
-        /メールアドレス.*既に使用|email.*already exists/i,
+        /このメールアドレスは既に使用されています/,
       )
 
       // データベースが更新されていないことを確認

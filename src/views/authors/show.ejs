@@ -142,12 +142,22 @@
             </div>
             <div class="info-row">
                 <div class="info-label">メールアドレス</div>
-                <div class="info-value"><%= author.email %></div>
+                <div class="info-value">
+                    <% if (author.email) { %>
+                        <%= author.email %>
+                    <% } else { %>
+                        <span style="color: #999;">メール未設定</span>
+                    <% } %>
+                </div>
             </div>
             <div class="info-row">
                 <div class="info-label">自己紹介</div>
                 <div class="info-value">
-                    <div class="bio-content"><%= author.bio %></div>
+                    <% if (author.bio) { %>
+                        <div class="bio-content"><%= author.bio %></div>
+                    <% } else { %>
+                        <span style="color: #999;">自己紹介未設定</span>
+                    <% } %>
                 </div>
             </div>
         </div>

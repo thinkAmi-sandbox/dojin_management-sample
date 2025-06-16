@@ -69,7 +69,7 @@ export class AuthorsController {
       await this.authorsService.create(createAuthorDto)
       res.redirect('/authors')
     } catch (error) {
-      if (error.code === '23505') {
+      if (error.code === '23505' || error.cause?.code === '23505') {
         return res.status(200).render('authors/new', {
           title: '新規執筆者登録',
           author: {
@@ -130,7 +130,7 @@ export class AuthorsController {
       await this.authorsService.update(id, updateAuthorDto)
       res.redirect(`/authors/${id}`)
     } catch (error) {
-      if (error.code === '23505') {
+      if (error.code === '23505' || error.cause?.code === '23505') {
         const author = await this.authorsService.findOne(id)
 
         return res.status(200).render('authors/edit', {

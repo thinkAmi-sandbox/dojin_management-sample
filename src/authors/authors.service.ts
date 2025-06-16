@@ -35,12 +35,17 @@ export class AuthorsService {
       bio: bio && bio.trim() !== '' ? bio : null,
     }
 
-    const [author] = await this.drizzleService.db
-      .insert(schema.authors)
-      .values(insertData)
-      .returning()
+    try {
+      const [author] = await this.drizzleService.db
+        .insert(schema.authors)
+        .values(insertData)
+        .returning()
 
-    return author
+      return author
+    } catch (error) {
+      // PostgreSQLのユニーク制約違反エラーをそのまま投げる
+      throw error
+    }
   }
 
   async update(id: number, updateAuthorDto: UpdateAuthorDto) {
@@ -54,13 +59,18 @@ export class AuthorsService {
       bio: bio && bio.trim() !== '' ? bio : null,
     }
 
-    const [updatedAuthor] = await this.drizzleService.db
-      .update(schema.authors)
-      .set(updateData)
-      .where(eq(schema.authors.id, id))
-      .returning()
+    try {
+      const [updatedAuthor] = await this.drizzleService.db
+        .update(schema.authors)
+        .set(updateData)
+        .where(eq(schema.authors.id, id))
+        .returning()
 
-    return updatedAuthor
+      return updatedAuthor
+    } catch (error) {
+      // PostgreSQLのユニーク制約違反エラーをそのまま投げる
+      throw error
+    }
   }
 
   async remove(id: number) {

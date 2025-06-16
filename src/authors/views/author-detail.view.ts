@@ -9,8 +9,8 @@ export class AuthorDetailView {
       author: {
         id: author.id,
         name: author.name,
-        email: author.email || '未設定',
-        bio: author.bio || '自己紹介未設定',
+        email: author.email,
+        bio: author.bio,
         formattedCreatedAt: author.createdAt.toLocaleDateString('ja-JP'),
         formattedUpdatedAt: author.updatedAt.toLocaleDateString('ja-JP'),
         editUrl: `/authors/${author.id}/edit`,

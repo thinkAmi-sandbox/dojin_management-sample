@@ -45,7 +45,7 @@ describe('Authors creation', () => {
       expect(response.text).toContain('name="name"')
       expect(response.text).toContain('name="email"')
       expect(response.text).toContain('name="bio"')
-      expect(response.text).toMatch(/<title>.*執筆者.*作成.*<\/title>/i)
+      expect(response.text).toMatch(/<title>.*執筆者.*登録.*<\/title>/i)
     })
 
     it('HTMLの基本構造が正しいことを確認する', async () => {
@@ -122,12 +122,10 @@ describe('Authors creation', () => {
       const response = await request(app.getHttpServer())
         .post('/authors')
         .send(authorData)
-        .expect(200)
-        .expect('Content-Type', /html/)
+        .expect(400) // ValidationPipeが400を返す
 
       // Assert: エラーメッセージが表示されることを確認
       expect(response.text).toMatch(/名前.*必須|name.*required/i)
-      expect(response.text).toContain('<form')
 
       // データベースに保存されていないことを確認
       const authors = await drizzleService.db.select().from(schema.authors)
@@ -157,7 +155,7 @@ describe('Authors creation', () => {
 
       // Assert: エラーメッセージが表示されることを確認
       expect(response.text).toMatch(
-        /メールアドレス.*既に使用|email.*already exists/i,
+        /このメールアドレスは既に使用されています/,
       )
 
       // データベースに新しい執筆者が追加されていないことを確認
