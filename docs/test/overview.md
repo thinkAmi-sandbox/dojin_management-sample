@@ -378,6 +378,8 @@ NODE_ENV=development  # 開発時、テスト時は自動的に'test'に設定
    # テスト用データベース
    pnpm drizzle:migrate:test
    ```
+   
+   **注意**: テスト用データベースは `drizzle.config.test.ts` 設定ファイルを使用し、`DATABASE_URL_TEST` 環境変数を参照します。
 
 #### 自動的な環境切り替え
 

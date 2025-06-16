@@ -46,12 +46,14 @@ pnpm format           # Biomeでコードをフォーマット
 
 ### データベース
 ```bash
-docker compose up -d  # PostgreSQLコンテナの起動
-docker compose down   # PostgreSQLコンテナの停止
-pnpm drizzle:generate # マイグレーションファイルの生成
-pnpm drizzle:migrate  # マイグレーションの実行
-pnpm drizzle:push     # スキーマをデータベースに直接反映
-pnpm drizzle:studio   # Drizzle Studio GUIを開く
+docker compose up -d      # PostgreSQLコンテナの起動
+docker compose down       # PostgreSQLコンテナの停止
+pnpm drizzle:generate     # マイグレーションファイルの生成
+pnpm drizzle:migrate      # プロダクション用データベースのマイグレーション実行
+pnpm drizzle:migrate:test # テスト用データベースのマイグレーション実行
+pnpm drizzle:push         # プロダクション用にスキーマを直接反映
+pnpm drizzle:push:test    # テスト用にスキーマを直接反映
+pnpm drizzle:studio       # Drizzle Studio GUIを開く
 ```
 
 ## アーキテクチャ
@@ -167,7 +169,8 @@ pnpm install
 docker compose up -d
 
 # 4. データベースのマイグレーション
-pnpm drizzle:migrate
+pnpm drizzle:migrate      # プロダクション用データベース
+pnpm drizzle:migrate:test # テスト用データベース
 
 # 5. 開発サーバーの起動
 pnpm start:dev
