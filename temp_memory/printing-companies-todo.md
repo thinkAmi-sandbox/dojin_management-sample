@@ -7,26 +7,50 @@ CLAUDE.mdの開発ルールに従い、各画面ごとに統合テスト→プ�
 
 ## Phase 1: 基本機能（必須）
 
-### □ 1. 印刷所一覧画面（GET /printing-companies）
+### ✅ 1. 印刷所一覧画面（GET /printing-companies）**【完了】**
 
 #### 設計フェーズ
-- [ ] 画面仕様の確認
-- [ ] 必要なデータとビューの設計
+- [x] 画面仕様の確認
+- [x] 必要なデータとビューの設計
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/printing-companies/list.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] スキーマ追加（src/db/schema.ts にPrintingCompanyテーブル）
-  - [ ] マイグレーション生成・実行
-  - [ ] モジュール作成（src/printing-companies/printing-companies.module.ts）
-  - [ ] コントローラー作成（printing-companies.controller.ts）
-  - [ ] サービス作成（printing-companies.service.ts）
-  - [ ] ビューファイル作成（views/printing-companies/index.ejs）
-  - [ ] ルーティング設定
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/printing-companies/list-printing-companies.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] スキーマ追加（src/db/schema.ts にPrintingCompanyテーブル）
+  - [x] マイグレーション生成・実行（本番・テスト両方）
+  - [x] モジュール作成（src/printing-companies/printing-companies.module.ts）
+  - [x] コントローラー作成（printing-companies.controller.ts）
+  - [x] サービス作成（printing-companies.service.ts）
+  - [x] ビューファイル作成（views/printing-companies/index.ejs）
+  - [x] メインレイアウト作成（views/layouts/main.ejs）
+  - [x] ルーティング設定（app.moduleに追加）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【全テスト通過】**
+- [x] 2-6. ビューファイル移動修正（/views → src/views）
+- [ ] 2-7. ユーザー確認 ← **次はここ**
+
+#### 追加で対応した課題
+- [x] ビューファイルパス設定修正（src/main.ts → src/views）
+- [x] テスト用ビューファイルパス設定修正（test/integration/setup-test-app.ts → src/views）
+- [x] nest-cli.json のassets設定修正（src/views/**/* → dist）
+- [x] ビューファイル移動（/views/printing-companies → src/views/printing-companies）
+- [x] 古いビューディレクトリ削除（/views）
+- [x] テストデータベースのクリーンアップ処理追加（test/helpers/db-utils.ts）
+- [x] レイアウトファイル作成
+
+#### 実装済みファイル
+```
+✅ src/db/schema.ts（PrintingCompanyテーブル追加）
+✅ src/printing-companies/printing-companies.module.ts
+✅ src/printing-companies/printing-companies.controller.ts
+✅ src/printing-companies/printing-companies.service.ts
+✅ views/printing-companies/index.ejs
+✅ views/printing-companies/show.ejs
+✅ views/layouts/main.ejs
+✅ test/integration/printing-companies/list-printing-companies.integration.spec.ts
+✅ drizzle/0004_lively_plazm.sql（マイグレーションファイル）
+```
 
 ### □ 2. 新規印刷所登録（GET /printing-companies/new + POST /printing-companies）
 
@@ -145,8 +169,25 @@ test/
 
 ## 現在の状況
 
-- [ ] Phase 1-1: 印刷所一覧画面 ← **現在ここから開始**
-- [ ] Phase 1-2: 新規印刷所登録
+- [x] Phase 1-1: 印刷所一覧画面 **【完了 - 統合テスト全通過】**
+- [ ] Phase 1-2: 新規印刷所登録 ← **次はここ**
 - [ ] Phase 1-3: 印刷所詳細画面
 - [ ] Phase 2: 編集機能
 - [ ] Phase 3: 削除機能
+
+## 完了報告
+
+### Phase 1-1: 印刷所一覧画面 実装完了 ✅
+
+**実装日時**: 2025/06/16 21:37完了  
+**テスト結果**: 統合テスト4件全て通過  
+**動作確認**: ユーザー確認待ち
+
+**主な成果物**:
+- PrintingCompanyテーブル実装
+- 印刷所一覧表示機能（/printing-companies）
+- 印刷所詳細表示機能（/printing-companies/:id）
+- レスポンシブ対応のEJSビューファイル
+- 完全な統合テスト
+
+**次のステップ**: ユーザーによる動作確認後、Phase 1-2（新規印刷所登録）へ進行

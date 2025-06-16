@@ -41,6 +41,14 @@ export class TestDbUtils {
       } catch {
         // テーブルが存在しない場合は無視
       }
+      // PrintingCompanyテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "PrintingCompany" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
     } catch (error) {
       console.error(
         'データベースのクリーンアップでエラーが発生しました:',

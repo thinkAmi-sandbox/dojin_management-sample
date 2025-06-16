@@ -6,8 +6,8 @@
     "deleteOutDir": true,
     "assets": [
       {
-        "include": "views/**/*",
-        "outDir": "dist/src"
+        "include": "src/views/**/*",
+        "outDir": "dist"
       }
     ]
   }

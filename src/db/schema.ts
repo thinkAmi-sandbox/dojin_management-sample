@@ -89,3 +89,20 @@ export const bookAuthors = pgTable(
 
 export type BookAuthor = typeof bookAuthors.$inferSelect
 export type NewBookAuthor = typeof bookAuthors.$inferInsert
+
+export const printingCompanies = pgTable('PrintingCompany', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  websiteUrl: varchar('websiteUrl', { length: 500 }),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type PrintingCompany = typeof printingCompanies.$inferSelect
+export type NewPrintingCompany = typeof printingCompanies.$inferInsert
