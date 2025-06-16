@@ -44,32 +44,48 @@ CLAUDE.mdの開発ルールに従い、各画面ごとに統合テスト→プ�
 ```
 ✅ src/db/schema.ts（PrintingCompanyテーブル追加）
 ✅ src/printing-companies/printing-companies.module.ts
-✅ src/printing-companies/printing-companies.controller.ts
-✅ src/printing-companies/printing-companies.service.ts
-✅ views/printing-companies/index.ejs
-✅ views/printing-companies/show.ejs
-✅ views/layouts/main.ejs
-✅ test/integration/printing-companies/list-printing-companies.integration.spec.ts
+✅ src/printing-companies/printing-companies.controller.ts（一覧・詳細・新規登録機能含む）
+✅ src/printing-companies/printing-companies.service.ts（一覧・詳細・新規登録機能含む）
+✅ src/printing-companies/dto/create-printing-company.dto.ts（新規登録用DTO）
+✅ src/views/printing-companies/index.ejs（一覧画面）
+✅ src/views/printing-companies/show.ejs（詳細画面）
+✅ src/views/printing-companies/new.ejs（新規登録フォーム）
+✅ src/views/layouts/main.ejs
+✅ test/integration/printing-companies/list-printing-companies.integration.spec.ts（一覧テスト）
+✅ test/integration/printing-companies/create-printing-company.integration.spec.ts（新規登録テスト）
 ✅ drizzle/0004_lively_plazm.sql（マイグレーションファイル）
 ```
 
-### □ 2. 新規印刷所登録（GET /printing-companies/new + POST /printing-companies）
+### ✅ 2. 新規印刷所登録（GET /printing-companies/new + POST /printing-companies）**【完了】**
 
 #### 設計フェーズ
-- [ ] フォーム仕様の確認
-- [ ] バリデーションルールの設計
+- [x] フォーム仕様の確認
+- [x] バリデーションルールの設計
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/printing-companies/create.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] CreatePrintingCompanyDto作成
-  - [ ] コントローラーにrenderNewForm()とcreate()追加
-  - [ ] サービスにcreate()追加
-  - [ ] ビューファイル作成（views/printing-companies/new.ejs）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/printing-companies/create-printing-company.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] CreatePrintingCompanyDto作成
+  - [x] コントローラーにrenderNewForm()とcreate()追加
+  - [x] サービスにcreate()追加
+  - [x] ビューファイル作成（src/views/printing-companies/new.ejs）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【新規登録機能テスト6件全通過】**
+- [x] 2-6. ユーザー確認（動作確認完了）
+
+#### 実装済みファイル（新規作成）
+```
+✅ src/printing-companies/dto/create-printing-company.dto.ts（バリデーション付きDTO）
+✅ src/views/printing-companies/new.ejs（新規登録フォーム）
+✅ test/integration/printing-companies/create-printing-company.integration.spec.ts（統合テスト）
+```
+
+#### 実装済みファイル（機能追加）
+```
+✅ src/printing-companies/printing-companies.controller.ts（renderNewForm()・create()メソッド追加）
+✅ src/printing-companies/printing-companies.service.ts（create()メソッド追加）
+```
 
 ### □ 3. 印刷所詳細画面（GET /printing-companies/:id）
 
@@ -171,8 +187,8 @@ test/
 ## 現在の状況
 
 - [x] Phase 1-1: 印刷所一覧画面 **【完了 - 統合テスト全通過】**
-- [ ] Phase 1-2: 新規印刷所登録 ← **次はここ**
-- [ ] Phase 1-3: 印刷所詳細画面
+- [x] Phase 1-2: 新規印刷所登録 **【完了 - 統合テスト6件全通過】**
+- [ ] Phase 1-3: 印刷所詳細画面 ← **次はここ**
 - [ ] Phase 2: 編集機能
 - [ ] Phase 3: 削除機能
 
@@ -192,3 +208,20 @@ test/
 - 完全な統合テスト
 
 **次のステップ**: ユーザーによる動作確認後、Phase 1-2（新規印刷所登録）へ進行
+
+### Phase 1-2: 新規印刷所登録機能 実装完了 ✅
+
+**実装日時**: 2025/06/16 22:32完了  
+**テスト結果**: 新規登録機能の統合テスト6件全て通過  
+**動作確認**: ユーザーによる動作確認完了
+
+**主な成果物**:
+- 新規登録フォーム機能（GET /printing-companies/new）
+- 印刷所登録処理機能（POST /printing-companies）
+- バリデーション機能（必須チェック・URL形式チェック）
+- 統合テスト（フォーム表示・登録処理・エラーハンドリング）
+- CreatePrintingCompanyDto（class-validator使用）
+
+**コミット**: 462040d - 印刷所新規登録機能を実装
+
+**次のステップ**: Phase 1-3（印刷所詳細画面）の実装
