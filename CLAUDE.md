@@ -144,9 +144,11 @@ export class BooksController {
 - 現在実装済みのテーブル：
   - `Book`: 書籍情報の管理（タイトル、サブタイトル、説明、ページ数、執筆ステータス）
   - `Deadline`: 締切情報の管理（タイトル、締切日、説明、書籍との関連）
+  - `Author`: 執筆者情報の管理（名前、メールアドレス、プロフィール）
+  - `BookAuthor`: 書籍と執筆者の多対多関連テーブル
 
 ### テスト設計
-- 詳細は`docs/02_test.md`を参照
+- 詳細は`docs/test/overview.md`を参照
 - 3層構造：ユニットテスト、統合テスト、E2Eテスト
 - 統合テストはRSpecのrequest specに相当
 

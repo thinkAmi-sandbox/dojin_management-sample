@@ -2,6 +2,8 @@
 
 ## テストの種類と目的
 
+> **重要**: 統合テストのベストプラクティスについては、[best_practices.md](./best_practices.md) も参照してください。
+
 ### 1. Unit Test（ユニットテスト）
 - **目的**: 個別のクラスやメソッドの動作を検証
 - **配置**: `src/` 内の各ファイルと同じディレクトリ
@@ -236,7 +238,33 @@ export const bookFixtures = {
 
 ### 統合テスト固有のベストプラクティス
 
-#### 1. 一貫したデータベース接続の使用
+#### 1. テストの独立性確保（最重要）
+```typescript
+// ❌ 悪い例：beforeAllでデータを作成し、各テストで共有
+beforeAll(async () => {
+  const book = await createBook(); 
+  testBookId = book.id;
+});
+
+// ✅ 良い例：各テストで独立したデータを作成
+beforeEach(async () => {
+  await testDbUtils.cleanupDatabase(); // 完全クリーンアップ
+  const timestamp = Date.now();
+  const book = await createBook(`テスト書籍_${timestamp}`);
+  testBookId = book.id;
+});
+
+afterEach(async () => {
+  await testDbUtils.cleanupDatabase(); // 完全クリーンアップ
+});
+```
+
+**理由**: 
+- テスト間のデータ競合を防止
+- 並列実行時の安定性確保
+- メールアドレスなどのユニーク制約違反を回避
+
+#### 2. 一貫したデータベース接続の使用
 ```typescript
 // ❌ 悪い例：独立したデータベース接続を作成
 const testDb = drizzle(new Pool({ connectionString: process.env.DATABASE_URL_TEST }));
@@ -247,7 +275,7 @@ const drizzleService = moduleRef.get<DrizzleService>(DrizzleService);
 
 **理由**: 複数のデータベース接続は競合状態を引き起こし、テストが不安定になる
 
-#### 2. 適切なテストデータのクリーンアップ
+#### 3. 適切なテストデータのクリーンアップ
 ```typescript
 afterEach(async () => {
   // NestJSアプリと同じDrizzleServiceインスタンスでクリーンアップ
@@ -255,13 +283,13 @@ afterEach(async () => {
 });
 ```
 
-#### 3. テストデータの挿入もアプリ内サービスを使用
+#### 4. テストデータの挿入もアプリ内サービスを使用
 ```typescript
 // テストデータの作成時もDrizzleServiceを使用
 await drizzleService.db.insert(schema.books).values([testData]);
 ```
 
-#### 4. 順次実行の設定（重要）
+#### 5. 順次実行の設定（重要）
 ```typescript
 // vitest.config.integration.ts
 export default defineConfig({
@@ -277,6 +305,16 @@ export default defineConfig({
 ```
 
 **理由**: 並行実行時のデータベースアクセス競合を防ぐため
+
+#### 6. テストヘルパーの活用
+```typescript
+// test/helpers/db-utils.ts で提供されるクリーンアップメソッド
+cleanupDatabase()        // 全テーブルの完全クリーンアップ（推奨）
+cleanupRelationalData()  // 関連テーブルのみクリーンアップ（非推奨）
+cleanupDeadlines()       // 締切テーブルのみクリーンアップ（非推奨）
+```
+
+**注意**: 部分的なクリーンアップは外部キー制約エラーの原因となるため、基本的に`cleanupDatabase()`の使用を推奨
 
 ## テスト戦略の方針
 
@@ -406,6 +444,37 @@ docker compose up -d
 // DrizzleServiceにログを追加して確認
 console.log(`NODE_ENV=${process.env.NODE_ENV}, DATABASE_URL=${databaseUrl}`);
 ```
+
+#### 5. フレーキーなテスト（ランダムに失敗する）
+**症状**: 
+- 単体では成功するが、全体実行時に失敗
+- 外部キー制約違反エラー（例: `violates foreign key constraint`）
+- ユニーク制約違反エラー（例: `duplicate key value violates unique constraint`）
+
+**原因**:
+- beforeAllで作成したデータを複数テストで共有
+- 部分的なクリーンアップによるデータ残存
+- テスト間でのデータ競合
+
+**解決策**:
+1. 各テストを完全に独立させる
+   ```typescript
+   beforeEach(async () => {
+     await testDbUtils.cleanupDatabase();
+     // 各テストで新しいデータを作成
+   });
+   ```
+2. タイムスタンプを使ったユニークなテストデータ生成
+   ```typescript
+   const timestamp = Date.now();
+   const email = `test-${timestamp}@example.com`;
+   ```
+3. afterEachで全データをクリーンアップ
+   ```typescript
+   afterEach(async () => {
+     await testDbUtils.cleanupDatabase();
+   });
+   ```
 
 ## 注意事項
 
