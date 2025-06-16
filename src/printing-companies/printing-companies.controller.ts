@@ -1,5 +1,17 @@
-import { Controller, Get, Param, ParseIntPipe, Render } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  ParseIntPipe,
+  Render,
+  Redirect,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common'
 import { PrintingCompaniesService } from './printing-companies.service'
+import { CreatePrintingCompanyDto } from './dto/create-printing-company.dto'
 
 @Controller('printing-companies')
 export class PrintingCompaniesController {
@@ -26,6 +38,25 @@ export class PrintingCompaniesController {
         fullNotes: company.notes || '',
       })),
     }
+  }
+
+  @Get('new')
+  @Render('printing-companies/new')
+  renderNewForm() {
+    return {
+      title: '新規印刷所登録',
+      breadcrumbs: [
+        { name: '印刷所一覧', url: '/printing-companies' },
+        { name: '新規登録', url: null },
+      ],
+    }
+  }
+
+  @Post()
+  @Redirect('/printing-companies')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async create(@Body() createPrintingCompanyDto: CreatePrintingCompanyDto) {
+    await this.printingCompaniesService.create(createPrintingCompanyDto)
   }
 
   @Get(':id')

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { eq } from 'drizzle-orm'
 import { PrintingCompany, printingCompanies } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
+import { CreatePrintingCompanyDto } from './dto/create-printing-company.dto'
 
 @Injectable()
 export class PrintingCompaniesService {
@@ -23,6 +24,21 @@ export class PrintingCompaniesService {
     if (result.length === 0) {
       throw new NotFoundException(`印刷所ID ${id} が見つかりません`)
     }
+
+    return result[0]
+  }
+
+  async create(
+    createPrintingCompanyDto: CreatePrintingCompanyDto,
+  ): Promise<PrintingCompany> {
+    const result = await this.drizzleService.db
+      .insert(printingCompanies)
+      .values({
+        name: createPrintingCompanyDto.name,
+        websiteUrl: createPrintingCompanyDto.website || null,
+        notes: createPrintingCompanyDto.notes || null,
+      })
+      .returning()
 
     return result[0]
   }
