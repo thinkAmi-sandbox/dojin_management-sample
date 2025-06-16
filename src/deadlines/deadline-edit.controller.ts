@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -56,6 +57,10 @@ export class DeadlineEditController {
       return this.update(id, body, res)
     }
 
+    if (body._method === 'DELETE') {
+      return this.remove(id, res)
+    }
+
     res.status(404).send('Not Found')
   }
 
@@ -109,5 +114,11 @@ export class DeadlineEditController {
 
     await this.deadlinesService.update(id, updateDeadlineDto)
     res.redirect(`/books/${book.id}/deadlines`)
+  }
+
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const bookId = await this.deadlinesService.remove(id)
+    res.redirect(`/books/${bookId}/deadlines`)
   }
 }

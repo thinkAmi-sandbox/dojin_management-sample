@@ -96,4 +96,13 @@ export class DeadlinesService {
 
     return deadline
   }
+
+  async remove(id: number): Promise<number> {
+    // 締切が存在するか確認
+    const deadline = await this.findOne(id)
+
+    await this.drizzle.db.delete(deadlines).where(eq(deadlines.id, id))
+
+    return deadline.bookId
+  }
 }

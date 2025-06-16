@@ -111,4 +111,57 @@ describe('Deadlines (Integration)', () => {
       expect(response.text).toContain('新規締切作成')
     })
   })
+
+  describe('DELETE /deadlines/:id', () => {
+    it('存在しない締切を削除しようとすると404エラーを返す', () => {
+      return request(app.getHttpServer())
+        .delete('/deadlines/999999')
+        .expect(404)
+    })
+
+    it('締切を正常に削除できる', async () => {
+      // テスト用の締切を作成
+      const [deadline] = await drizzleService.db
+        .insert(deadlines)
+        .values({
+          bookId: testBook.id,
+          title: '削除テスト締切',
+          dueDate: new Date('2024-12-31'),
+          description: '削除テスト用の締切',
+        })
+        .returning()
+
+      // 削除リクエストを送信
+      await request(app.getHttpServer())
+        .delete(`/deadlines/${deadline.id}`)
+        .expect(302) // リダイレクト
+
+      // 削除後、一覧から該当の締切が消えていることを確認
+      const response = await request(app.getHttpServer())
+        .get(`/books/${testBook.id}/deadlines`)
+        .expect(200)
+
+      expect(response.text).not.toContain('削除テスト締切')
+    })
+
+    it('削除後は締切一覧ページにリダイレクトされる', async () => {
+      // テスト用の締切を作成
+      const [deadline] = await drizzleService.db
+        .insert(deadlines)
+        .values({
+          bookId: testBook.id,
+          title: 'リダイレクトテスト締切',
+          dueDate: new Date('2024-12-31'),
+          description: 'リダイレクトテスト用の締切',
+        })
+        .returning()
+
+      // 削除リクエストを送信し、リダイレクト先を確認
+      const response = await request(app.getHttpServer())
+        .delete(`/deadlines/${deadline.id}`)
+        .expect(302)
+
+      expect(response.headers.location).toBe(`/books/${testBook.id}/deadlines`)
+    })
+  })
 })
