@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { type Book, type Deadline, books, deadlines } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateDeadlineDto } from './dto/create-deadline.dto'
+import { UpdateDeadlineDto } from './dto/update-deadline.dto'
 
 @Injectable()
 export class DeadlinesService {
@@ -57,6 +58,40 @@ export class DeadlinesService {
         dueDate: new Date(createDeadlineDto.dueDate),
         description: createDeadlineDto.description,
       })
+      .returning()
+
+    return deadline
+  }
+
+  async findOne(id: number): Promise<Deadline> {
+    const [deadline] = await this.drizzle.db
+      .select()
+      .from(deadlines)
+      .where(eq(deadlines.id, id))
+      .limit(1)
+
+    if (!deadline) {
+      throw new NotFoundException(`締切ID ${id} が見つかりません`)
+    }
+
+    return deadline
+  }
+
+  async update(
+    id: number,
+    updateDeadlineDto: UpdateDeadlineDto,
+  ): Promise<Deadline> {
+    // 締切が存在するか確認
+    await this.findOne(id)
+
+    const [deadline] = await this.drizzle.db
+      .update(deadlines)
+      .set({
+        title: updateDeadlineDto.title,
+        dueDate: new Date(updateDeadlineDto.dueDate),
+        description: updateDeadlineDto.description,
+      })
+      .where(eq(deadlines.id, id))
       .returning()
 
     return deadline
