@@ -75,6 +75,8 @@ describe('Books Show (Integration)', () => {
         `href="/books/${testBook.id}/status/edit"`,
       )
       expect(response.text).toContain('ステータス変更')
+      expect(response.text).toContain(`href="/books/${testBook.id}/deadlines"`)
+      expect(response.text).toContain('締切一覧')
     })
 
     it('サブタイトルがない場合も正常に表示すること', async () => {
