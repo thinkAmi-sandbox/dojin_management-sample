@@ -87,22 +87,27 @@ CLAUDE.mdの開発ルールに従い、各画面ごとに統合テスト→プ�
 ✅ src/printing-companies/printing-companies.service.ts（create()メソッド追加）
 ```
 
-### □ 3. 印刷所詳細画面（GET /printing-companies/:id）
+### ✅ 3. 印刷所詳細画面（GET /printing-companies/:id）**【完了】**
 
 #### 設計フェーズ
-- [ ] 詳細画面の表示項目確認
-- [ ] 将来の入稿履歴表示の考慮
+- [x] 詳細画面の表示項目確認
+- [x] 将来の入稿履歴表示の考慮
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/printing-companies/show.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] コントローラーにfindOne()追加
-  - [ ] サービスにfindOne()追加
-  - [ ] ビューファイル作成（views/printing-companies/show.ejs）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
+- [x] 2-1. 統合テスト作成（test/integration/printing-companies/show-printing-company.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装（既に実装済み）
+  - [x] コントローラーにfindOne()追加（実装済み）
+  - [x] サービスにfindOne()追加（実装済み）
+  - [x] ビューファイル作成（src/views/printing-companies/show.ejs - 実装済み）
+- [x] 2-3. 型チェック（pnpm type-check）**【通過】**
+- [x] 2-4. Linter実行（pnpm format）**【完了】**
+- [x] 2-5. テスト実行（pnpm test:integration）**【152件全テスト通過】**
 - [ ] 2-6. ユーザー確認
+
+#### 実装済みファイル（新規作成）
+```
+✅ test/integration/printing-companies/show-printing-company.integration.spec.ts（統合テスト5件）
+```
 
 ## Phase 2: 編集機能
 
@@ -188,8 +193,8 @@ test/
 
 - [x] Phase 1-1: 印刷所一覧画面 **【完了 - 統合テスト全通過】**
 - [x] Phase 1-2: 新規印刷所登録 **【完了 - 統合テスト6件全通過】**
-- [ ] Phase 1-3: 印刷所詳細画面 ← **次はここ**
-- [ ] Phase 2: 編集機能
+- [x] Phase 1-3: 印刷所詳細画面 **【完了 - 統合テスト5件全通過】**
+- [ ] Phase 2: 編集機能 ← **次はここ**
 - [ ] Phase 3: 削除機能
 
 ## 完了報告
