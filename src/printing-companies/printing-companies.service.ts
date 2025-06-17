@@ -72,4 +72,13 @@ export class PrintingCompaniesService {
 
     return result[0]
   }
+
+  async remove(id: number): Promise<void> {
+    // 存在確認
+    await this.findOne(id)
+
+    await this.drizzleService.db
+      .delete(printingCompanies)
+      .where(eq(printingCompanies.id, id))
+  }
 }

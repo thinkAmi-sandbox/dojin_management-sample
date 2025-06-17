@@ -142,24 +142,36 @@ CLAUDE.mdの開発ルールに従い、各画面ごとに統合テスト→プ�
 ✅ src/printing-companies/printing-companies.service.ts（update()メソッド追加）
 ```
 
-## Phase 3: 削除機能（後回し可）
+## Phase 3: 削除機能
 
-### □ 5. 印刷所削除（DELETE /printing-companies/:id）
+### ✅ 5. 印刷所削除（DELETE /printing-companies/:id）**【完了】**
 
 #### 設計フェーズ
-- [ ] 削除確認の仕様確認
-- [ ] 入稿データとの整合性確認
+- [x] 削除確認の仕様確認（JavaScript confirm()ダイアログ使用）
+- [x] 入稿データとの整合性確認（現時点では単純削除、将来的に関連チェック追加予定）
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/printing-companies/delete.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] コントローラーにremove()追加
-  - [ ] サービスにremove()追加
-  - [ ] 削除確認UI追加
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/printing-companies/delete-printing-company.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] コントローラーにremove()追加（DELETEデコレータ、HTTPメソッドオーバーライド対応）
+  - [x] サービスにremove()追加（存在確認付き削除処理）
+  - [x] 削除確認UI追加（詳細画面に削除ボタンとJavaScript確認ダイアログ）
+- [x] 2-3. 型チェック（pnpm type-check）**【通過】**
+- [x] 2-4. Linter実行（pnpm format）**【完了】**
+- [x] 2-5. テスト実行（pnpm test:integration）**【165件全テスト通過（削除機能5件含む）】**
+- [x] 2-6. ユーザー確認（動作確認完了）
+
+#### 実装済みファイル（新規作成）
+```
+✅ test/integration/printing-companies/delete-printing-company.integration.spec.ts（統合テスト5件）
+```
+
+#### 実装済みファイル（機能追加）
+```
+✅ src/printing-companies/printing-companies.controller.ts（remove()メソッド、POSTメソッドオーバーライド対応追加）
+✅ src/printing-companies/printing-companies.service.ts（remove()メソッド追加）
+✅ src/views/printing-companies/show.ejs（削除ボタンとJavaScript確認ダイアログ追加）
+```
 
 ## 必要なファイル構成（参考）
 
@@ -208,7 +220,13 @@ test/
 - [x] Phase 1-2: 新規印刷所登録 **【完了 - 統合テスト6件全通過】**
 - [x] Phase 1-3: 印刷所詳細画面 **【完了 - 統合テスト5件全通過】**
 - [x] Phase 2: 編集機能 **【完了 - 統合テスト8件全通過】**
-- [ ] Phase 3: 削除機能 ← **次はここ**
+- [x] Phase 3: 削除機能 **【完了 - 統合テスト5件全通過】**
+
+## 🎉 印刷所機能 全機能実装完了！
+
+**総テスト数**: 165件（印刷所関連テスト24件含む）
+**実装期間**: 2025/06/16 〜 2025/06/17
+**全ての機能が正常動作確認済み**
 
 ## 完了報告
 
@@ -279,3 +297,24 @@ test/
 - expressのResponseタイプ使用（type import）
 
 **次のステップ**: Phase 3（印刷所削除機能）の実装
+
+### Phase 3: 印刷所削除機能 実装完了 ✅
+
+**実装日時**: 2025/06/17 22:15完了  
+**テスト結果**: 統合テスト165件全て通過（削除機能テスト5件含む）  
+**動作確認**: ユーザーによる動作確認完了
+
+**主な成果物**:
+- 印刷所削除機能（DELETE /printing-companies/:id）
+- HTTPメソッドオーバーライド対応（POST + _method=DELETE）
+- JavaScript確認ダイアログ付き削除UI
+- 詳細画面への削除ボタン追加
+- 統合テスト（削除処理・複数データ・異常系・直接DELETEメソッド）
+
+**技術的な実装内容**:
+- コントローラーremove()メソッド（エラーハンドリング付き）
+- サービスremove()メソッド（存在確認付き）
+- EJSテンプレートでの削除フォームとJavaScript確認
+- DELETEデコレータとHTTPメソッドオーバーライドの両対応
+
+**印刷所機能 全完了**: 一覧・詳細・新規登録・編集・削除の全CRUD操作が実装完了

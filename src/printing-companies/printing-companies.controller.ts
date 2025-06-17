@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   ParseIntPipe,
@@ -11,6 +12,8 @@ import {
   Res,
   UsePipes,
   ValidationPipe,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { PrintingCompaniesService } from './printing-companies.service'
@@ -118,7 +121,9 @@ export class PrintingCompaniesController {
     if (body._method === 'PUT') {
       return this.update(id, body, res)
     }
-    // 他のメソッドオーバーライドの処理があればここに追加
+    if (body._method === 'DELETE') {
+      return this.remove(id, res)
+    }
     res.status(404).send('Not Found')
   }
 
@@ -181,5 +186,23 @@ export class PrintingCompaniesController {
     // 更新処理
     await this.printingCompaniesService.update(id, updatePrintingCompanyDto)
     res.redirect(`/printing-companies/${id}`)
+  }
+
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    try {
+      // ID形式の妥当性チェック
+      if (id <= 0 || isNaN(id)) {
+        return res.status(400).send('無効なIDです')
+      }
+
+      await this.printingCompaniesService.remove(id)
+      res.redirect('/printing-companies')
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 404) {
+        return res.status(404).send('印刷所が見つかりませんでした')
+      }
+      throw error
+    }
   }
 }

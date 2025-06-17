@@ -11,8 +11,10 @@
         .breadcrumbs a { color: #007bff; text-decoration: none; }
         .breadcrumbs a:hover { text-decoration: underline; }
         .actions { margin-bottom: 20px; }
-        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; border: none; cursor: pointer; }
         .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
         .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 12px; }
         .detail-table th { background-color: #f2f2f2; width: 150px; text-align: left; }
@@ -40,6 +42,10 @@
     <div class="actions">
         <a href="<%= printingCompany.editUrl %>" class="btn">編集</a>
         <a href="/printing-companies" class="btn" style="background: #6c757d;">一覧に戻る</a>
+        <form style="display: inline;" onsubmit="return confirm('「<%= printingCompany.name %>」を削除してもよろしいですか？\n\nこの操作は元に戻せません。')" action="/printing-companies/<%= printingCompany.id %>" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
     </div>
 
     <table class="detail-table">
