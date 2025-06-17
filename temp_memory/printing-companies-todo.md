@@ -111,23 +111,36 @@ CLAUDE.mdの開発ルールに従い、各画面ごとに統合テスト→プ�
 
 ## Phase 2: 編集機能
 
-### □ 4. 印刷所編集（GET /printing-companies/:id/edit + PUT /printing-companies/:id）
+### ✅ 4. 印刷所編集（GET /printing-companies/:id/edit + PUT /printing-companies/:id）**【完了】**
 
 #### 設計フェーズ
-- [ ] 編集フォーム仕様の確認
-- [ ] バリデーションルールの確認
+- [x] 編集フォーム仕様の確認
+- [x] バリデーションルールの確認
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/printing-companies/update.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] UpdatePrintingCompanyDto作成
-  - [ ] コントローラーにrenderEditForm()とupdate()追加
-  - [ ] サービスにupdate()追加
-  - [ ] ビューファイル作成（views/printing-companies/edit.ejs）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/printing-companies/update-printing-company.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] UpdatePrintingCompanyDto作成
+  - [x] コントローラーにrenderEditForm()とupdate()追加
+  - [x] サービスにupdate()追加
+  - [x] ビューファイル作成（src/views/printing-companies/edit.ejs）
+- [x] 2-3. 型チェック（pnpm type-check）**【通過】**
+- [x] 2-4. Linter実行（pnpm format）**【完了】**
+- [x] 2-5. テスト実行（pnpm test:integration）**【160件全テスト通過】**
+- [x] 2-6. ユーザー確認（動作確認完了）
+
+#### 実装済みファイル（新規作成）
+```
+✅ src/printing-companies/dto/update-printing-company.dto.ts（編集用DTO）
+✅ src/views/printing-companies/edit.ejs（編集フォーム）
+✅ test/integration/printing-companies/update-printing-company.integration.spec.ts（統合テスト8件）
+```
+
+#### 実装済みファイル（機能追加）
+```
+✅ src/printing-companies/printing-companies.controller.ts（renderEditForm()・update()・updateViaPost()メソッド追加）
+✅ src/printing-companies/printing-companies.service.ts（update()メソッド追加）
+```
 
 ## Phase 3: 削除機能（後回し可）
 
@@ -194,8 +207,8 @@ test/
 - [x] Phase 1-1: 印刷所一覧画面 **【完了 - 統合テスト全通過】**
 - [x] Phase 1-2: 新規印刷所登録 **【完了 - 統合テスト6件全通過】**
 - [x] Phase 1-3: 印刷所詳細画面 **【完了 - 統合テスト5件全通過】**
-- [ ] Phase 2: 編集機能 ← **次はここ**
-- [ ] Phase 3: 削除機能
+- [x] Phase 2: 編集機能 **【完了 - 統合テスト8件全通過】**
+- [ ] Phase 3: 削除機能 ← **次はここ**
 
 ## 完了報告
 
@@ -245,3 +258,24 @@ test/
 **コミット**: 131b2e5 - 印刷所詳細画面の統合テストを実装
 
 **次のステップ**: Phase 2（印刷所編集機能）の実装
+
+### Phase 2: 印刷所編集機能 実装完了 ✅
+
+**実装日時**: 2025/06/17 21:20完了  
+**テスト結果**: 統合テスト160件全て通過（編集機能テスト8件含む）  
+**動作確認**: ユーザーによる動作確認完了
+
+**主な成果物**:
+- 編集フォーム表示機能（GET /printing-companies/:id/edit）
+- 印刷所更新処理機能（PUT /printing-companies/:id）
+- HTTPメソッドオーバーライド対応（POST + _method=PUT）
+- バリデーション機能（必須チェック・URL形式チェック）
+- エラー時の入力値保持機能
+- 統合テスト（編集フォーム表示・更新処理・エラーハンドリング）
+
+**技術的な実装内容**:
+- UpdatePrintingCompanyDto（PartialType使用）
+- 空文字列のnull変換処理（websiteUrl、notes）
+- expressのResponseタイプ使用（type import）
+
+**次のステップ**: Phase 3（印刷所削除機能）の実装

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { PrintingCompany, printingCompanies } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreatePrintingCompanyDto } from './dto/create-printing-company.dto'
+import { UpdatePrintingCompanyDto } from './dto/update-printing-company.dto'
 
 @Injectable()
 export class PrintingCompaniesService {
@@ -38,6 +39,35 @@ export class PrintingCompaniesService {
         websiteUrl: createPrintingCompanyDto.website || null,
         notes: createPrintingCompanyDto.notes || null,
       })
+      .returning()
+
+    return result[0]
+  }
+
+  async update(
+    id: number,
+    updatePrintingCompanyDto: UpdatePrintingCompanyDto,
+  ): Promise<PrintingCompany> {
+    // 存在確認
+    await this.findOne(id)
+
+    const result = await this.drizzleService.db
+      .update(printingCompanies)
+      .set({
+        name: updatePrintingCompanyDto.name,
+        websiteUrl: updatePrintingCompanyDto.website
+          ? updatePrintingCompanyDto.website
+          : updatePrintingCompanyDto.website === ''
+            ? null
+            : undefined,
+        notes: updatePrintingCompanyDto.notes
+          ? updatePrintingCompanyDto.notes
+          : updatePrintingCompanyDto.notes === ''
+            ? null
+            : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(printingCompanies.id, id))
       .returning()
 
     return result[0]
