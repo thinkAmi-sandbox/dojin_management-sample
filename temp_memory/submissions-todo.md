@@ -58,27 +58,44 @@ export const submissions = pgTable('Submission', {
 
 ## Phase 1: 基本機能（必須）
 
-### 1. 入稿一覧画面（GET /submissions）
+### ✅ 1. 入稿一覧画面（GET /submissions）**【完了】**
 
 #### 設計フェーズ
-- [ ] 画面仕様の確認（全入稿の一覧表示）
-- [ ] 必要なデータとビューの設計
-- [ ] 書籍・印刷所との結合表示設計
+- [x] 画面仕様の確認（全入稿の一覧表示）
+- [x] 必要なデータとビューの設計
+- [x] 書籍・印刷所との結合表示設計
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/submissions/list-submissions.integration.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] スキーマ追加（src/db/schema.ts にSubmissionテーブル）
-  - [ ] マイグレーション生成・実行（本番・テスト両方）
-  - [ ] モジュール作成（src/submissions/submissions.module.ts）
-  - [ ] コントローラー作成（submissions.controller.ts）
-  - [ ] サービス作成（submissions.service.ts）
-  - [ ] ビューファイル作成（src/views/submissions/index.ejs）
-  - [ ] ルーティング設定（app.moduleに追加）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/submissions/list-submissions.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] スキーマ追加（src/db/schema.ts にSubmissionテーブル）
+  - [x] マイグレーション生成・実行（本番・テスト両方）
+  - [x] モジュール作成（src/submissions/submissions.module.ts）
+  - [x] コントローラー作成（submissions.controller.ts）
+  - [x] サービス作成（submissions.service.ts）
+  - [x] ビューファイル作成（src/views/submissions/index.ejs）
+  - [x] ルーティング設定（app.moduleに追加）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト5件全通過】**
+- [x] 2-6. ユーザー確認（動作確認完了）
+
+#### 実装済みファイル（新規作成）
+```
+✅ src/db/schema.ts（Submissionテーブル追加）
+✅ src/submissions/submissions.module.ts
+✅ src/submissions/submissions.controller.ts（入稿一覧機能）
+✅ src/submissions/submissions.service.ts（JOIN処理でデータ取得）
+✅ src/views/submissions/index.ejs（入稿一覧画面）
+✅ test/integration/submissions/list-submissions.integration.spec.ts（統合テスト5件）
+✅ drizzle/0005_magical_scarecrow.sql（マイグレーションファイル）
+```
+
+#### 技術的な実装内容
+- Drizzle ORMでのINNER JOIN処理（書籍・印刷所との結合）
+- ステータス日本語変換機能（draft→準備中、submitted→入稿済み等）
+- レスポンシブ対応のEJSビューファイル
+- 書籍名・印刷所名・ステータス・部数・搬入先・作成日の表示
 
 ### 2. 書籍の入稿履歴（GET /books/:bookId/submissions）
 
@@ -241,12 +258,35 @@ test/
 
 ## 現在の状況
 
-- [ ] Phase 1-1: 入稿一覧画面 **【未着手】**
+- [x] Phase 1-1: 入稿一覧画面 **【完了 - 統合テスト5件全通過】**
 - [ ] Phase 1-2: 書籍の入稿履歴 **【未着手】**
 - [ ] Phase 1-3: 新規入稿作成 **【未着手】**
 - [ ] Phase 1-4: 入稿詳細画面 **【未着手】**
 - [ ] Phase 2-1: 入稿編集 **【未着手】**
 - [ ] Phase 2-2: 入稿削除 **【未着手】**
+
+## 完了報告
+
+### Phase 1-1: 入稿一覧画面 実装完了 ✅
+
+**実装日時**: 2025/06/18 23:03完了  
+**テスト結果**: 統合テスト170件全て通過（入稿一覧テスト5件含む）  
+**動作確認**: ユーザーによる動作確認完了
+
+**主な成果物**:
+- Submissionテーブル実装（20フィールド、書籍・印刷所との外部キー参照）
+- 入稿一覧表示機能（/submissions）- JOIN処理で関連データ取得
+- ステータス日本語変換機能
+- レスポンシブ対応のEJSビューファイル
+- 完全な統合テスト（5パターンのテストケース）
+
+**技術的な実装内容**:
+- Drizzle ORMでのINNER JOIN処理（submissions ⟨-⟩ books ⟨-⟩ printingCompanies）
+- NestJS規則に従ったコントローラー・サービス構成
+- HTTPメソッドオーバーライド対応のインフラ構築
+- 印刷所機能の成功パターンを踏襲した実装手順
+
+**次のステップ**: Phase 1-2（書籍の入稿履歴）の実装
 
 ## URL設計（docs/01_url.mdより）
 

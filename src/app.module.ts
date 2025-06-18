@@ -7,6 +7,7 @@ import { BooksModule } from './books/books.module'
 import { DeadlinesModule } from './deadlines/deadlines.module'
 import { DrizzleModule } from './drizzle/drizzle.module'
 import { PrintingCompaniesModule } from './printing-companies/printing-companies.module'
+import { SubmissionsModule } from './submissions/submissions.module'
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PrintingCompaniesModule } from './printing-companies/printing-companies
     AuthorsModule,
     BookAuthorsModule,
     PrintingCompaniesModule,
+    SubmissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

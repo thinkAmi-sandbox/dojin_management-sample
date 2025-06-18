@@ -106,3 +106,58 @@ export const printingCompanies = pgTable('PrintingCompany', {
 
 export type PrintingCompany = typeof printingCompanies.$inferSelect
 export type NewPrintingCompany = typeof printingCompanies.$inferInsert
+
+export const submissions = pgTable('Submission', {
+  id: serial('id').primaryKey(),
+
+  // 基本情報
+  bookId: integer('bookId')
+    .notNull()
+    .references(() => books.id, { onDelete: 'cascade' }),
+  printingCompanyId: integer('printingCompanyId')
+    .notNull()
+    .references(() => printingCompanies.id, { onDelete: 'restrict' }),
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+
+  // 日付管理
+  submissionDate: timestamp('submissionDate', { mode: 'date', precision: 3 }),
+  expectedDeliveryDate: timestamp('expectedDeliveryDate', {
+    mode: 'date',
+    precision: 3,
+  }),
+  actualDeliveryDate: timestamp('actualDeliveryDate', {
+    mode: 'date',
+    precision: 3,
+  }),
+
+  // 印刷情報
+  quantity: integer('quantity').notNull(),
+  specificationNotes: text('specificationNotes'),
+
+  // コスト情報
+  printingCost: integer('printingCost'),
+  shippingCost: integer('shippingCost'),
+  otherCost: integer('otherCost'),
+  totalCost: integer('totalCost'),
+  discountType: varchar('discountType', { length: 50 }),
+
+  // 配送情報
+  deliveryDestination: varchar('deliveryDestination', { length: 255 }),
+  deliveryNotes: text('deliveryNotes'),
+
+  // その他
+  submissionFileNotes: text('submissionFileNotes'),
+  generalNotes: text('generalNotes'),
+
+  // タイムスタンプ
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Submission = typeof submissions.$inferSelect
+export type NewSubmission = typeof submissions.$inferInsert
