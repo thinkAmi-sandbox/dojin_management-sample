@@ -10,6 +10,7 @@ import {
   Redirect,
   Render,
   Res,
+  NotFoundException,
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { BooksService } from './books.service'
@@ -17,12 +18,14 @@ import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookStatusDto } from './dto/update-book-status.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 import { BooksListView } from './views/books-list.view'
+import { SubmissionsService } from '../submissions/submissions.service'
 
 @Controller('books')
 export class BooksController {
   constructor(
     private readonly booksService: BooksService,
     private readonly booksListView: BooksListView,
+    private readonly submissionsService: SubmissionsService,
   ) {}
 
   @Get()
@@ -276,5 +279,46 @@ export class BooksController {
 
     await this.booksService.updateStatus(bookId, updateBookStatusDto)
     res.redirect(`/books/${bookId}`)
+  }
+
+  @Get(':bookId/submissions')
+  @Render('submissions/book-index')
+  async findSubmissionsByBook(@Param('bookId', ParseIntPipe) bookId: number) {
+    try {
+      const result = await this.submissionsService.findByBook(bookId)
+
+      // ステータスの日本語変換
+      const statusMap = {
+        draft: '準備中',
+        submitted: '入稿済み',
+        printing: '印刷中',
+        delivered: '納品済み',
+        cancelled: 'キャンセル',
+      }
+
+      return {
+        title: `${result.book.title}の入稿履歴`,
+        book: result.book,
+        submissions: result.submissions.map((submission) => ({
+          id: submission.id,
+          status:
+            statusMap[submission.status as keyof typeof statusMap] ||
+            submission.status,
+          quantity: submission.quantity,
+          deliveryDestination: submission.deliveryDestination || '-',
+          bookTitle: submission.book.title,
+          bookSubtitle: submission.book.subtitle || '',
+          printingCompanyName: submission.printingCompany.name,
+          formattedCreatedAt: submission.createdAt.toLocaleDateString('ja-JP'),
+          detailUrl: `/submissions/${submission.id}`,
+          editUrl: `/submissions/${submission.id}/edit`,
+        })),
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Book not found') {
+        throw new NotFoundException('指定された書籍が見つかりません')
+      }
+      throw error
+    }
   }
 }

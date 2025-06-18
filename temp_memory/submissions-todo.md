@@ -97,22 +97,22 @@ export const submissions = pgTable('Submission', {
 - レスポンシブ対応のEJSビューファイル
 - 書籍名・印刷所名・ステータス・部数・搬入先・作成日の表示
 
-### 2. 書籍の入稿履歴（GET /books/:bookId/submissions）
+### ✅ 2. 書籍の入稿履歴（GET /books/:bookId/submissions）**【完了】**
 
 #### 設計フェーズ
-- [ ] 書籍ごとの入稿履歴表示仕様確認
-- [ ] ページネーション・ソート設計
+- [x] 書籍ごとの入稿履歴表示仕様確認
+- [x] ページネーション・ソート設計
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/submissions/book-submissions.integration.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] コントローラーにfindByBook()追加
-  - [ ] サービスにfindByBook()追加
-  - [ ] ビューファイル作成（src/views/submissions/book-index.ejs）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/submissions/book-submissions.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] BooksControllerにfindSubmissionsByBook()追加
+  - [x] SubmissionsServiceにfindByBook()追加
+  - [x] ビューファイル作成（src/views/submissions/book-index.ejs）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト175件全通過】**
+- [x] 2-6. ユーザー確認（ビューファイル配置問題解決済み）
 
 ### 3. 新規入稿作成（GET /books/:bookId/submissions/new + POST /books/:bookId/submissions）
 
@@ -255,11 +255,12 @@ test/
 - 印刷所・書籍との結合処理では適切なJOINを使用
 - 日付フィールドは適切な入力バリデーション・表示フォーマットを実装
 - 金額フィールドは整数型（円単位）で管理
+- **重要**: 新しいビューファイル作成時は必ず `pnpm build` を実行して `dist/views/` にコピーすること
 
 ## 現在の状況
 
 - [x] Phase 1-1: 入稿一覧画面 **【完了 - 統合テスト5件全通過】**
-- [ ] Phase 1-2: 書籍の入稿履歴 **【未着手】**
+- [x] Phase 1-2: 書籍の入稿履歴 **【完了 - 統合テスト175件全通過】**
 - [ ] Phase 1-3: 新規入稿作成 **【未着手】**
 - [ ] Phase 1-4: 入稿詳細画面 **【未着手】**
 - [ ] Phase 2-1: 入稿編集 **【未着手】**
@@ -287,6 +288,41 @@ test/
 - 印刷所機能の成功パターンを踏襲した実装手順
 
 **次のステップ**: Phase 1-2（書籍の入稿履歴）の実装
+
+### Phase 1-2: 書籍の入稿履歴画面 実装完了 ✅
+
+**実装日時**: 2025/06/18 23:17完了  
+**テスト結果**: 統合テスト175件全て通過（書籍別入稿履歴テスト5件含む）  
+**動作確認**: ユーザーによる動作確認完了（ビューファイル配置問題も解決）
+
+**主な成果物**:
+- 書籍別入稿履歴表示機能（/books/:bookId/submissions）
+- 書籍存在確認・404エラーハンドリング
+- 空状態の適切な処理
+- 作成日降順ソート機能
+- BooksControllerとSubmissionsServiceの連携
+
+**技術的な実装内容**:
+- BooksControllerに `findSubmissionsByBook()` メソッド追加
+- SubmissionsService に `findByBook()` メソッド追加
+- JOIN処理での書籍存在確認+入稿履歴取得
+- レスポンシブ対応のEJSビューファイル（book-index.ejs）
+- 統合テスト5種類の完全カバレッジ
+
+**解決した課題**:
+- ビューファイル配置問題（pnpm build でdist/にコピー必要）
+- 再発防止策として開発ルールにビルド手順を追加
+
+**実装済みファイル（新規作成・修正）**:
+```
+✅ src/books/books.controller.ts（findSubmissionsByBook()メソッド追加）
+✅ src/books/books.module.ts（SubmissionsService依存性注入）
+✅ src/submissions/submissions.service.ts（findByBook()メソッド追加）
+✅ src/views/submissions/book-index.ejs（書籍別入稿履歴画面）
+✅ test/integration/submissions/book-submissions.integration.spec.ts（統合テスト5件）
+```
+
+**次のステップ**: Phase 1-3（新規入稿作成）の実装
 
 ## URL設計（docs/01_url.mdより）
 
