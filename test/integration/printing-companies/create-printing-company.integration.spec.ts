@@ -1,10 +1,10 @@
 import { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import request from 'supertest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { setupTestApp } from '../setup-test-app'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('POST /printing-companies（新規印刷所登録）', () => {
   let app: INestApplication

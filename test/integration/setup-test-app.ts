@@ -1,6 +1,7 @@
 import { join } from 'path'
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
+import { ValidationExceptionFilter } from '../../src/common/filters/validation-exception.filter'
 
 export function setupTestApp(app: INestApplication): void {
   const expressApp = app as NestExpressApplication
@@ -14,6 +15,9 @@ export function setupTestApp(app: INestApplication): void {
       },
     }),
   )
+
+  // グローバル例外フィルター設定
+  expressApp.useGlobalFilters(new ValidationExceptionFilter())
 
   // EJSの設定
   expressApp.useStaticAssets(join(__dirname, '..', '..', 'public'))

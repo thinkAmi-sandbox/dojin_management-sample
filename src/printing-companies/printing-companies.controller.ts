@@ -1,24 +1,24 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
   Param,
   ParseIntPipe,
-  Render,
+  Post,
+  Put,
   Redirect,
+  Render,
   Res,
   UsePipes,
   ValidationPipe,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common'
 import type { Response } from 'express'
-import { PrintingCompaniesService } from './printing-companies.service'
 import { CreatePrintingCompanyDto } from './dto/create-printing-company.dto'
 import { UpdatePrintingCompanyDto } from './dto/update-printing-company.dto'
+import { PrintingCompaniesService } from './printing-companies.service'
 
 @Controller('printing-companies')
 export class PrintingCompaniesController {
@@ -113,79 +113,50 @@ export class PrintingCompaniesController {
   }
 
   @Post(':id')
+  // @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateViaPost(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: any,
     @Res() res: Response,
   ) {
+    console.log('🚀 updateViaPost called')
+    console.log('body:', body)
+    console.log('body._method:', body._method)
+    
     if (body._method === 'PUT') {
-      return this.update(id, body, res)
+      console.log('🔄 Calling update method')
+      
+      // 手動でバリデーション実行してみる
+      const validationPipe = new ValidationPipe({ whitelist: true })
+      try {
+        const validatedDto = await validationPipe.transform(body, {
+          type: 'body',
+          metatype: UpdatePrintingCompanyDto,
+        })
+        console.log('✅ Validation passed:', validatedDto)
+        const result = await this.update(id, validatedDto)
+        return res.redirect(result.url)
+      } catch (error) {
+        console.log('❌ Validation failed:', error)
+        throw error
+      }
     }
     if (body._method === 'DELETE') {
       return this.remove(id, res)
     }
+    console.log('❌ Not Found case')
     res.status(404).send('Not Found')
   }
 
   @Put(':id')
+  @Redirect()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePrintingCompanyDto: UpdatePrintingCompanyDto,
-    @Res() res: Response,
   ) {
-    // バリデーションエラーの処理
-    if (
-      !updatePrintingCompanyDto.name ||
-      updatePrintingCompanyDto.name.trim() === ''
-    ) {
-      const printingCompany = await this.printingCompaniesService.findOne(id)
-      return res.status(200).render('printing-companies/edit', {
-        title: '印刷所編集',
-        printingCompany: {
-          id: printingCompany.id,
-          name: updatePrintingCompanyDto.name || '',
-          websiteUrl: updatePrintingCompanyDto.website || '',
-          notes: updatePrintingCompanyDto.notes || '',
-        },
-        errors: { name: '印刷所名は必須です' },
-        breadcrumbs: [
-          { name: '印刷所一覧', url: '/printing-companies' },
-          { name: printingCompany.name, url: `/printing-companies/${id}` },
-          { name: '編集', url: null },
-        ],
-      })
-    }
-
-    // URLバリデーション
-    if (
-      updatePrintingCompanyDto.website &&
-      updatePrintingCompanyDto.website.trim() !== ''
-    ) {
-      try {
-        new URL(updatePrintingCompanyDto.website)
-      } catch {
-        const printingCompany = await this.printingCompaniesService.findOne(id)
-        return res.status(200).render('printing-companies/edit', {
-          title: '印刷所編集',
-          printingCompany: {
-            id: printingCompany.id,
-            name: updatePrintingCompanyDto.name || '',
-            websiteUrl: updatePrintingCompanyDto.website || '',
-            notes: updatePrintingCompanyDto.notes || '',
-          },
-          errors: { website: '有効なURLを入力してください' },
-          breadcrumbs: [
-            { name: '印刷所一覧', url: '/printing-companies' },
-            { name: printingCompany.name, url: `/printing-companies/${id}` },
-            { name: '編集', url: null },
-          ],
-        })
-      }
-    }
-
-    // 更新処理
     await this.printingCompaniesService.update(id, updatePrintingCompanyDto)
-    res.redirect(`/printing-companies/${id}`)
+    return { url: `/printing-companies/${id}` }
   }
 
   @Delete(':id')

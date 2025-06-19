@@ -1,5 +1,6 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import {
   afterAll,
@@ -15,7 +16,6 @@ import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
 import { setupTestApp } from '../setup-test-app'
-import { eq } from 'drizzle-orm'
 
 describe('入稿編集機能 (Integration)', () => {
   let app: INestApplication

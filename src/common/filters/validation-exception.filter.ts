@@ -9,8 +9,13 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest()
 
+    console.log('🔍 ValidationExceptionFilter catch called')
+    console.log('Exception message:', exception.message)
+    console.log('Request path:', request.path)
+
     // ValidationPipeからのエラーかどうかを判定
     const exceptionResponse = exception.getResponse()
+    console.log('Exception response:', exceptionResponse)
 
     if (
       typeof exceptionResponse === 'object' &&
@@ -20,21 +25,33 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     ) {
       // ValidationPipeからのエラーの場合
       const validationErrors = (exceptionResponse as any).message as string[]
+      console.log('🔍 Raw validation errors:', validationErrors)
 
       // エラーメッセージをフィールド名ベースのオブジェクトに変換
       const errors: Record<string, string> = {}
 
       for (const error of validationErrors) {
-        // "name should not be empty" のような形式からフィールド名を抽出
-        const fieldMatch = error.match(/^(\w+)/)
-        if (fieldMatch) {
-          const fieldName = fieldMatch[1]
-          errors[fieldName] = error
+        console.log('🔍 Processing error:', error)
+        // 日本語エラーメッセージから推測
+        if (error.includes('印刷所名') || error.includes('name')) {
+          errors.name = error
+        } else if (error.includes('Webサイト') || error.includes('website') || error.includes('有効なURL')) {
+          errors.website = error
+        } else if (error.includes('備考') || error.includes('notes')) {
+          errors.notes = error
         } else {
-          // フィールド名が抽出できない場合は一般的なエラーとして扱う
-          errors._general = error
+          // 英語メッセージの場合は従来のロジック
+          const fieldMatch = error.match(/^(\w+)/)
+          if (fieldMatch) {
+            const fieldName = fieldMatch[1]
+            errors[fieldName] = error
+          } else {
+            // フィールド名が抽出できない場合は一般的なエラーとして扱う
+            errors._general = error
+          }
         }
       }
+      console.log('🔍 Processed errors:', errors)
 
       // 元のリクエストデータを取得してフォームに再表示
       const formData = request.body || {}
@@ -51,6 +68,10 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         } else if (path.endsWith('/printing-companies')) {
           templatePath = 'printing-companies/new'
           title = '印刷所新規作成'
+        } else if (path.match(/\/printing-companies\/\d+$/)) {
+          // POST /printing-companies/:id (PUT via _method)
+          templatePath = 'printing-companies/edit'
+          title = '印刷所編集'
         }
       } else if (path.includes('/books/')) {
         if (path.includes('/edit')) {
@@ -79,7 +100,9 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       }
 
       if (templatePath) {
-        return response.status(400).render(templatePath, {
+        console.log('🎯 Rendering template:', templatePath)
+        console.log('🎯 Template data:', { title, errors, ...this.prepareFormData(formData, path) })
+        return response.status(200).render(templatePath, {
           title,
           errors,
           // フォームデータを戻す（テンプレートによって変数名が異なるため汎用的に）
@@ -98,12 +121,22 @@ export class ValidationExceptionFilter implements ExceptionFilter {
   private prepareFormData(formData: any, path: string): any {
     // パスに応じて適切な変数名でフォームデータを返す
     if (path.includes('/printing-companies/')) {
+      // パスからIDを抽出 (例: /printing-companies/1 -> 1)
+      const idMatch = path.match(/\/printing-companies\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+      
       return {
         printingCompany: {
+          id,
           name: formData.name || '',
           websiteUrl: formData.website || '',
           notes: formData.notes || '',
         },
+        breadcrumbs: id ? [
+          { name: '印刷所一覧', url: '/printing-companies' },
+          { name: `印刷所 #${id}`, url: `/printing-companies/${id}` },
+          { name: '編集', url: null },
+        ] : [],
       }
     } else if (path.includes('/books/')) {
       return {

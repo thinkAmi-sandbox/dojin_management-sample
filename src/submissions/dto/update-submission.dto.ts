@@ -1,14 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types'
-import { CreateSubmissionDto } from './create-submission.dto'
+import { Transform } from 'class-transformer'
 import {
-  IsOptional,
+  IsDateString,
   IsIn,
   IsInt,
-  Min,
+  IsOptional,
   IsString,
-  IsDateString,
+  Min,
 } from 'class-validator'
-import { Transform } from 'class-transformer'
+import { CreateSubmissionDto } from './create-submission.dto'
 
 export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
   @IsOptional()

@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import { HttpStatus, INestApplication } from '@nestjs/common'
-import request from 'supertest'
-import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
-import { books, printingCompanies, submissions } from '../../../src/db/schema'
+import { Test, TestingModule } from '@nestjs/testing'
 import { sql } from 'drizzle-orm'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppModule } from '../../../src/app.module'
+import { books, printingCompanies, submissions } from '../../../src/db/schema'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { setupTestApp } from '../setup-test-app'
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 
 describe('Submissions - Create (Integration)', () => {
   let app: INestApplication

@@ -1,13 +1,13 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
-import request from 'supertest'
 import { eq } from 'drizzle-orm'
+import request from 'supertest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { setupTestApp } from '../setup-test-app'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('DELETE /printing-companies/:id（印刷所削除）', () => {
   let app: INestApplication
