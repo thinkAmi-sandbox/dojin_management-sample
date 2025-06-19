@@ -6,6 +6,7 @@ import * as dotenv from 'dotenv'
 import * as expressLayouts from 'express-ejs-layouts'
 import * as methodOverride from 'method-override'
 import { AppModule } from './app.module'
+import { ValidationExceptionFilter } from './common/filters/validation-exception.filter'
 
 // 環境変数を読み込み
 dotenv.config()
@@ -22,6 +23,9 @@ async function bootstrap() {
       },
     }),
   )
+
+  // グローバル例外フィルター設定
+  app.useGlobalFilters(new ValidationExceptionFilter())
 
   // EJSの設定
   app.useStaticAssets(join(__dirname, '..', 'public'))

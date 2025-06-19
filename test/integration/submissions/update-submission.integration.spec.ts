@@ -137,7 +137,9 @@ describe('入稿編集機能 (Integration)', () => {
       expect(html).toContain('<option value="submitted" >入稿済み</option>')
 
       // 印刷所選択の確認（既存の印刷所が選択されている）
-      expect(html).toContain(`<option value="${testPrintingCompany.id}" selected>`)
+      expect(html).toContain(
+        `<option value="${testPrintingCompany.id}" selected>`,
+      )
       expect(html).toContain('テスト印刷所')
 
       // 送信ボタンとキャンセルリンク

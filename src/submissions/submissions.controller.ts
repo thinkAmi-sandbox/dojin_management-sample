@@ -205,7 +205,10 @@ export class SubmissionsController {
     const errors: any = {}
 
     // 部数のバリデーション
-    if (!updateSubmissionDto.quantity || updateSubmissionDto.quantity.toString().trim() === '') {
+    if (
+      !updateSubmissionDto.quantity ||
+      updateSubmissionDto.quantity.toString().trim() === ''
+    ) {
       errors.quantity = '部数を入力してください'
     } else {
       const quantity = Number.parseInt(updateSubmissionDto.quantity, 10)
@@ -228,7 +231,9 @@ export class SubmissionsController {
         title: '入稿編集',
         submission: {
           id: id,
-          printingCompanyId: updateSubmissionDto.printingCompanyId || submission.printingCompany.id,
+          printingCompanyId:
+            updateSubmissionDto.printingCompanyId ||
+            submission.printingCompany.id,
           status: updateSubmissionDto.status || submission.status,
           quantity: updateSubmissionDto.quantity || '',
           submissionDate: updateSubmissionDto.submissionDate || '',
@@ -258,20 +263,67 @@ export class SubmissionsController {
 
     // DTOに変換（手動バリデーション通過後）
     const validatedDto: UpdateSubmissionDto = {
-      printingCompanyId: updateSubmissionDto.printingCompanyId ? Number.parseInt(updateSubmissionDto.printingCompanyId, 10) : undefined,
+      printingCompanyId: updateSubmissionDto.printingCompanyId
+        ? Number.parseInt(updateSubmissionDto.printingCompanyId, 10)
+        : undefined,
       status: updateSubmissionDto.status,
-      quantity: updateSubmissionDto.quantity ? Number.parseInt(updateSubmissionDto.quantity, 10) : undefined,
-      submissionDate: updateSubmissionDto.submissionDate && updateSubmissionDto.submissionDate !== '' ? updateSubmissionDto.submissionDate : null,
-      expectedDeliveryDate: updateSubmissionDto.expectedDeliveryDate && updateSubmissionDto.expectedDeliveryDate !== '' ? updateSubmissionDto.expectedDeliveryDate : null,
-      specificationNotes: updateSubmissionDto.specificationNotes && updateSubmissionDto.specificationNotes !== '' ? updateSubmissionDto.specificationNotes : null,
-      printingCost: updateSubmissionDto.printingCost && updateSubmissionDto.printingCost !== '' ? Number.parseInt(updateSubmissionDto.printingCost, 10) : null,
-      shippingCost: updateSubmissionDto.shippingCost && updateSubmissionDto.shippingCost !== '' ? Number.parseInt(updateSubmissionDto.shippingCost, 10) : null,
-      otherCost: updateSubmissionDto.otherCost && updateSubmissionDto.otherCost !== '' ? Number.parseInt(updateSubmissionDto.otherCost, 10) : null,
-      discountType: updateSubmissionDto.discountType && updateSubmissionDto.discountType !== '' ? updateSubmissionDto.discountType : null,
-      deliveryDestination: updateSubmissionDto.deliveryDestination && updateSubmissionDto.deliveryDestination !== '' ? updateSubmissionDto.deliveryDestination : null,
-      deliveryNotes: updateSubmissionDto.deliveryNotes && updateSubmissionDto.deliveryNotes !== '' ? updateSubmissionDto.deliveryNotes : null,
-      submissionFileNotes: updateSubmissionDto.submissionFileNotes && updateSubmissionDto.submissionFileNotes !== '' ? updateSubmissionDto.submissionFileNotes : null,
-      generalNotes: updateSubmissionDto.generalNotes && updateSubmissionDto.generalNotes !== '' ? updateSubmissionDto.generalNotes : null,
+      quantity: updateSubmissionDto.quantity
+        ? Number.parseInt(updateSubmissionDto.quantity, 10)
+        : undefined,
+      submissionDate:
+        updateSubmissionDto.submissionDate &&
+        updateSubmissionDto.submissionDate !== ''
+          ? updateSubmissionDto.submissionDate
+          : null,
+      expectedDeliveryDate:
+        updateSubmissionDto.expectedDeliveryDate &&
+        updateSubmissionDto.expectedDeliveryDate !== ''
+          ? updateSubmissionDto.expectedDeliveryDate
+          : null,
+      specificationNotes:
+        updateSubmissionDto.specificationNotes &&
+        updateSubmissionDto.specificationNotes !== ''
+          ? updateSubmissionDto.specificationNotes
+          : null,
+      printingCost:
+        updateSubmissionDto.printingCost &&
+        updateSubmissionDto.printingCost !== ''
+          ? Number.parseInt(updateSubmissionDto.printingCost, 10)
+          : null,
+      shippingCost:
+        updateSubmissionDto.shippingCost &&
+        updateSubmissionDto.shippingCost !== ''
+          ? Number.parseInt(updateSubmissionDto.shippingCost, 10)
+          : null,
+      otherCost:
+        updateSubmissionDto.otherCost && updateSubmissionDto.otherCost !== ''
+          ? Number.parseInt(updateSubmissionDto.otherCost, 10)
+          : null,
+      discountType:
+        updateSubmissionDto.discountType &&
+        updateSubmissionDto.discountType !== ''
+          ? updateSubmissionDto.discountType
+          : null,
+      deliveryDestination:
+        updateSubmissionDto.deliveryDestination &&
+        updateSubmissionDto.deliveryDestination !== ''
+          ? updateSubmissionDto.deliveryDestination
+          : null,
+      deliveryNotes:
+        updateSubmissionDto.deliveryNotes &&
+        updateSubmissionDto.deliveryNotes !== ''
+          ? updateSubmissionDto.deliveryNotes
+          : null,
+      submissionFileNotes:
+        updateSubmissionDto.submissionFileNotes &&
+        updateSubmissionDto.submissionFileNotes !== ''
+          ? updateSubmissionDto.submissionFileNotes
+          : null,
+      generalNotes:
+        updateSubmissionDto.generalNotes &&
+        updateSubmissionDto.generalNotes !== ''
+          ? updateSubmissionDto.generalNotes
+          : null,
     }
 
     try {

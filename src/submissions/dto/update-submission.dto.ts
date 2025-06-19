@@ -1,12 +1,21 @@
 import { PartialType } from '@nestjs/mapped-types'
 import { CreateSubmissionDto } from './create-submission.dto'
-import { IsOptional, IsIn, IsInt, Min, IsString, IsDateString } from 'class-validator'
+import {
+  IsOptional,
+  IsIn,
+  IsInt,
+  Min,
+  IsString,
+  IsDateString,
+} from 'class-validator'
 import { Transform } from 'class-transformer'
 
 export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
   @IsOptional()
-  @Transform(({ value }) => 
-    value === '' || value === null || value === undefined ? undefined : Number.parseInt(value, 10)
+  @Transform(({ value }) =>
+    value === '' || value === null || value === undefined
+      ? undefined
+      : Number.parseInt(value, 10),
   )
   @IsInt({ message: '印刷所IDが不正です' })
   printingCompanyId?: number
@@ -18,8 +27,10 @@ export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
   status?: string
 
   @IsOptional()
-  @Transform(({ value }) => 
-    value === '' || value === null || value === undefined ? undefined : Number.parseInt(value, 10)
+  @Transform(({ value }) =>
+    value === '' || value === null || value === undefined
+      ? undefined
+      : Number.parseInt(value, 10),
   )
   @IsInt({ message: '部数は整数で入力してください' })
   @Min(1, { message: '部数は1以上で入力してください' })
