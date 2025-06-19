@@ -7,6 +7,7 @@ import { desc, eq } from 'drizzle-orm'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import * as schema from '../db/schema'
 import { CreateSubmissionDto } from './dto/create-submission.dto'
+import { UpdateSubmissionDto } from './dto/update-submission.dto'
 
 @Injectable()
 export class SubmissionsService {
@@ -232,5 +233,156 @@ export class SubmissionsService {
     await this.drizzleService.db
       .insert(schema.submissions)
       .values(submissionData)
+  }
+
+  async update(
+    id: number,
+    updateSubmissionDto: UpdateSubmissionDto,
+  ): Promise<void> {
+    // 入稿の存在確認
+    const existingSubmission = await this.drizzleService.db
+      .select({ id: schema.submissions.id })
+      .from(schema.submissions)
+      .where(eq(schema.submissions.id, id))
+      .limit(1)
+
+    if (existingSubmission.length === 0) {
+      throw new NotFoundException('入稿が見つかりません')
+    }
+
+    // 印刷所の存在確認（印刷所IDが指定されている場合）
+    if (updateSubmissionDto.printingCompanyId) {
+      const printingCompany = await this.drizzleService.db
+        .select({ id: schema.printingCompanies.id })
+        .from(schema.printingCompanies)
+        .where(
+          eq(
+            schema.printingCompanies.id,
+            updateSubmissionDto.printingCompanyId,
+          ),
+        )
+        .limit(1)
+
+      if (printingCompany.length === 0) {
+        throw new BadRequestException('指定された印刷所が見つかりません')
+      }
+    }
+
+    // 更新データの構築
+    const updateData: any = {}
+
+    // 基本情報の更新
+    if (updateSubmissionDto.printingCompanyId !== undefined) {
+      updateData.printingCompanyId = updateSubmissionDto.printingCompanyId
+    }
+    if (updateSubmissionDto.status !== undefined) {
+      updateData.status = updateSubmissionDto.status
+    }
+    if (updateSubmissionDto.quantity !== undefined) {
+      updateData.quantity = updateSubmissionDto.quantity
+    }
+
+    // 日付フィールドの更新
+    if (updateSubmissionDto.submissionDate !== undefined) {
+      updateData.submissionDate = updateSubmissionDto.submissionDate
+        ? new Date(updateSubmissionDto.submissionDate)
+        : null
+    }
+    if (updateSubmissionDto.expectedDeliveryDate !== undefined) {
+      updateData.expectedDeliveryDate = updateSubmissionDto.expectedDeliveryDate
+        ? new Date(updateSubmissionDto.expectedDeliveryDate)
+        : null
+    }
+
+    // テキストフィールドの更新
+    if (updateSubmissionDto.specificationNotes !== undefined) {
+      updateData.specificationNotes =
+        updateSubmissionDto.specificationNotes || null
+    }
+    if (updateSubmissionDto.discountType !== undefined) {
+      updateData.discountType = updateSubmissionDto.discountType || null
+    }
+    if (updateSubmissionDto.deliveryDestination !== undefined) {
+      updateData.deliveryDestination =
+        updateSubmissionDto.deliveryDestination || null
+    }
+    if (updateSubmissionDto.deliveryNotes !== undefined) {
+      updateData.deliveryNotes = updateSubmissionDto.deliveryNotes || null
+    }
+    if (updateSubmissionDto.submissionFileNotes !== undefined) {
+      updateData.submissionFileNotes =
+        updateSubmissionDto.submissionFileNotes || null
+    }
+    if (updateSubmissionDto.generalNotes !== undefined) {
+      updateData.generalNotes = updateSubmissionDto.generalNotes || null
+    }
+
+    // コストフィールドの更新
+    if (updateSubmissionDto.printingCost !== undefined) {
+      updateData.printingCost = updateSubmissionDto.printingCost
+    }
+    if (updateSubmissionDto.shippingCost !== undefined) {
+      updateData.shippingCost = updateSubmissionDto.shippingCost
+    }
+    if (updateSubmissionDto.otherCost !== undefined) {
+      updateData.otherCost = updateSubmissionDto.otherCost
+    }
+
+    // 合計コストの再計算（コスト関連のフィールドが更新された場合）
+    if (
+      updateSubmissionDto.printingCost !== undefined ||
+      updateSubmissionDto.shippingCost !== undefined ||
+      updateSubmissionDto.otherCost !== undefined
+    ) {
+      // 現在のデータを取得して、更新されていないコスト項目を含めて計算
+      const currentSubmission = await this.drizzleService.db
+        .select({
+          printingCost: schema.submissions.printingCost,
+          shippingCost: schema.submissions.shippingCost,
+          otherCost: schema.submissions.otherCost,
+        })
+        .from(schema.submissions)
+        .where(eq(schema.submissions.id, id))
+        .limit(1)
+
+      const current = currentSubmission[0]
+      const finalPrintingCost =
+        updateData.printingCost !== undefined
+          ? updateData.printingCost
+          : current.printingCost
+      const finalShippingCost =
+        updateData.shippingCost !== undefined
+          ? updateData.shippingCost
+          : current.shippingCost
+      const finalOtherCost =
+        updateData.otherCost !== undefined
+          ? updateData.otherCost
+          : current.otherCost
+
+      // 型を数値に確実に変換
+      const printingCostNum = finalPrintingCost ? Number(finalPrintingCost) : 0
+      const shippingCostNum = finalShippingCost ? Number(finalShippingCost) : 0
+      const otherCostNum = finalOtherCost ? Number(finalOtherCost) : 0
+
+      // いずれかがnullの場合は合計もnullにする
+      if (
+        finalPrintingCost === null &&
+        finalShippingCost === null &&
+        finalOtherCost === null
+      ) {
+        updateData.totalCost = null
+      } else {
+        updateData.totalCost = printingCostNum + shippingCostNum + otherCostNum
+      }
+    }
+
+    // updatedAtを現在時刻に設定
+    updateData.updatedAt = new Date()
+
+    // データベース更新
+    await this.drizzleService.db
+      .update(schema.submissions)
+      .set(updateData)
+      .where(eq(schema.submissions.id, id))
   }
 }
