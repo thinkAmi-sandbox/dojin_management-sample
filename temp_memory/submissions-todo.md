@@ -114,24 +114,25 @@ export const submissions = pgTable('Submission', {
 - [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト175件全通過】**
 - [x] 2-6. ユーザー確認（ビューファイル配置問題解決済み）
 
-### 3. 新規入稿作成（GET /books/:bookId/submissions/new + POST /books/:bookId/submissions）
+### ✅ 3. 新規入稿作成（GET /books/:bookId/submissions/new + POST /books/:bookId/submissions）**【完了】**
 
 #### 設計フェーズ
-- [ ] 入稿作成フォーム仕様の確認
-- [ ] バリデーションルールの設計
-- [ ] 印刷所選択UI設計
+- [x] 入稿作成フォーム仕様の確認
+- [x] バリデーションルールの設計
+- [x] 印刷所選択UI設計
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/submissions/create-submission.integration.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] CreateSubmissionDto作成
-  - [ ] コントローラーにrenderNewForm()とcreate()追加
-  - [ ] サービスにcreate()追加
-  - [ ] ビューファイル作成（src/views/submissions/new.ejs）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/submissions/create-submission.integration.spec.ts）
+- [x] 2-2. プロダクションコード実装
+  - [x] CreateSubmissionDto作成
+  - [x] BooksControllerにrenderNewSubmissionForm()とcreateSubmission()追加
+  - [x] サービスにcreate()追加
+  - [x] ビューファイル作成（src/views/submissions/new.ejs）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）
+- [x] 2-6. ビルド実行（pnpm build）とビューファイルコピー確認
+- [x] 2-7. ユーザー確認待ち
 
 ### 4. 入稿詳細画面（GET /submissions/:id）
 
@@ -256,12 +257,15 @@ test/
 - 日付フィールドは適切な入力バリデーション・表示フォーマットを実装
 - 金額フィールドは整数型（円単位）で管理
 - **重要**: 新しいビューファイル作成時は必ず `pnpm build` を実行して `dist/views/` にコピーすること
+- **重要**: テストデータ作成時は必ずスキーマ定義（`src/db/schema.ts`）を確認
+- **重要**: 新規パッケージ使用時は事前に`package.json`を確認
+- **重要**: URLパスに基づいて適切なコントローラーに実装（例: `/books/:id/...` → BooksController）
 
 ## 現在の状況
 
 - [x] Phase 1-1: 入稿一覧画面 **【完了 - 統合テスト5件全通過】**
 - [x] Phase 1-2: 書籍の入稿履歴 **【完了 - 統合テスト175件全通過】**
-- [ ] Phase 1-3: 新規入稿作成 **【未着手】**
+- [x] Phase 1-3: 新規入稿作成 **【完了 - 実装済み、動作確認待ち】**
 - [ ] Phase 1-4: 入稿詳細画面 **【未着手】**
 - [ ] Phase 2-1: 入稿編集 **【未着手】**
 - [ ] Phase 2-2: 入稿削除 **【未着手】**
@@ -323,6 +327,48 @@ test/
 ```
 
 **次のステップ**: Phase 1-3（新規入稿作成）の実装
+
+### Phase 1-3: 新規入稿作成機能 実装完了 ✅
+
+**実装日時**: 2025/06/19 20:25完了  
+**実装状況**: コード実装完了、ビルド確認済み、動作確認待ち
+
+**主な成果物**:
+- 新規入稿作成フォーム（/books/:bookId/submissions/new）
+- 入稿作成処理（POST /books/:bookId/submissions）
+- 包括的なバリデーション機能（必須項目、データ型、存在チェック）
+- レスポンシブ対応の作成フォーム
+- 統合テスト6パターンの実装
+
+**技術的な実装内容**:
+- BooksControllerに `renderNewSubmissionForm()` と `createSubmission()` メソッド追加
+- SubmissionsService に `create()` メソッド追加（印刷所存在確認、合計コスト計算）
+- CreateSubmissionDto によるリクエストバリデーション（class-validator使用）
+- レスポンシブ対応のEJSビューファイル（new.ejs）
+- 包括的なエラーハンドリング（存在しない書籍・印刷所、バリデーションエラー）
+
+**解決した課題**:
+- **依存関係の不足**: `@nestjs/mapped-types`、`method-override`を追加インストール
+- **型エラーの修正**: スキーマ定義を確認してテストデータのフィールド名を修正
+- **インポートパスの問題**: 他のテストファイルを参考に正しいパスに修正
+- **コントローラー配置**: URLパスから適切なコントローラー（BooksController）に実装
+
+**実装済みファイル（新規作成・修正）**:
+```
+✅ src/submissions/dto/create-submission.dto.ts（バリデーション付きDTO）
+✅ src/books/books.controller.ts（新規入稿作成メソッド追加）
+✅ src/books/books.module.ts（PrintingCompaniesService依存性注入）
+✅ src/submissions/submissions.service.ts（create()メソッド追加）
+✅ src/views/submissions/new.ejs（新規入稿作成フォーム）
+✅ test/integration/submissions/create-submission.integration.spec.ts（統合テスト6件）
+```
+
+**学んだ教訓・改善点**:
+- 実装前チェックリストの重要性（スキーマ定義、依存関係、URLパス）
+- 統合テスト駆動開発の効果（仕様の明確化、早期エラー発見）
+- 既存パターン踏襲の価値（印刷所機能の実装パターンを参考）
+
+**次のステップ**: ユーザーによる動作確認 → Phase 1-4（入稿詳細画面）の実装
 
 ## URL設計（docs/01_url.mdより）
 

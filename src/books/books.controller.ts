@@ -11,6 +11,7 @@ import {
   Render,
   Res,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { BooksService } from './books.service'
@@ -19,6 +20,8 @@ import { UpdateBookStatusDto } from './dto/update-book-status.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 import { BooksListView } from './views/books-list.view'
 import { SubmissionsService } from '../submissions/submissions.service'
+import { PrintingCompaniesService } from '../printing-companies/printing-companies.service'
+import { CreateSubmissionDto } from '../submissions/dto/create-submission.dto'
 
 @Controller('books')
 export class BooksController {
@@ -26,6 +29,7 @@ export class BooksController {
     private readonly booksService: BooksService,
     private readonly booksListView: BooksListView,
     private readonly submissionsService: SubmissionsService,
+    private readonly printingCompaniesService: PrintingCompaniesService,
   ) {}
 
   @Get()
@@ -317,6 +321,74 @@ export class BooksController {
     } catch (error) {
       if (error instanceof Error && error.message === 'Book not found') {
         throw new NotFoundException('指定された書籍が見つかりません')
+      }
+      throw error
+    }
+  }
+
+  @Get(':bookId/submissions/new')
+  @Render('submissions/new')
+  async renderNewSubmissionForm(@Param('bookId', ParseIntPipe) bookId: number) {
+    try {
+      const book = await this.booksService.findOne(bookId)
+      const printingCompanies = await this.printingCompaniesService.findAll()
+
+      return {
+        title: '入稿作成',
+        book,
+        printingCompanies,
+        submission: {
+          printingCompanyId: '',
+          quantity: '',
+          submissionDate: '',
+          expectedDeliveryDate: '',
+          specificationNotes: '',
+          printingCost: '',
+          shippingCost: '',
+          otherCost: '',
+          discountType: '',
+          deliveryDestination: '',
+          deliveryNotes: '',
+          submissionFileNotes: '',
+          generalNotes: '',
+        },
+        errors: {},
+      }
+    } catch (error) {
+      throw new NotFoundException('書籍が見つかりません')
+    }
+  }
+
+  @Post(':bookId/submissions')
+  async createSubmission(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Body() createSubmissionDto: CreateSubmissionDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const book = await this.booksService.findOne(bookId)
+
+      try {
+        await this.submissionsService.create(bookId, createSubmissionDto)
+        res.redirect(`/books/${bookId}/submissions`)
+      } catch (error) {
+        if (error instanceof BadRequestException) {
+          const printingCompanies =
+            await this.printingCompaniesService.findAll()
+
+          return res.status(400).render('submissions/new', {
+            title: '入稿作成',
+            book,
+            printingCompanies,
+            submission: createSubmissionDto,
+            errors: { general: error.message },
+          })
+        }
+        throw error
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('書籍が見つかりません')
       }
       throw error
     }
