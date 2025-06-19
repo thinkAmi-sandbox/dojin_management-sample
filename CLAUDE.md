@@ -198,28 +198,36 @@ pnpm start:dev
 
 新機能を実装する前に、以下の項目を必ず確認してください：
 
-- [ ] **スキーマ定義の確認**
+- [ ] **スキーマ定義の詳細確認**
   - `src/db/schema.ts`でテーブル定義を確認
-  - フィールド名の正確な確認（例: `subtitle`であって`subTitle`ではない）
-  - データ型の確認（例: `pageCount`は`integer`型）
+  - **重要**: フィールド名の正確な確認（例: `websiteUrl`であって`officialSite`ではない）
+  - データ型の確認（例: `pageCount`は`integer`型、`createdAt`は`timestamp`型）
   - enumの値を確認（例: 書籍ステータスは`planning`, `writing`, `editing`, `completed`）
+  - **手順**: 実装前に必ず `Read` ツールでスキーマ定義を読み返す
 
 - [ ] **既存の類似実装の確認**
   - 同じパターンの実装が既にあるか確認
-  - 特に印刷所機能は良い参考例として活用
+  - **参考実装の優先順位**:
+    1. 印刷所機能（完全なCRUD実装の模範例）
+    2. 書籍機能（ステータス更新、部分更新の例）
+    3. 執筆者機能（多対多関係の例）
+  - JOIN処理、エラーハンドリング、ビューファイル構造を参考にする
 
 - [ ] **必要な依存関係の確認**
   - `package.json`で必要なパッケージがインストール済みか確認
   - 型定義パッケージも含めて確認（例: `@types/method-override`）
+  - **特に注意**: `@nestjs/mapped-types`, `class-validator`, `method-override`
 
 - [ ] **URLパスとコントローラーの対応確認**
   - URLパスから適切なコントローラーを判断
   - 例: `/books/:bookId/submissions/new` → BooksControllerに実装
   - 例: `/submissions/:id` → SubmissionsControllerに実装
+  - **ルール**: パスの最初のセグメントでコントローラーを決定
 
 - [ ] **テストファイルのインポートパス確認**
   - 他の統合テストファイルを参考にして正しいインポートパスを使用
   - 例: `setupTestApp`は`../setup-test-app`からインポート
+  - **確認手順**: 既存テストファイルのimport文をコピーして修正
 
 
 ### 2. 実装フェーズ
@@ -403,14 +411,171 @@ app.setBaseViewsDir(viewsPath)
 
 ### エラーハンドリング
 
-- 存在しないリソースへのアクセスは`NotFoundException`を使用
-- バリデーションエラーは`BadRequestException`を使用
-- サービス層で適切な例外を投げ、コントローラー層でキャッチして処理
+#### 標準エラーハンドリングパターン
+
+- **存在しないリソース**: `NotFoundException`を使用
+- **バリデーションエラー**: `BadRequestException`を使用
+- **権限エラー**: `ForbiddenException`を使用
+- **サービス層**: 適切な例外を投げる
+- **コントローラー層**: 基本的にはcatchせず、NestJSのグローバルフィルターに任せる
+
+#### **YOU MUST**: ParseIntPipeと例外の適切な組み合わせ
+
+```typescript
+// ✅ 正しいパターン: ParseIntPipeを使い、サービス層でNotFoundExceptionを投げる
+@Get(':id')
+@Render('resource/show')
+async findOne(@Param('id', ParseIntPipe) id: number) {
+  // サービス内でNotFoundException投げる → 404エラー
+  const resource = await this.service.findOne(id)
+  return { resource }
+}
+
+// ❌ 間違ったパターン: try-catchでBadRequestExceptionを投げる
+@Get(':id')
+@Render('resource/show')
+async findOne(@Param('id', ParseIntPipe) id: number) {
+  try {
+    const resource = await this.service.findOne(id)
+    return { resource }
+  } catch (error) {
+    // これだと存在しないリソースも400エラーになってしまう
+    throw new BadRequestException('無効なIDです')
+  }
+}
+```
+
+#### サービス層での例外処理
+
+```typescript
+// ✅ 推奨パターン
+async findOne(id: number) {
+  const result = await this.db.select().where(eq(table.id, id)).limit(1)
+  
+  if (result.length === 0) {
+    throw new NotFoundException('リソースが見つかりません')
+  }
+  
+  return result[0]
+}
+```
 
 ### 依存関係の管理
 
 - 新しいパッケージを使用する際は、必ず事前にインストール状況を確認
 - 型定義パッケージも忘れずにインストール（`@types/`で始まるパッケージ）
+
+## 効率的実装パターン集
+
+### CRUD操作の標準テンプレート
+
+#### サービス層のテンプレート
+
+```typescript
+// 一覧取得（JOIN処理含む）
+async findAll() {
+  return await this.drizzleService.db
+    .select({
+      id: schema.mainTable.id,
+      // 必要なフィールドを列挙
+      relatedData: {
+        id: schema.relatedTable.id,
+        name: schema.relatedTable.name,
+      },
+    })
+    .from(schema.mainTable)
+    .innerJoin(schema.relatedTable, eq(schema.mainTable.relatedId, schema.relatedTable.id))
+    .orderBy(desc(schema.mainTable.createdAt))
+}
+
+// 単一取得（JOIN処理含む）
+async findOne(id: number) {
+  const result = await this.drizzleService.db
+    .select({
+      // 全フィールドを含む詳細情報
+    })
+    .from(schema.mainTable)
+    .innerJoin(schema.relatedTable, eq(schema.mainTable.relatedId, schema.relatedTable.id))
+    .where(eq(schema.mainTable.id, id))
+    .limit(1)
+
+  if (result.length === 0) {
+    throw new NotFoundException('リソースが見つかりません')
+  }
+
+  return result[0]
+}
+```
+
+#### コントローラー層のテンプレート
+
+```typescript
+// 詳細画面パターン
+@Get(':id')
+@Render('resource/show')
+async findOne(@Param('id', ParseIntPipe) id: number) {
+  const resource = await this.service.findOne(id)
+
+  // ステータス日本語変換
+  const statusMap = { /* ステータスマッピング */ }
+
+  // フォーマット関数
+  const formatCurrency = (amount: number | null) => 
+    amount !== null ? amount.toLocaleString('ja-JP') + '円' : '-'
+  
+  const formatDate = (date: Date | null) => 
+    date ? date.toLocaleDateString('ja-JP') : '-'
+
+  return {
+    title: 'リソース詳細',
+    resource: {
+      // フォーマット済みデータ
+    },
+    // URL生成
+    editUrl: `/resources/${resource.id}/edit`,
+    deleteUrl: `/resources/${resource.id}`,
+    listUrl: '/resources',
+  }
+}
+```
+
+### ビューファイルの構造化テンプレート
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        /* 共通スタイル */
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        
+        /* セクション構造 */
+        .detail-section { margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .detail-item { display: flex; margin-bottom: 10px; }
+        .detail-label { font-weight: bold; min-width: 150px; }
+        .detail-value { flex: 1; }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ヘッダーとアクション -->
+    <!-- セクション別詳細表示 -->
+    <!-- JavaScript（削除確認等） -->
+</body>
+</html>
+```
 
 ## 3. Gitへコミットする
 

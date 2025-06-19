@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; display: inline-block; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        
+        .detail-container { max-width: 800px; }
+        .detail-section { margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: #495057; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .detail-item { display: flex; margin-bottom: 10px; }
+        .detail-label { font-weight: bold; min-width: 150px; color: #495057; }
+        .detail-value { flex: 1; }
+        
+        .full-width { grid-column: 1 / -1; }
+        .text-area-value { white-space: pre-wrap; background: white; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6; }
+        
+        .status-draft { color: #6c757d; font-weight: bold; }
+        .status-submitted { color: #007bff; font-weight: bold; }
+        .status-printing { color: #fd7e14; font-weight: bold; }
+        .status-delivered { color: #28a745; font-weight: bold; }
+        .status-cancelled { color: #dc3545; font-weight: bold; }
+        
+        .link-button { color: #007bff; text-decoration: none; }
+        .link-button:hover { text-decoration: underline; }
+        
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .actions { text-align: center; }
+            .btn { margin-bottom: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="<%= listUrl %>" class="btn btn-secondary">一覧に戻る</a>
+        <a href="<%= bookSubmissionsUrl %>" class="btn btn-secondary">書籍の入稿履歴</a>
+        <a href="<%= editUrl %>" class="btn">編集</a>
+        <button onclick="confirmDelete()" class="btn btn-danger">削除</button>
+    </div>
+
+    <div class="detail-container">
+        <!-- 基本情報セクション -->
+        <div class="detail-section">
+            <div class="section-title">基本情報</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">ID:</span>
+                    <span class="detail-value"><%= submission.id %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">ステータス:</span>
+                    <span class="detail-value status-<%= submission.status.toLowerCase() %>"><%= submission.status %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">書籍名:</span>
+                    <span class="detail-value"><%= submission.book.title %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">サブタイトル:</span>
+                    <span class="detail-value"><%= submission.book.subtitle %></span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">書籍説明:</span>
+                    <span class="detail-value"><%= submission.book.description %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">印刷所:</span>
+                    <span class="detail-value"><%= submission.printingCompany.name %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">公式サイト:</span>
+                    <span class="detail-value">
+                        <% if (submission.printingCompany.websiteUrl !== '-') { %>
+                            <a href="<%= submission.printingCompany.websiteUrl %>" target="_blank" class="link-button"><%= submission.printingCompany.websiteUrl %></a>
+                        <% } else { %>
+                            -
+                        <% } %>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日付情報セクション -->
+        <div class="detail-section">
+            <div class="section-title">日付情報</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">入稿日:</span>
+                    <span class="detail-value"><%= submission.submissionDate %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">納期予定日:</span>
+                    <span class="detail-value"><%= submission.expectedDeliveryDate %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">実際の納品日:</span>
+                    <span class="detail-value"><%= submission.actualDeliveryDate %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">作成日:</span>
+                    <span class="detail-value"><%= submission.formattedCreatedAt %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">更新日:</span>
+                    <span class="detail-value"><%= submission.formattedUpdatedAt %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 印刷情報セクション -->
+        <div class="detail-section">
+            <div class="section-title">印刷情報</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">部数:</span>
+                    <span class="detail-value"><%= submission.quantity %></span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">仕様メモ:</span>
+                    <div class="detail-value text-area-value"><%= submission.specificationNotes %></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- コスト情報セクション -->
+        <div class="detail-section">
+            <div class="section-title">コスト情報</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">印刷代:</span>
+                    <span class="detail-value"><%= submission.printingCost %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">送料:</span>
+                    <span class="detail-value"><%= submission.shippingCost %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">その他費用:</span>
+                    <span class="detail-value"><%= submission.otherCost %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">合計金額:</span>
+                    <span class="detail-value" style="font-weight: bold; font-size: 1.1em;"><%= submission.totalCost %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">割引種別:</span>
+                    <span class="detail-value"><%= submission.discountType %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配送情報セクション -->
+        <div class="detail-section">
+            <div class="section-title">配送情報</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">搬入先:</span>
+                    <span class="detail-value"><%= submission.deliveryDestination %></span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">配送メモ:</span>
+                    <div class="detail-value text-area-value"><%= submission.deliveryNotes %></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- その他情報セクション -->
+        <div class="detail-section">
+            <div class="section-title">その他情報</div>
+            <div class="detail-grid">
+                <div class="detail-item full-width">
+                    <span class="detail-label">入稿ファイルメモ:</span>
+                    <div class="detail-value text-area-value"><%= submission.submissionFileNotes %></div>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">全般メモ:</span>
+                    <div class="detail-value text-area-value"><%= submission.generalNotes %></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete() {
+            if (confirm('この入稿を削除しますか？この操作は元に戻せません。')) {
+                // 削除処理用のフォームを動的に作成
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<%= deleteUrl %>';
+                
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

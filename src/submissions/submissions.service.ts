@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common'
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common'
 import { desc, eq } from 'drizzle-orm'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import * as schema from '../db/schema'
@@ -84,6 +88,58 @@ export class SubmissionsService {
       book: book[0],
       submissions,
     }
+  }
+
+  async findOne(id: number) {
+    const submission = await this.drizzleService.db
+      .select({
+        // 入稿の全フィールド
+        id: schema.submissions.id,
+        status: schema.submissions.status,
+        submissionDate: schema.submissions.submissionDate,
+        expectedDeliveryDate: schema.submissions.expectedDeliveryDate,
+        actualDeliveryDate: schema.submissions.actualDeliveryDate,
+        quantity: schema.submissions.quantity,
+        specificationNotes: schema.submissions.specificationNotes,
+        printingCost: schema.submissions.printingCost,
+        shippingCost: schema.submissions.shippingCost,
+        otherCost: schema.submissions.otherCost,
+        totalCost: schema.submissions.totalCost,
+        discountType: schema.submissions.discountType,
+        deliveryDestination: schema.submissions.deliveryDestination,
+        deliveryNotes: schema.submissions.deliveryNotes,
+        submissionFileNotes: schema.submissions.submissionFileNotes,
+        generalNotes: schema.submissions.generalNotes,
+        createdAt: schema.submissions.createdAt,
+        updatedAt: schema.submissions.updatedAt,
+        // 書籍情報
+        book: {
+          id: schema.books.id,
+          title: schema.books.title,
+          subtitle: schema.books.subtitle,
+          description: schema.books.description,
+        },
+        // 印刷所情報
+        printingCompany: {
+          id: schema.printingCompanies.id,
+          name: schema.printingCompanies.name,
+          websiteUrl: schema.printingCompanies.websiteUrl,
+        },
+      })
+      .from(schema.submissions)
+      .innerJoin(schema.books, eq(schema.submissions.bookId, schema.books.id))
+      .innerJoin(
+        schema.printingCompanies,
+        eq(schema.submissions.printingCompanyId, schema.printingCompanies.id),
+      )
+      .where(eq(schema.submissions.id, id))
+      .limit(1)
+
+    if (submission.length === 0) {
+      throw new NotFoundException('入稿が見つかりません')
+    }
+
+    return submission[0]
   }
 
   async create(
