@@ -7,6 +7,8 @@ import {
   Post,
   Redirect,
   Render,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import { DeadlinesService } from './deadlines.service'
 import { CreateDeadlineDto } from './dto/create-deadline.dto'
@@ -72,6 +74,7 @@ export class DeadlinesController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   @Redirect()
   async create(
     @Param('bookId', ParseIntPipe) bookId: number,

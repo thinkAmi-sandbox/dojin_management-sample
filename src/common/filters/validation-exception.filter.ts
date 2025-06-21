@@ -9,13 +9,8 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest()
 
-    console.log('🔍 ValidationExceptionFilter catch called')
-    console.log('Exception message:', exception.message)
-    console.log('Request path:', request.path)
-
     // ValidationPipeからのエラーかどうかを判定
     const exceptionResponse = exception.getResponse()
-    console.log('Exception response:', exceptionResponse)
 
     if (
       typeof exceptionResponse === 'object' &&
@@ -25,13 +20,11 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     ) {
       // ValidationPipeからのエラーの場合
       const validationErrors = (exceptionResponse as any).message as string[]
-      console.log('🔍 Raw validation errors:', validationErrors)
 
       // エラーメッセージをフィールド名ベースのオブジェクトに変換
       const errors: Record<string, string> = {}
 
       for (const error of validationErrors) {
-        console.log('🔍 Processing error:', error)
         // 日本語エラーメッセージから推測
         if (error.includes('印刷所名') || error.includes('name')) {
           errors.name = error
@@ -53,6 +46,14 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.pageCount = error
         } else if (error.includes('ステータス')) {
           errors.status = error
+        } else if (error.includes('名前')) {
+          errors.name = error
+        } else if (error.includes('メールアドレス') || error.includes('有効なメールアドレス')) {
+          errors.email = error
+        } else if (error.includes('プロフィール') || error.includes('bio')) {
+          errors.bio = error
+        } else if (error.includes('締切日') || error.includes('dueDate')) {
+          errors.dueDate = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -65,7 +66,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           }
         }
       }
-      console.log('🔍 Processed errors:', errors)
 
       // 元のリクエストデータを取得してフォームに再表示
       const formData = request.body || {}
@@ -87,6 +87,22 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'printing-companies/edit'
           title = '印刷所編集'
         }
+      } else if (path.includes('/deadlines')) {
+        if (path.includes('/edit')) {
+          templatePath = 'deadlines/edit'
+          title = '締切編集'
+        } else if (path.match(/\/deadlines\/\d+$/)) {
+          // POST /deadlines/:id (PUT via _method)
+          templatePath = 'deadlines/edit'
+          title = '締切編集'
+        } else if (path.match(/\/books\/\d+\/deadlines$/)) {
+          // POST /books/:bookId/deadlines (新規作成)
+          templatePath = 'deadlines/new'
+          title = '締切追加'
+        } else {
+          templatePath = 'deadlines/edit'
+          title = '締切編集'
+        }
       } else if (path.includes('/books')) {
         if (path.includes('/status/edit')) {
           templatePath = 'books/status-edit'
@@ -106,13 +122,17 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'books/edit'
           title = '書籍編集'
         }
-      } else if (path.includes('/authors/')) {
+      } else if (path.includes('/authors')) {
         if (path.includes('/edit')) {
           templatePath = 'authors/edit'
           title = '執筆者編集'
         } else if (path.endsWith('/authors')) {
           templatePath = 'authors/new'
           title = '執筆者新規作成'
+        } else if (path.match(/\/authors\/\d+$/)) {
+          // POST /authors/:id (PUT via _method)
+          templatePath = 'authors/edit'
+          title = '執筆者編集'
         }
       } else if (path.includes('/submissions/')) {
         if (path.includes('/edit')) {
@@ -125,18 +145,14 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       }
 
       if (templatePath) {
-        console.log('🎯 Rendering template:', templatePath)
-        console.log('🎯 Template data:', {
-          title,
-          errors,
-          ...this.prepareFormData(formData, path),
-        })
-        return response.status(200).render(templatePath, {
+        const templateData = {
           title,
           errors,
           // フォームデータを戻す（テンプレートによって変数名が異なるため汎用的に）
           ...this.prepareFormData(formData, path),
-        })
+        }
+        
+        return response.status(200).render(templatePath, templateData)
       }
     }
 
@@ -230,13 +246,81 @@ export class ValidationExceptionFilter implements ExceptionFilter {
             ]
           : [],
       }
-    } else if (path.includes('/authors/')) {
+    } else if (path.includes('/authors')) {
+      // パスからIDを抽出 (例: /authors/1 -> 1)
+      const idMatch = path.match(/\/authors\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/authors') {
+        return {
+          author: {
+            name: formData.name || '',
+            email: formData.email || '',
+            bio: formData.bio || '',
+          },
+        }
+      }
+
+      // 編集の場合
       return {
         author: {
+          id,
           name: formData.name || '',
           email: formData.email || '',
-          profile: formData.profile || '',
+          bio: formData.bio || '',
         },
+        breadcrumbs: id
+          ? [
+              { name: '執筆者一覧', url: '/authors' },
+              { name: `執筆者 #${id}`, url: `/authors/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.includes('/deadlines')) {
+      // パスからIDを抽出 (例: /deadlines/1 -> 1)
+      const idMatch = path.match(/\/deadlines\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合 (/books/:bookId/deadlines)
+      const bookIdMatch = path.match(/\/books\/(\d+)\/deadlines/)
+      if (bookIdMatch) {
+        const bookId = parseInt(bookIdMatch[1], 10)
+        return {
+          deadline: {
+            title: formData.title || '',
+            dueDate: formData.dueDate || '',
+            description: formData.description || '',
+          },
+          book: {
+            id: bookId,
+            title: `書籍 #${bookId}`, // 実際の書籍タイトルは取得困難
+          },
+          breadcrumbs: [
+            { name: '書籍一覧', url: '/books' },
+            { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
+            { name: '締切一覧', url: `/books/${bookId}/deadlines` },
+            { name: '締切追加', url: null },
+          ],
+        }
+      }
+
+      // 編集の場合
+      return {
+        deadline: {
+          id,
+          title: formData.title || '',
+          dueDate: formData.dueDate || '',
+          description: formData.description || '',
+        },
+        breadcrumbs: id
+          ? [
+              { name: '書籍一覧', url: '/books' },
+              { name: '締切一覧', url: '#' }, // bookIdが不明なため
+              { name: '編集', url: null },
+            ]
+          : [],
       }
     } else if (path.includes('/submissions/')) {
       return {

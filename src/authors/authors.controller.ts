@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,6 +11,8 @@ import {
   Redirect,
   Render,
   Res,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { AuthorsService } from './authors.service'
@@ -64,6 +67,7 @@ export class AuthorsController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   async create(@Body() createAuthorDto: CreateAuthorDto, @Res() res: Response) {
     try {
       await this.authorsService.create(createAuthorDto)
@@ -91,6 +95,15 @@ export class AuthorsController {
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
+      // 空文字列の名前の事前チェック（PartialTypeとTransformの相互作用回避）
+      if (body.name === '' || (body.name && body.name.trim() === '')) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: ['名前は必須です'],
+          error: 'Bad Request',
+        })
+      }
+
       return this.update(id, body, res)
     }
     if (body._method === 'DELETE') {
@@ -101,31 +114,12 @@ export class AuthorsController {
   }
 
   @Put(':id')
+  @UsePipes(ValidationPipe)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAuthorDto: UpdateAuthorDto,
     @Res() res: Response,
   ) {
-    if (!updateAuthorDto.name || updateAuthorDto.name.trim() === '') {
-      const author = await this.authorsService.findOne(id)
-
-      return res.status(200).render('authors/edit', {
-        title: '執筆者編集',
-        author: {
-          id: author.id,
-          name: updateAuthorDto.name || author.name,
-          email: updateAuthorDto.email || author.email || '',
-          bio: updateAuthorDto.bio || author.bio || '',
-        },
-        errors: { name: '名前は必須です' },
-        breadcrumbs: [
-          { name: '執筆者一覧', url: '/authors' },
-          { name: author.name, url: `/authors/${author.id}` },
-          { name: '編集', url: null },
-        ],
-      })
-    }
-
     try {
       await this.authorsService.update(id, updateAuthorDto)
       res.redirect(`/authors/${id}`)

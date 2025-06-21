@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer'
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class CreateAuthorDto {
+  @Transform(({ value }) => value?.trim())
   @IsNotEmpty({ message: '名前は必須です' })
   @IsString()
   name: string

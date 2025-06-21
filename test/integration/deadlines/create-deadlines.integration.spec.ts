@@ -124,7 +124,8 @@ describe('Deadlines Creation', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/deadlines`)
         .send(deadlineData)
-        .expect(400) // バッドリクエスト
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
       // Assert: エラーメッセージが含まれていることを確認
       expect(response.text).toMatch(/タイトル.*必須|title.*required/i)

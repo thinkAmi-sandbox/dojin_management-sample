@@ -123,7 +123,8 @@ describe('Authors creation', () => {
       const response = await request(app.getHttpServer())
         .post('/authors')
         .send(authorData)
-        .expect(400) // ValidationPipeが400を返す
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
       // Assert: エラーメッセージが表示されることを確認
       expect(response.text).toMatch(/名前.*必須|name.*required/i)
