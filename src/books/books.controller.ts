@@ -323,6 +323,7 @@ export class BooksController {
   }
 
   @Post(':bookId/submissions')
+  @UsePipes(ValidationPipe)
   async createSubmission(
     @Param('bookId', ParseIntPipe) bookId: number,
     @Body() createSubmissionDto: CreateSubmissionDto,

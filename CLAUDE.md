@@ -553,9 +553,10 @@ console.log('✅ 処理完了')
 #### ValidationPipe統一ガイドライン
 
 ##### **YOU MUST**: ValidationPipeの使用方針
-- 新規実装では必ずValidationPipeを使用（手動バリデーションは避ける）
+- **全コントローラーでValidationPipe統一完了済み**（2025-06-21時点）
 - ValidationExceptionFilterがMPA用のエラーハンドリングを提供
 - DTOでclass-validatorデコレータを使用してバリデーション定義
+- **手動バリデーションは全廃済み**（約300行削除完了）
 
 ##### バリデーション実装パターン
 ```typescript
@@ -666,6 +667,22 @@ async findOne(id: number) {
 
 - 新しいパッケージを使用する際は、必ず事前にインストール状況を確認
 - 型定義パッケージも忘れずにインストール（`@types/`で始まるパッケージ）
+
+### ValidationExceptionFilter実装済み
+
+**実装済み機能**（2025-06-21完了）:
+- `src/common/filters/validation-exception.filter.ts`でMPA用エラーハンドリング統一
+- 全コントローラーのValidationPipeエラーを適切なHTMLエラーページに変換
+- フォームデータ復元機能でユーザビリティ保持
+- 全195件統合テスト成功確認済み
+
+**対応済みパス**:
+- 印刷所: `/printing-companies`, `/printing-companies/:id`
+- 書籍: `/books`, `/books/:id`, `/books/:id/status`
+- 執筆者: `/authors`, `/authors/:id`
+- 締切: `/books/:bookId/deadlines`, `/deadlines/:id`
+- 入稿: `/books/:bookId/submissions`, `/submissions/:id`
+- 書籍執筆者: `/books/:bookId/authors`
 
 ## 効率的実装パターン集
 

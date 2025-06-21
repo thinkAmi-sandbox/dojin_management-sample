@@ -148,7 +148,8 @@ describe('Deadlines Creation', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/deadlines`)
         .send(deadlineData)
-        .expect(400) // バッドリクエスト
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/) // バッドリクエスト
 
       // Assert: エラーメッセージが含まれていることを確認
       expect(response.text).toMatch(/締切日.*必須|dueDate.*required/i)
@@ -173,7 +174,8 @@ describe('Deadlines Creation', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/deadlines`)
         .send(deadlineData)
-        .expect(400)
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
       // Assert: バリデーションエラーメッセージを確認
       expect(response.text).toMatch(
@@ -224,7 +226,8 @@ describe('Deadlines Creation', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/deadlines`)
         .send(deadlineData)
-        .expect(400)
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
       // Assert: バリデーションエラーメッセージを確認
       expect(response.text).toMatch(/締切日.*有効な日付|dueDate.*valid date/i)

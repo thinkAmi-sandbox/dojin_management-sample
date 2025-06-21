@@ -170,7 +170,7 @@ describe('Submissions - Create (Integration)', () => {
           // printingCompanyIdとquantityが不足
           deliveryDestination: '東京ビッグサイト',
         })
-        .expect(HttpStatus.BAD_REQUEST)
+        .expect(HttpStatus.OK) // ValidationExceptionFilterが200でHTMLエラーページを返す
 
       expect(response.text).toContain('印刷所を選択してください')
       expect(response.text).toContain('部数を入力してください')
@@ -212,7 +212,7 @@ describe('Submissions - Create (Integration)', () => {
           printingCompanyId: 9999, // 存在しない印刷所ID
           quantity: 100,
         })
-        .expect(HttpStatus.BAD_REQUEST)
+        .expect(HttpStatus.BAD_REQUEST) // ServiceレベルのBadRequestExceptionは400
 
       expect(response.text).toContain('指定された印刷所が見つかりません')
     })

@@ -97,7 +97,11 @@
           required
           maxlength="255"
           placeholder="印刷所名を入力してください"
+          value="<%= locals.printingCompany ? printingCompany.name : '' %>"
         >
+        <% if (locals.errors && errors.name) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.name %></div>
+        <% } %>
         <div class="help-text">必須項目です。255文字以内で入力してください。</div>
       </div>
 
@@ -109,7 +113,11 @@
           name="website"
           maxlength="500"
           placeholder="https://example.com"
+          value="<%= locals.printingCompany ? printingCompany.websiteUrl : '' %>"
         >
+        <% if (locals.errors && errors.website) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.website %></div>
+        <% } %>
         <div class="help-text">任意項目です。有効なURLを入力してください。</div>
       </div>
 
@@ -121,7 +129,10 @@
           rows="4"
           maxlength="1000"
           placeholder="備考があれば入力してください（特色、注意点など）"
-        ></textarea>
+        ><%= locals.printingCompany ? printingCompany.notes : '' %></textarea>
+        <% if (locals.errors && errors.notes) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.notes %></div>
+        <% } %>
         <div class="help-text">任意項目です。1000文字以内で入力してください。</div>
       </div>
 

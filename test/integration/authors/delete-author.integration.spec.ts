@@ -130,7 +130,7 @@ describe('DELETE /authors/:id', () => {
       await request(app.getHttpServer())
         .post('/authors/invalid')
         .send({ _method: 'DELETE' })
-        .expect(400)
+        .expect(400) // ParseIntPipeが400を返す
     })
   })
 

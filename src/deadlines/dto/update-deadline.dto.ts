@@ -8,13 +8,19 @@ import {
 } from 'class-validator'
 
 export class UpdateDeadlineDto {
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined
+    return value?.trim()
+  })
   @IsNotEmpty({ message: 'タイトルは必須です' })
   @IsString({ message: 'タイトルは文字列である必要があります' })
   @MaxLength(255, { message: 'タイトルは255文字以下である必要があります' })
   title: string
 
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined
+    return value?.trim()
+  })
   @IsNotEmpty({ message: '締切日は必須です' })
   @IsDateString({}, { message: '締切日は有効な日付である必要があります' })
   dueDate: string

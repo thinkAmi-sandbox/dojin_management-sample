@@ -196,10 +196,11 @@ describe('Add Author to Book', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/authors`)
         .send(authorData)
-        .expect(400) // バッドリクエスト
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/) // バッドリクエスト
 
       // Assert: エラーメッセージが含まれていることを確認
-      expect(response.text).toMatch(/執筆者.*選択.*必須|authorId.*required/i)
+      expect(response.text).toContain('執筆者の選択は必須です')
 
       // データベースに保存されていないことを確認
       const savedBookAuthors = await drizzleService.db
@@ -269,11 +270,11 @@ describe('Add Author to Book', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/authors`)
         .send(authorData)
-        .expect(400) // バッドリクエスト
+        .expect(400) // サービス層からのBadRequestExceptionは400エラー
 
-      // Assert: エラーメッセージが含まれていることを確認
-      expect(response.text).toMatch(
-        /この執筆者は既にこの書籍に関連付けられています/,
+      // Assert: エラーメッセージが含まれていることを確認（JSON形式で返される）
+      expect(response.body.message).toContain(
+        'この執筆者は既にこの書籍に関連付けられています',
       )
 
       // データベースに重複して保存されていないことを確認

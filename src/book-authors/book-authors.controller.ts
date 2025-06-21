@@ -9,6 +9,8 @@ import {
   Redirect,
   Render,
   Res,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { BookAuthorsService } from './book-authors.service'
@@ -73,6 +75,7 @@ export class BookAuthorsController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   async create(
     @Param('bookId', ParseIntPipe) bookId: number,
     @Body() addAuthorToBookDto: AddAuthorToBookDto,

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -187,7 +186,13 @@ export class SubmissionsController {
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
-      return this.update(id, body, res)
+      // ValidationPipeを手動で適用
+      const validationPipe = new ValidationPipe({ transform: true })
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateSubmissionDto,
+      })
+      return this.update(id, validatedDto, res)
     }
     if (body._method === 'DELETE') {
       return this.remove(id, res)
@@ -196,145 +201,18 @@ export class SubmissionsController {
   }
 
   @Put(':id')
+  @UsePipes(ValidationPipe)
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateSubmissionDto: any,
+    @Body() updateSubmissionDto: UpdateSubmissionDto,
     @Res() res: Response,
   ) {
-    // 手動バリデーション
-    const errors: any = {}
-
-    // 部数のバリデーション
-    if (
-      !updateSubmissionDto.quantity ||
-      updateSubmissionDto.quantity.toString().trim() === ''
-    ) {
-      errors.quantity = '部数を入力してください'
-    } else {
-      const quantity = Number.parseInt(updateSubmissionDto.quantity, 10)
-      if (isNaN(quantity) || quantity < 1) {
-        errors.quantity = '部数は1以上で入力してください'
-      }
-    }
-
-    // 印刷所IDのバリデーション
-    if (!updateSubmissionDto.printingCompanyId) {
-      errors.printingCompanyId = '印刷所を選択してください'
-    }
-
-    // エラーがある場合は編集フォームを再表示
-    if (Object.keys(errors).length > 0) {
-      const submission = await this.submissionsService.findOne(id)
-      const printingCompanies = await this.printingCompaniesService.findAll()
-
-      return res.status(200).render('submissions/edit', {
-        title: '入稿編集',
-        submission: {
-          id: id,
-          printingCompanyId:
-            updateSubmissionDto.printingCompanyId ||
-            submission.printingCompany.id,
-          status: updateSubmissionDto.status || submission.status,
-          quantity: updateSubmissionDto.quantity || '',
-          submissionDate: updateSubmissionDto.submissionDate || '',
-          expectedDeliveryDate: updateSubmissionDto.expectedDeliveryDate || '',
-          specificationNotes: updateSubmissionDto.specificationNotes || '',
-          printingCost: updateSubmissionDto.printingCost || '',
-          shippingCost: updateSubmissionDto.shippingCost || '',
-          otherCost: updateSubmissionDto.otherCost || '',
-          discountType: updateSubmissionDto.discountType || '',
-          deliveryDestination: updateSubmissionDto.deliveryDestination || '',
-          deliveryNotes: updateSubmissionDto.deliveryNotes || '',
-          submissionFileNotes: updateSubmissionDto.submissionFileNotes || '',
-          generalNotes: updateSubmissionDto.generalNotes || '',
-        },
-        printingCompanies: printingCompanies.map((company) => ({
-          id: company.id,
-          name: company.name,
-        })),
-        errors,
-        breadcrumbs: [
-          { name: '入稿一覧', url: '/submissions' },
-          { name: '入稿詳細', url: `/submissions/${id}` },
-          { name: '編集', url: null },
-        ],
-      })
-    }
-
-    // DTOに変換（手動バリデーション通過後）
-    const validatedDto: UpdateSubmissionDto = {
-      printingCompanyId: updateSubmissionDto.printingCompanyId
-        ? Number.parseInt(updateSubmissionDto.printingCompanyId, 10)
-        : undefined,
-      status: updateSubmissionDto.status,
-      quantity: updateSubmissionDto.quantity
-        ? Number.parseInt(updateSubmissionDto.quantity, 10)
-        : undefined,
-      submissionDate:
-        updateSubmissionDto.submissionDate &&
-        updateSubmissionDto.submissionDate !== ''
-          ? updateSubmissionDto.submissionDate
-          : null,
-      expectedDeliveryDate:
-        updateSubmissionDto.expectedDeliveryDate &&
-        updateSubmissionDto.expectedDeliveryDate !== ''
-          ? updateSubmissionDto.expectedDeliveryDate
-          : null,
-      specificationNotes:
-        updateSubmissionDto.specificationNotes &&
-        updateSubmissionDto.specificationNotes !== ''
-          ? updateSubmissionDto.specificationNotes
-          : null,
-      printingCost:
-        updateSubmissionDto.printingCost &&
-        updateSubmissionDto.printingCost !== ''
-          ? Number.parseInt(updateSubmissionDto.printingCost, 10)
-          : null,
-      shippingCost:
-        updateSubmissionDto.shippingCost &&
-        updateSubmissionDto.shippingCost !== ''
-          ? Number.parseInt(updateSubmissionDto.shippingCost, 10)
-          : null,
-      otherCost:
-        updateSubmissionDto.otherCost && updateSubmissionDto.otherCost !== ''
-          ? Number.parseInt(updateSubmissionDto.otherCost, 10)
-          : null,
-      discountType:
-        updateSubmissionDto.discountType &&
-        updateSubmissionDto.discountType !== ''
-          ? updateSubmissionDto.discountType
-          : null,
-      deliveryDestination:
-        updateSubmissionDto.deliveryDestination &&
-        updateSubmissionDto.deliveryDestination !== ''
-          ? updateSubmissionDto.deliveryDestination
-          : null,
-      deliveryNotes:
-        updateSubmissionDto.deliveryNotes &&
-        updateSubmissionDto.deliveryNotes !== ''
-          ? updateSubmissionDto.deliveryNotes
-          : null,
-      submissionFileNotes:
-        updateSubmissionDto.submissionFileNotes &&
-        updateSubmissionDto.submissionFileNotes !== ''
-          ? updateSubmissionDto.submissionFileNotes
-          : null,
-      generalNotes:
-        updateSubmissionDto.generalNotes &&
-        updateSubmissionDto.generalNotes !== ''
-          ? updateSubmissionDto.generalNotes
-          : null,
-    }
-
     try {
-      await this.submissionsService.update(id, validatedDto)
+      await this.submissionsService.update(id, updateSubmissionDto)
       return res.redirect(`/submissions/${id}`)
     } catch (error) {
-      // バリデーションエラーまたはビジネスロジックエラーの処理
-      if (
-        error instanceof BadRequestException ||
-        (error instanceof Error && error.message.includes('見つかりません'))
-      ) {
+      // ビジネスロジックエラーの処理
+      if (error instanceof Error && error.message.includes('見つかりません')) {
         const submission = await this.submissionsService.findOne(id)
         const printingCompanies = await this.printingCompaniesService.findAll()
 
@@ -342,23 +220,23 @@ export class SubmissionsController {
           title: '入稿編集',
           submission: {
             id: id,
-            printingCompanyId:
-              updateSubmissionDto.printingCompanyId ||
-              submission.printingCompany.id,
-            status: updateSubmissionDto.status || submission.status,
-            quantity: updateSubmissionDto.quantity || '',
-            submissionDate: updateSubmissionDto.submissionDate || '',
+            printingCompanyId: submission.printingCompany.id,
+            status: submission.status,
+            quantity: submission.quantity,
+            submissionDate:
+              submission.submissionDate?.toISOString().split('T')[0] || '',
             expectedDeliveryDate:
-              updateSubmissionDto.expectedDeliveryDate || '',
-            specificationNotes: updateSubmissionDto.specificationNotes || '',
-            printingCost: updateSubmissionDto.printingCost || '',
-            shippingCost: updateSubmissionDto.shippingCost || '',
-            otherCost: updateSubmissionDto.otherCost || '',
-            discountType: updateSubmissionDto.discountType || '',
-            deliveryDestination: updateSubmissionDto.deliveryDestination || '',
-            deliveryNotes: updateSubmissionDto.deliveryNotes || '',
-            submissionFileNotes: updateSubmissionDto.submissionFileNotes || '',
-            generalNotes: updateSubmissionDto.generalNotes || '',
+              submission.expectedDeliveryDate?.toISOString().split('T')[0] ||
+              '',
+            specificationNotes: submission.specificationNotes || '',
+            printingCost: submission.printingCost || '',
+            shippingCost: submission.shippingCost || '',
+            otherCost: submission.otherCost || '',
+            discountType: submission.discountType || '',
+            deliveryDestination: submission.deliveryDestination || '',
+            deliveryNotes: submission.deliveryNotes || '',
+            submissionFileNotes: submission.submissionFileNotes || '',
+            generalNotes: submission.generalNotes || '',
           },
           printingCompanies: printingCompanies.map((company) => ({
             id: company.id,

@@ -110,7 +110,7 @@ describe('Submission Detail Integration Tests', () => {
     it('不正な入稿IDの場合、400エラーを返す', async () => {
       await request(app.getHttpServer())
         .get('/submissions/invalid-id')
-        .expect(400)
+        .expect(400) // ParseIntPipeが400を返す
     })
 
     it('全フィールドが空の場合でも詳細を表示する', async () => {

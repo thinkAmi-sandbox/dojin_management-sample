@@ -48,12 +48,33 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.status = error
         } else if (error.includes('名前')) {
           errors.name = error
-        } else if (error.includes('メールアドレス') || error.includes('有効なメールアドレス')) {
+        } else if (
+          error.includes('メールアドレス') ||
+          error.includes('有効なメールアドレス')
+        ) {
           errors.email = error
         } else if (error.includes('プロフィール') || error.includes('bio')) {
           errors.bio = error
         } else if (error.includes('締切日') || error.includes('dueDate')) {
           errors.dueDate = error
+        } else if (error.includes('部数')) {
+          errors.quantity = error
+        } else if (error.includes('印刷所ID') || error.includes('印刷所')) {
+          errors.printingCompanyId = error
+        } else if (error.includes('入稿日')) {
+          errors.submissionDate = error
+        } else if (error.includes('納品予定日')) {
+          errors.expectedDeliveryDate = error
+        } else if (error.includes('印刷費')) {
+          errors.printingCost = error
+        } else if (error.includes('送料')) {
+          errors.shippingCost = error
+        } else if (error.includes('その他費用')) {
+          errors.otherCost = error
+        } else if (error.includes('ステータス')) {
+          errors.status = error
+        } else if (error.includes('執筆者') || error.includes('authorId')) {
+          errors.authorId = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -75,7 +96,29 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       let templatePath = ''
       let title = ''
 
-      if (path.includes('/printing-companies/')) {
+      // より具体的なパターンを先に判定
+      if (path.match(/\/books\/\d+\/deadlines/)) {
+        // 書籍の締切関連パス
+        if (path.match(/\/books\/\d+\/deadlines$/)) {
+          // POST /books/:bookId/deadlines (新規作成)
+          templatePath = 'deadlines/new'
+          title = '締切追加'
+        }
+      } else if (path.match(/\/books\/\d+\/submissions/)) {
+        // 書籍の入稿関連パス
+        if (path.match(/\/books\/\d+\/submissions$/)) {
+          // POST /books/:bookId/submissions (新規作成)
+          templatePath = 'submissions/new'
+          title = '入稿作成'
+        }
+      } else if (path.match(/\/books\/\d+\/authors/)) {
+        // 書籍の執筆者関連パス
+        if (path.match(/\/books\/\d+\/authors$/)) {
+          // POST /books/:bookId/authors (執筆者追加)
+          templatePath = 'book-authors/add'
+          title = '執筆者追加'
+        }
+      } else if (path.includes('/printing-companies')) {
         if (path.includes('/edit')) {
           templatePath = 'printing-companies/edit'
           title = '印刷所編集'
@@ -95,10 +138,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /deadlines/:id (PUT via _method)
           templatePath = 'deadlines/edit'
           title = '締切編集'
-        } else if (path.match(/\/books\/\d+\/deadlines$/)) {
-          // POST /books/:bookId/deadlines (新規作成)
-          templatePath = 'deadlines/new'
-          title = '締切追加'
         } else {
           templatePath = 'deadlines/edit'
           title = '締切編集'
@@ -134,8 +173,12 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'authors/edit'
           title = '執筆者編集'
         }
-      } else if (path.includes('/submissions/')) {
+      } else if (path.includes('/submissions')) {
         if (path.includes('/edit')) {
+          templatePath = 'submissions/edit'
+          title = '入稿編集'
+        } else if (path.match(/\/submissions\/\d+$/)) {
+          // POST /submissions/:id (PUT via _method)
           templatePath = 'submissions/edit'
           title = '入稿編集'
         } else {
@@ -151,7 +194,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // フォームデータを戻す（テンプレートによって変数名が異なるため汎用的に）
           ...this.prepareFormData(formData, path),
         }
-        
+
         return response.status(200).render(templatePath, templateData)
       }
     }
@@ -164,12 +207,100 @@ export class ValidationExceptionFilter implements ExceptionFilter {
   }
 
   private prepareFormData(formData: any, path: string): any {
-    // パスに応じて適切な変数名でフォームデータを返す
-    if (path.includes('/printing-companies/')) {
+    // より具体的なパターンを先に判定
+    if (path.match(/\/books\/\d+\/deadlines/)) {
+      // 書籍の締切関連パス
+      const bookIdMatch = path.match(/\/books\/(\d+)\/deadlines/)
+      if (bookIdMatch) {
+        const bookId = parseInt(bookIdMatch[1], 10)
+        return {
+          deadline: {
+            title: formData.title || '',
+            dueDate: formData.dueDate || '',
+            description: formData.description || '',
+          },
+          book: {
+            id: bookId,
+            title: `書籍 #${bookId}`, // 実際の書籍タイトルは取得困難
+          },
+          breadcrumbs: [
+            { name: '書籍一覧', url: '/books' },
+            { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
+            { name: '締切一覧', url: `/books/${bookId}/deadlines` },
+            { name: '締切追加', url: null },
+          ],
+        }
+      }
+    } else if (path.match(/\/books\/\d+\/submissions/)) {
+      // 書籍の入稿関連パス
+      const bookIdMatch = path.match(/\/books\/(\d+)\/submissions/)
+      if (bookIdMatch) {
+        const bookId = parseInt(bookIdMatch[1], 10)
+        return {
+          submission: {
+            printingCompanyId: formData.printingCompanyId || '',
+            quantity: formData.quantity || '',
+            submissionDate: formData.submissionDate || '',
+            expectedDeliveryDate: formData.expectedDeliveryDate || '',
+            specificationNotes: formData.specificationNotes || '',
+            printingCost: formData.printingCost || '',
+            shippingCost: formData.shippingCost || '',
+            otherCost: formData.otherCost || '',
+            discountType: formData.discountType || '',
+            deliveryDestination: formData.deliveryDestination || '',
+            deliveryNotes: formData.deliveryNotes || '',
+            submissionFileNotes: formData.submissionFileNotes || '',
+            generalNotes: formData.generalNotes || '',
+          },
+          book: {
+            id: bookId,
+            title: `書籍 #${bookId}`,
+          },
+          printingCompanies: [], // 印刷所リストは取得困難
+          breadcrumbs: [
+            { name: '書籍一覧', url: '/books' },
+            { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
+            { name: '入稿一覧', url: `/books/${bookId}/submissions` },
+            { name: '入稿作成', url: null },
+          ],
+        }
+      }
+    } else if (path.match(/\/books\/\d+\/authors/)) {
+      // 書籍の執筆者関連パス
+      const bookIdMatch = path.match(/\/books\/(\d+)\/authors/)
+      if (bookIdMatch) {
+        const bookId = parseInt(bookIdMatch[1], 10)
+        return {
+          book: {
+            id: bookId,
+            title: `書籍 #${bookId}`,
+          },
+          authors: [{ id: 1, name: 'ダミー執筆者', email: '' }], // エラー表示のためのダミーデータ
+          breadcrumbs: [
+            { name: '書籍一覧', url: '/books' },
+            { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
+            { name: '執筆者一覧', url: `/books/${bookId}/authors` },
+            { name: '執筆者追加', url: null },
+          ],
+        }
+      }
+    } else if (path.includes('/printing-companies')) {
       // パスからIDを抽出 (例: /printing-companies/1 -> 1)
       const idMatch = path.match(/\/printing-companies\/(\d+)/)
       const id = idMatch ? parseInt(idMatch[1], 10) : null
 
+      // 新規作成の場合
+      if (path === '/printing-companies') {
+        return {
+          printingCompany: {
+            name: formData.name || '',
+            websiteUrl: formData.website || '',
+            notes: formData.notes || '',
+          },
+        }
+      }
+
+      // 編集の場合
       return {
         printingCompany: {
           id,
@@ -283,29 +414,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       const idMatch = path.match(/\/deadlines\/(\d+)/)
       const id = idMatch ? parseInt(idMatch[1], 10) : null
 
-      // 新規作成の場合 (/books/:bookId/deadlines)
-      const bookIdMatch = path.match(/\/books\/(\d+)\/deadlines/)
-      if (bookIdMatch) {
-        const bookId = parseInt(bookIdMatch[1], 10)
-        return {
-          deadline: {
-            title: formData.title || '',
-            dueDate: formData.dueDate || '',
-            description: formData.description || '',
-          },
-          book: {
-            id: bookId,
-            title: `書籍 #${bookId}`, // 実際の書籍タイトルは取得困難
-          },
-          breadcrumbs: [
-            { name: '書籍一覧', url: '/books' },
-            { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
-            { name: '締切一覧', url: `/books/${bookId}/deadlines` },
-            { name: '締切追加', url: null },
-          ],
-        }
-      }
-
       // 編集の場合
       return {
         deadline: {
@@ -314,22 +422,48 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           dueDate: formData.dueDate || '',
           description: formData.description || '',
         },
+        book: {
+          id: 1, // bookIdが不明なため暫定値
+          title: '書籍', // 暫定タイトル
+        },
+        breadcrumbs: [
+          { name: '書籍一覧', url: '/books' },
+          { name: '書籍', url: '#' }, // bookIdが不明なため
+          { name: '締切一覧', url: '#' },
+          { name: '編集', url: null },
+        ],
+      }
+    } else if (path.includes('/submissions')) {
+      // パスからIDを抽出 (例: /submissions/1 -> 1)
+      const idMatch = path.match(/\/submissions\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      return {
+        submission: {
+          id,
+          printingCompanyId: formData.printingCompanyId || '',
+          status: formData.status || 'draft',
+          quantity: formData.quantity || '',
+          submissionDate: formData.submissionDate || '',
+          expectedDeliveryDate: formData.expectedDeliveryDate || '',
+          specificationNotes: formData.specificationNotes || '',
+          printingCost: formData.printingCost || '',
+          shippingCost: formData.shippingCost || '',
+          otherCost: formData.otherCost || '',
+          discountType: formData.discountType || '',
+          deliveryDestination: formData.deliveryDestination || '',
+          deliveryNotes: formData.deliveryNotes || '',
+          submissionFileNotes: formData.submissionFileNotes || '',
+          generalNotes: formData.generalNotes || '',
+        },
+        printingCompanies: [], // 印刷所リストは取得困難
         breadcrumbs: id
           ? [
-              { name: '書籍一覧', url: '/books' },
-              { name: '締切一覧', url: '#' }, // bookIdが不明なため
+              { name: '入稿一覧', url: '/submissions' },
+              { name: '入稿詳細', url: `/submissions/${id}` },
               { name: '編集', url: null },
             ]
           : [],
-      }
-    } else if (path.includes('/submissions/')) {
-      return {
-        submission: {
-          title: formData.title || '',
-          amount: formData.amount || '',
-          submittedAt: formData.submittedAt || '',
-          notes: formData.notes || '',
-        },
       }
     }
 

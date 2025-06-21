@@ -91,4 +91,8 @@ export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
   @IsOptional()
   @IsString()
   generalNotes?: string
+
+  @IsOptional()
+  @IsString()
+  _method?: string
 }

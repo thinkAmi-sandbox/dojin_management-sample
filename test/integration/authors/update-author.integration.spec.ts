@@ -72,7 +72,7 @@ describe('Authors update', () => {
       // Act: 無効なIDでリクエスト
       await request(app.getHttpServer())
         .get('/authors/invalid/edit')
-        .expect(400)
+        .expect(400) // ParseIntPipeが400を返す
     })
   })
 

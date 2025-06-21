@@ -56,14 +56,27 @@ export class DeadlineEditController {
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
-      return this.update(id, body, res)
-    }
+      // ValidationPipeを手動で適用
+      const validationPipe = new ValidationPipe()
+      try {
+        const validatedDto = await validationPipe.transform(body, {
+          type: 'body',
+          metatype: UpdateDeadlineDto,
+        })
+        await this.deadlinesService.update(id, validatedDto)
 
-    if (body._method === 'DELETE') {
+        const deadline = await this.deadlinesService.findOne(id)
+        const book = await this.deadlinesService.findBook(deadline.bookId)
+        res.redirect(`/books/${book.id}/deadlines`)
+      } catch (error) {
+        // ValidationPipeのエラーはグローバルフィルターで処理される
+        throw error
+      }
+    } else if (body._method === 'DELETE') {
       return this.remove(id, res)
+    } else {
+      res.status(404).send('Not Found')
     }
-
-    res.status(404).send('Not Found')
   }
 
   @Put(':id')

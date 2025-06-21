@@ -92,7 +92,8 @@ describe('POST /printing-companies（新規印刷所登録）', () => {
       const response = await request(app.getHttpServer())
         .post('/printing-companies')
         .send(printingCompanyData)
-        .expect(400) // バリデーションエラー
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
       // エラーメッセージが含まれることを確認
       expect(response.text).toContain('印刷所名は必須です')
@@ -107,7 +108,8 @@ describe('POST /printing-companies（新規印刷所登録）', () => {
       const response = await request(app.getHttpServer())
         .post('/printing-companies')
         .send(printingCompanyData)
-        .expect(400) // バリデーションエラー
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
       // エラーメッセージが含まれることを確認
       expect(response.text).toContain('有効なURLを入力してください')

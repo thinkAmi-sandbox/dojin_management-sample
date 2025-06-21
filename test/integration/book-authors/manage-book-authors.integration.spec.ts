@@ -123,7 +123,7 @@ describe('Book Authors Management (Integration)', () => {
     it('不正なbookIDの場合は400エラーを返すこと', async () => {
       await request(app.getHttpServer())
         .get('/books/invalid-id/authors')
-        .expect(400)
+        .expect(400) // ParseIntPipeが400エラーを返す
     })
   })
 
@@ -193,11 +193,11 @@ describe('Book Authors Management (Integration)', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/authors`)
         .send({ authorId: testAuthor1Id.toString() })
-        .expect(400) // バッドリクエスト
+        .expect(400) // サービス層からのBadRequestExceptionは400エラー
 
-      // エラーメッセージが含まれることを確認
-      expect(response.text).toMatch(
-        /この執筆者は既にこの書籍に関連付けられています/,
+      // エラーメッセージが含まれることを確認（JSON形式で返される）
+      expect(response.body.message).toContain(
+        'この執筆者は既にこの書籍に関連付けられています',
       )
     })
 
@@ -219,20 +219,27 @@ describe('Book Authors Management (Integration)', () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/authors`)
         .send({})
-        .expect(400)
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
-      expect(response.text).toMatch(/執筆者.*選択|authorId.*required/i)
+      expect(response.text).toContain('執筆者の選択は必須です')
     })
 
     it('無効なauthorIdの場合はバリデーションエラーを返すこと', async () => {
       const response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/authors`)
         .send({ authorId: 'invalid-id' })
-        .expect(400)
+        .expect(200) // ValidationExceptionFilterが200でエラーページを返す
+        .expect('Content-Type', /html/)
 
-      expect(response.text).toMatch(
-        /執筆者IDは正の数である必要があります|執筆者IDは整数である必要があります/,
+      // このケースでは無効な文字列が送信されるため、どちらかのエラーメッセージが表示される
+      const hasIntegerError = response.text.includes(
+        '執筆者IDは整数である必要があります',
       )
+      const hasPositiveError = response.text.includes(
+        '執筆者IDは正の数である必要があります',
+      )
+      expect(hasIntegerError || hasPositiveError).toBe(true)
     })
   })
 
