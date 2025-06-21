@@ -554,9 +554,11 @@ console.log('✅ 処理完了')
 
 ##### **YOU MUST**: ValidationPipeの使用方針
 - **全コントローラーでValidationPipe統一完了済み**（2025-06-21時点）
+- **全DTOで@Transform設定統一完了済み**（2025-06-21時点）
 - ValidationExceptionFilterがMPA用のエラーハンドリングを提供
 - DTOでclass-validatorデコレータを使用してバリデーション定義
 - **手動バリデーションは全廃済み**（約300行削除完了）
+- **12ファイルのDTO標準化完了**（一貫したTransformパターン確立）
 
 ##### バリデーション実装パターン
 ```typescript
@@ -587,26 +589,48 @@ async updateViaPost(
 }
 ```
 
-##### DTO実装の注意点
+##### **YOU MUST**: 標準化されたDTO実装パターン（2025-06-21統一完了）
+
+**Phase 3で統一された@Transformパターンを必ず使用**：
+
 ```typescript
-// 空文字列処理とオプショナルフィールド
+/**
+ * リソース作成用DTO
+ * 標準化された@Transform設定を使用
+ */
 export class CreateDto {
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  // 文字列の空文字列→undefined変換（標準）
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
   @IsString()
   optionalField?: string
 
-  // 数値フィールドの変換
+  // trim処理付き（必須フィールド用）
+  @Transform(({ value }) => value?.trim())
+  @IsNotEmpty({ message: '名前は必須です' })
+  @IsString()
+  name: string
+
+  // 数値変換（オプショナル）
   @Transform(({ value }) => {
-    if (value === '' || value === undefined) return undefined
+    if (value === '' || value === undefined || value === null) return undefined
     const num = Number(value)
     return isNaN(num) ? value : num
   })
   @IsOptional()
-  @IsPositive()
-  numberField?: number
+  @IsPositive({ message: 'ページ数は正の数である必要があります' })
+  pageCount?: number
+
+  // 数値変換（null許可）
+  @Transform(({ value }) => value && value !== '' ? Number.parseInt(value, 10) : null)
+  @IsOptional()
+  @IsInt({ message: '印刷費は整数で入力してください' })
+  @Min(0, { message: '印刷費は0以上で入力してください' })
+  printingCost?: number | null
 }
 ```
+
+**重要**: これらのパターンは全12ファイルのDTOで統一済み。新しいDTOを作成する際は必ずこのパターンを使用すること。
 
 ##### UpdateDtoの特殊対応
 - PartialTypeを使用する場合、空文字列の扱いに注意

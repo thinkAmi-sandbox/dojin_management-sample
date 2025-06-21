@@ -7,6 +7,10 @@ import {
   MaxLength,
 } from 'class-validator'
 
+/**
+ * 締切作成用DTO
+ * 標準化された@Transform設定と日付処理を使用
+ */
 export class CreateDeadlineDto {
   @Transform(({ value }) => value?.trim())
   @IsNotEmpty({ message: 'タイトルは必須です' })
@@ -20,7 +24,7 @@ export class CreateDeadlineDto {
   dueDate: string
 
   @IsOptional()
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsString({ message: '説明は文字列である必要があります' })
   description?: string
 }
