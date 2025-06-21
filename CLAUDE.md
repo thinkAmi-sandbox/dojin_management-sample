@@ -981,6 +981,111 @@ async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
 
 詳細は `temp_memory/submissions-todo.md` を参照。
 
+## ナビゲーション改善プロジェクト計画
+
+### 🎯 2025年6月21日計画策定
+
+**直接URL入力依存の解消とユーザビリティ向上プロジェクト**
+
+#### 問題の特定
+現在のアプリケーションでは、以下の機能に直接URL入力でしかアクセスできない状況：
+
+**📍 グローバルナビゲーション不足**：
+- `/authors` - 執筆者一覧
+- `/printing-companies` - 印刷所一覧  
+- `/submissions` - 入稿一覧
+- `/submissions/in-progress` - 進行中入稿一覧
+- `/submissions/costs` - 入稿コスト集計
+
+**📍 書籍詳細から入稿機能へのアクセス不足**：
+- `/books/:bookId/submissions` - 書籍の入稿履歴
+- `/books/:bookId/submissions/new` - 書籍から新規入稿作成
+
+**📍 入稿一覧から高度機能へのアクセス不足**：
+- `/submissions/in-progress` - 進行中入稿一覧
+- `/submissions/costs` - コスト集計画面
+
+#### 解決方針
+**TDD（テスト駆動開発）方式**でのナビゲーション改善実装
+
+#### 実装計画
+
+##### Phase 1: グローバルナビゲーション拡充（TDD）
+**1-1. 統合テスト作成**
+- `test/integration/navigation/global-navigation.integration.spec.ts` 作成
+- 全ページでヘッダーに以下のリンクが存在することをテスト：
+  - 書籍一覧、執筆者一覧、印刷所一覧、入稿一覧
+- **テスト実行して失敗を確認**
+
+**1-2. プロダクションコード実装**
+- `shared/header.ejs` にナビゲーションリンク追加
+- レスポンシブ対応（モバイルではハンバーガーメニュー）
+
+**1-3. テスト成功確認**
+- 統合テストが全て通ることを確認
+- ブラウザで動作確認
+
+##### Phase 2: 書籍詳細画面の機能拡充（TDD）
+**2-1. 統合テスト作成**
+- `test/integration/books/show-navigation.integration.spec.ts` 作成
+- 書籍詳細画面に以下のボタンが存在することをテスト：
+  - "入稿履歴" → `/books/:id/submissions`
+  - "新規入稿" → `/books/:id/submissions/new`
+- **テスト実行して失敗を確認**
+
+**2-2. プロダクションコード実装**
+- `books/show.ejs` に入稿関連ボタン追加
+- 適切なスタイリングとアイコン
+
+**2-3. テスト成功確認**
+- 統合テストが全て通ることを確認
+- 実際の画面遷移を確認
+
+##### Phase 3: 入稿一覧画面の高度機能アクセス（TDD）
+**3-1. 統合テスト作成**
+- `test/integration/submissions/index-navigation.integration.spec.ts` 作成
+- 入稿一覧画面に以下のリンクが存在することをテスト：
+  - "進行中のみ表示" → `/submissions/in-progress`
+  - "コスト集計" → `/submissions/costs`
+- **テスト実行して失敗を確認**
+
+**3-2. プロダクションコード実装**
+- `submissions/index.ejs` にサブナビゲーション追加
+- タブ形式またはボタン形式で実装
+
+**3-3. テスト成功確認**
+- 統合テストが全て通ることを確認
+- 画面遷移とレイアウトを確認
+
+##### Phase 4: 全体統合テスト
+**4-1. E2Eナビゲーションテスト作成**
+- `test/integration/navigation/full-navigation.integration.spec.ts` 作成
+- 直接URL入力なしで全機能にアクセス可能かテスト
+- **テスト実行して全て通ることを確認**
+
+**4-2. リファクタリング（必要に応じて）**
+- コード重複の削除
+- スタイルの統一
+
+#### 期待される効果
+- **UX大幅改善**: 直接URL入力不要でスムーズな画面遷移
+- **作業効率向上**: 各機能への迅速なアクセス
+- **保守性向上**: テスト保護されたナビゲーション機能
+
+#### 開発手法
+**各フェーズの進め方**：
+1. 統合テスト作成（RED）
+2. テスト失敗確認
+3. プロダクションコード実装（GREEN）
+4. テスト成功確認
+5. リファクタリング（REFACTOR）
+
+**優先度**: 高（UX改善によるシステム価値向上）
+**工数見積**: 6-8時間（TDD含む）
+**実装期間**: 2025年6月21日〜
+
+詳細は `todo_memory/navigation-improvement-plan.md` を参照。
+
 ---
 
 ## 3. Gitへコミットする
