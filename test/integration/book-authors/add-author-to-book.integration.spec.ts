@@ -69,10 +69,6 @@ describe('Add Author to Book', () => {
     testAuthorId = authorResult[0].id
   })
 
-  afterEach(async () => {
-    // 各テスト後に全データをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('GET /books/:bookId/authors', () => {
     it('書籍の執筆者一覧ページが表示される', async () => {

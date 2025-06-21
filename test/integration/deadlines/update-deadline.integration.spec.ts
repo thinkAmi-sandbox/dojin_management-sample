@@ -57,10 +57,6 @@ describe('Deadlines Update (Integration)', () => {
     testDeadlineId = testDeadline.id
   })
 
-  afterEach(async () => {
-    // すべてのテストデータをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   afterAll(async () => {
     await testDbUtils.closeConnection()

@@ -37,9 +37,6 @@ describe('印刷所編集機能 (Integration)', () => {
     await app.close()
   })
 
-  afterEach(async () => {
-    await testDbUtils.cleanupDatabase()
-  })
 
   beforeEach(async () => {
     // テスト用データの作成

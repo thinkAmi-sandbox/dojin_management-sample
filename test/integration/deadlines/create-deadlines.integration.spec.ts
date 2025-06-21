@@ -55,10 +55,6 @@ describe('Deadlines Creation', () => {
     testBookId = bookResult[0].id
   })
 
-  afterEach(async () => {
-    // 各テスト後に全データをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('POST /books/:bookId/deadlines', () => {
     it('有効なデータで締切が正常に作成される', async () => {

@@ -155,6 +155,8 @@ export class BooksController {
 - 詳細は`docs/test/overview.md`を参照
 - 3層構造：ユニットテスト、統合テスト、E2Eテスト
 - 統合テストはRSpecのrequest specに相当
+- **データベースクリーンアップ**: 詳細は`docs/test/database-cleanup-strategy.md`を参照
+- **フレーキーテスト対策**: 修正履歴は`docs/test/flaky-test-fix-history.md`を参照
 
 ## 開発環境のセットアップ
 
@@ -532,6 +534,111 @@ console.log('✅ 処理完了')
 - **YOU MUST**: 新機能実装時は必ず統合テストから書き始める
 - テストケースが仕様書の役割を果たし、実装の方向性が明確になる
 - テストが通ることで実装の正しさが保証される
+
+### 統合テストでのデータベースクリーンアップ戦略
+
+#### **YOU MUST**: 適切なクリーンアップパターンの選択
+
+**業界標準**: `beforeEach`でのクリーンアップが推奨（Ruby DatabaseCleaner、Jest、pytest等）
+
+**基本原則**:
+- **`beforeEach`のみ**: 各テスト開始時にクリーンな状態を保証（推奨）
+- **二重クリーンアップは避ける**: `beforeEach` + `afterEach`は冗長でフレーキーテストの原因
+
+#### **YOU MUST**: ファイル別クリーンアップパターン判定基準
+
+**Pattern A: beforeEachのみ（推奨）**
+```typescript
+beforeEach(async () => {
+  // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
+  await testDbUtils.cleanupDatabase()
+  
+  // テスト用データの作成
+  // ...
+})
+```
+- **適用条件**: 新規ファイル作成時は必ずこのパターンを使用
+- **効果**: フレーキーテスト防止、パフォーマンス向上、デバッグ性向上
+
+**Pattern B: beforeEach + afterEach（削除系テスト等で必要な場合のみ）**
+```typescript
+beforeEach(async () => {
+  // 他のテストファイルの影響を除去
+  await testDbUtils.cleanupDatabase()
+})
+
+afterEach(async () => {
+  // テスト後のクリーンアップ（削除系テストで重要）
+  await testDbUtils.cleanupDatabase()
+})
+```
+- **適用条件**: 削除処理を含むテストでデータ残留が他ファイルに影響する場合のみ
+- **例**: `books/delete-book.integration.spec.ts`、`book-authors/remove-author-from-book.integration.spec.ts`
+
+#### **YOU MUST**: フレーキーテスト修正時の段階的アプローチ
+
+**Phase 1: 問題ファイル特定・修正**
+1. 403エラー等のフレーキーテストが発生するファイルを特定
+2. 該当ファイルで`afterEach`を削除（`beforeEach`は保持）
+3. 5-10回連続実行でフレーキーテスト解消確認
+
+**Phase 2: 安全な範囲での拡大修正**
+1. `beforeEach` + `afterEach`両方を持つファイルのみ特定
+2. 1ファイルずつ`afterEach`削除→テスト実行→確認のサイクル
+3. 削除系テストなど、データ蓄積が問題となるファイルは除外
+
+**Phase 3: 全体統合確認**
+1. 全統合テスト実行で238/238テスト成功確認
+2. パフォーマンス向上とフレーキーテスト解消の確認
+
+#### **YOU MUST**: よくある問題パターンと対処法
+
+| 問題 | 原因 | 対処法 | 実装例 |
+|------|------|-------|--------|
+| **403エラーがランダム発生** | afterEchでの競合状態 | afterEch削除、beforeEchのみ使用 | `add-author-to-book.integration.spec.ts` |
+| **expected 1 but got 16** | 他ファイルからのデータ残留 | beforeEchでクリーンアップ追加 | `delete-book.integration.spec.ts` |
+| **テストファイル間の影響** | afterEch削除による副作用 | beforeEch + afterEch両方保持 | `remove-author-from-book.integration.spec.ts` |
+| **削除処理の検証失敗** | 前回テストデータの蓄積 | 削除系テストはafterEch必須 | 削除機能全般 |
+
+#### **YOU MUST**: 新規テストファイル作成時のテンプレート
+
+```typescript
+describe('Feature Test', () => {
+  let app: INestApplication
+  let drizzleService: DrizzleService
+
+  beforeAll(async () => {
+    // アプリケーション初期化
+  })
+
+  afterAll(async () => {
+    await testDbUtils.closeConnection()
+    await app.close()
+  })
+
+  beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ（推奨パターン）
+    await testDbUtils.cleanupDatabase()
+    
+    // テスト用データ作成
+    // ...
+  })
+
+  // afterEach は基本的に不要（フレーキーテスト防止）
+  // 削除系テストなど特別な理由がある場合のみ追加
+
+  describe('テストケース', () => {
+    // テスト実装
+  })
+})
+```
+
+#### デバッグ時の確認事項
+
+1. **データ蓄積確認**: `expect(data).toHaveLength(1) but got 16` → beforeEchクリーンアップ不足
+2. **フレーキーテスト**: 断続的な403/400エラー → afterEch削除検討
+3. **テストファイル依存**: 単体実行では成功、全体実行で失敗 → 他ファイルからの影響
+4. **データベースリセット**: `pnpm drizzle:push:test` で強制リセット可能
 
 ### 既存パターンの活用
 

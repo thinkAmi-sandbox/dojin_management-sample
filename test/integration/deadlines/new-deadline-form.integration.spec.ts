@@ -47,10 +47,6 @@ describe('Deadlines New Form', () => {
     testBookId = bookResult[0].id
   })
 
-  afterEach(async () => {
-    // すべてのテストデータをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   afterAll(async () => {
     await testDbUtils.closeConnection()

@@ -37,9 +37,6 @@ describe('印刷所詳細画面 (GET /printing-companies/:id)', () => {
     await app.close()
   })
 
-  afterEach(async () => {
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('正常系', () => {
     beforeEach(async () => {

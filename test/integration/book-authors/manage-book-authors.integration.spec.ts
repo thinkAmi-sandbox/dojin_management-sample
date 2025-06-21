@@ -78,10 +78,6 @@ describe('Book Authors Management (Integration)', () => {
     testAuthor2Id = authorsResult[1].id
   })
 
-  afterEach(async () => {
-    // 各テスト後に全データをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('GET /books/:bookId/authors', () => {
     it('書籍に関連する執筆者一覧を表示すること', async () => {

@@ -77,10 +77,6 @@ describe('List Book Authors', () => {
     testAuthor2Id = author2Result[0].id
   })
 
-  afterEach(async () => {
-    // 各テスト後に全データをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('GET /books/:bookId/authors', () => {
     it('関連付けられた執筆者が正しく表示される', async () => {

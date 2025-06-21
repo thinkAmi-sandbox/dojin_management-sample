@@ -28,6 +28,11 @@ describe('Books Delete (Integration)', () => {
     await app.close()
   })
 
+  beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
+    await testDbUtils.cleanupDatabase()
+  })
+
   afterEach(async () => {
     // testDbUtilsを使用して全テーブルをクリーンアップ
     await testDbUtils.cleanupDatabase()
