@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { desc, eq } from 'drizzle-orm'
+import { asc, desc, eq, inArray } from 'drizzle-orm'
 import * as schema from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateSubmissionDto } from './dto/create-submission.dto'
@@ -39,6 +39,37 @@ export class SubmissionsService {
         eq(schema.submissions.printingCompanyId, schema.printingCompanies.id),
       )
       .orderBy(desc(schema.submissions.createdAt))
+  }
+
+  async findInProgress() {
+    return await this.drizzleService.db
+      .select({
+        id: schema.submissions.id,
+        status: schema.submissions.status,
+        quantity: schema.submissions.quantity,
+        deliveryDestination: schema.submissions.deliveryDestination,
+        submissionDate: schema.submissions.submissionDate,
+        expectedDeliveryDate: schema.submissions.expectedDeliveryDate,
+        createdAt: schema.submissions.createdAt,
+        updatedAt: schema.submissions.updatedAt,
+        book: {
+          id: schema.books.id,
+          title: schema.books.title,
+          subtitle: schema.books.subtitle,
+        },
+        printingCompany: {
+          id: schema.printingCompanies.id,
+          name: schema.printingCompanies.name,
+        },
+      })
+      .from(schema.submissions)
+      .innerJoin(schema.books, eq(schema.submissions.bookId, schema.books.id))
+      .innerJoin(
+        schema.printingCompanies,
+        eq(schema.submissions.printingCompanyId, schema.printingCompanies.id),
+      )
+      .where(inArray(schema.submissions.status, ['submitted', 'printing']))
+      .orderBy(asc(schema.submissions.expectedDeliveryDate))
   }
 
   async findByBook(bookId: number) {

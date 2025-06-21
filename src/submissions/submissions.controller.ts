@@ -58,6 +58,52 @@ export class SubmissionsController {
     }
   }
 
+  @Get('in-progress')
+  @Render('submissions/in-progress')
+  async findInProgress() {
+    const submissions = await this.submissionsService.findInProgress()
+
+    // ステータスの日本語変換
+    const statusMap = {
+      submitted: '入稿済み',
+      printing: '印刷中',
+    }
+
+    // 日付フォーマット関数
+    const formatDate = (date: Date | null) => {
+      return date ? date.toLocaleDateString('ja-JP') : '-'
+    }
+
+    // 納期アラート判定（3日以内）
+    const isUrgent = (date: Date | null) => {
+      if (!date) return false
+      const threeDaysFromNow = new Date()
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+      return date <= threeDaysFromNow
+    }
+
+    return {
+      title: '進行中の入稿一覧',
+      submissions: submissions.map((submission) => ({
+        id: submission.id,
+        status:
+          statusMap[submission.status as keyof typeof statusMap] ||
+          submission.status,
+        quantity: submission.quantity,
+        deliveryDestination: submission.deliveryDestination || '-',
+        bookTitle: submission.book.title,
+        bookSubtitle: submission.book.subtitle || '',
+        printingCompanyName: submission.printingCompany.name,
+        submissionDate: formatDate(submission.submissionDate),
+        expectedDeliveryDate: formatDate(submission.expectedDeliveryDate),
+        isUrgent: isUrgent(submission.expectedDeliveryDate),
+        detailUrl: `/submissions/${submission.id}`,
+        editUrl: `/submissions/${submission.id}/edit`,
+      })),
+      inProgressCount: submissions.length,
+    }
+  }
+
   @Get(':id')
   @Render('submissions/show')
   async findOne(@Param('id', ParseIntPipe) id: number) {

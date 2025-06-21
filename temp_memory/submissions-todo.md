@@ -192,17 +192,26 @@ export const submissions = pgTable('Submission', {
 - [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト197件全通過】**
 - [x] 2-6. ユーザー確認（動作確認完了）
 
-## Phase 3: 集計機能（将来実装）
+## Phase 3: 集計機能
 
-### 7. 進行中入稿一覧（GET /submissions/in-progress）
+### ✅ 7. 進行中入稿一覧（GET /submissions/in-progress）**【完了】**
 
 #### 設計フェーズ
-- [ ] 進行中ステータスの定義確認
-- [ ] 表示項目・ソート順の設計
+- [x] 進行中ステータスの定義確認（submitted・printing）
+- [x] 表示項目・ソート順の設計（納期昇順、緊急納期アラート）
+- [x] 統計情報・UI機能の設計
 
 #### 実装フェーズ
-- [ ] 統合テスト・プロダクションコード実装
-- [ ] ビューファイル作成
+- [x] 2-1. 統合テスト作成（test/integration/submissions/in-progress-submissions.integration.spec.ts）**【5件全通過】**
+- [x] 2-2. プロダクションコード実装
+  - [x] SubmissionsServiceにfindInProgress()追加（WHERE + ORDER BY処理）
+  - [x] SubmissionsControllerにfindInProgress()エンドポイント追加（納期アラート機能）
+  - [x] ビューファイル作成（src/views/submissions/in-progress.ejs）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト202件全通過】**
+- [x] 2-6. ビルド実行（pnpm build）とビューファイルコピー確認
+- [x] 2-7. ユーザー確認（動作確認完了）
 
 ### 8. コスト一覧・集計（GET /submissions/costs）
 
@@ -233,6 +242,7 @@ src/
 src/views/
 └── submissions/
     ├── index.ejs（全入稿一覧）
+    ├── in-progress.ejs（進行中入稿一覧）
     ├── book-index.ejs（書籍別入稿履歴）
     ├── new.ejs（新規作成）
     ├── show.ejs（詳細）
@@ -242,6 +252,7 @@ test/
 └── integration/
     └── submissions/
         ├── list-submissions.integration.spec.ts
+        ├── in-progress-submissions.integration.spec.ts
         ├── book-submissions.integration.spec.ts
         ├── create-submission.integration.spec.ts
         ├── show-submission.integration.spec.ts
@@ -272,12 +283,15 @@ test/
 - [x] Phase 1-4: 入稿詳細画面 **【完了 - 統合テスト186件全通過】**
 - [x] Phase 2-1: 入稿編集 **【完了 - 統合テスト9件全通過】**
 - [x] Phase 2-2: 入稿削除 **【完了 - 統合テスト197件全通過】**
+- [x] Phase 3-1: 進行中入稿一覧 **【完了 - 統合テスト202件全通過】**
 
 ## **🎉 Phase 1 基本機能 完全実装完了！**
 
 ## **🎉 Phase 2 編集・削除機能 完全実装完了！**
 
-## **🎯 入稿機能 Phase 1-2 完全実装達成！**
+## **🎉 Phase 3-1 進行中入稿一覧機能 完全実装完了！**
+
+## **🎯 入稿機能 基本・編集・削除・集計(一部) 完全実装達成！**
 
 ## 完了報告
 
@@ -513,7 +527,54 @@ test/
 - 事前設計フェーズでの外部キー制約確認による安全な削除処理
 - 段階的テスト実装（ミニマム→フル）による効率的開発
 
-**次のステップ**: Phase 3（集計機能）の設計・実装検討
+**次のステップ**: Phase 3-2（コスト集計機能）の設計・実装検討
+
+### Phase 3-1: 進行中入稿一覧機能 実装完了 ✅
+
+**実装日時**: 2025/06/21 18:55完了  
+**テスト結果**: 統合テスト202件全て通過（進行中入稿一覧テスト5件含む）  
+**動作確認**: ユーザーによる動作確認完了（2025/06/21 19:05）
+
+**主な成果物**:
+- 進行中入稿一覧機能（/submissions/in-progress）
+- 納期昇順ソート機能（緊急度順表示）
+- 納期3日以内の緊急アラート機能（警告色表示）
+- 統計情報表示（進行中件数・緊急件数）
+- レスポンシブ対応の専用UI
+
+**技術的な実装内容**:
+- SubmissionsServiceに `findInProgress()` メソッド追加（WHERE + ORDER BY処理）
+- SubmissionsControllerに進行中専用エンドポイント追加（納期アラート判定機能）
+- レスポンシブ対応のEJSビューファイル（in-progress.ejs）
+- 既存パターン踏襲（JOIN処理・ステータス変換・エラーハンドリング）
+- 統合テスト5パターンの完全実装
+
+**解決した課題**:
+- **データフィルタリング**: `inArray(status, ['submitted', 'printing'])` でステータス絞り込み
+- **ソート処理**: `orderBy(asc(expectedDeliveryDate))` で納期昇順表示
+- **納期アラート**: 3日以内判定ロジックとCSS警告色表示
+- **統計情報**: 進行中件数・緊急件数の自動計算表示
+
+**実装済みファイル（新規作成・修正）**:
+```
+✅ src/submissions/submissions.service.ts（findInProgress()メソッド追加）
+✅ src/submissions/submissions.controller.ts（@Get('in-progress')エンドポイント追加）
+✅ src/views/submissions/in-progress.ejs（進行中入稿一覧画面）
+✅ test/integration/submissions/in-progress-submissions.integration.spec.ts（統合テスト5件）
+```
+
+**効率化ポイント**:
+- 既存findAll()メソッドパターンの完全踏襲による高速実装
+- 統合テスト駆動開発による仕様明確化・早期エラー発見
+- 段階的実装戦略（統合テスト→サービス→コントローラー→ビュー）による効率化
+- Drizzleクエリビルダーの活用による型安全なデータ操作
+
+**Phase 3機能の特徴**:
+- Phase 1-2の基本CRUD機能を活用した集計・分析機能
+- 業務効率向上に直結する実用的な管理機能
+- 納期管理・進捗管理の自動化による運用負荷軽減
+
+**次のステップ**: Phase 3-2（コスト集計機能）の設計・実装検討
 
 ## 🎯 Phase 1 完了による効率化の学習ポイント
 
