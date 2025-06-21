@@ -128,12 +128,17 @@ export class BooksController {
   @Post(':id')
   async updateViaPost(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
+    @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
       // タイトルが空文字列の場合、バリデーションエラーとして処理
-      if (body.title === '' || (body.title && body.title.trim() === '')) {
+      if (
+        body.title === '' ||
+        (body.title &&
+          typeof body.title === 'string' &&
+          body.title.trim() === '')
+      ) {
         throw new BadRequestException({
           statusCode: 400,
           message: ['タイトルは必須です'],
@@ -143,17 +148,12 @@ export class BooksController {
 
       // ValidationPipeを手動で適用
       const validationPipe = new ValidationPipe()
-      try {
-        const validatedDto = await validationPipe.transform(body, {
-          type: 'body',
-          metatype: UpdateBookDto,
-        })
-        await this.booksService.update(id, validatedDto)
-        res.redirect(`/books/${id}`)
-      } catch (error) {
-        // ValidationPipeのエラーはグローバルフィルターで処理される
-        throw error
-      }
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateBookDto,
+      })
+      await this.booksService.update(id, validatedDto)
+      res.redirect(`/books/${id}`)
     } else if (body._method === 'DELETE') {
       return this.removeViaPost(id, res)
     } else {
@@ -215,23 +215,18 @@ export class BooksController {
   @Post(':bookId/status')
   async updateStatusViaPost(
     @Param('bookId', ParseIntPipe) bookId: number,
-    @Body() body: any,
+    @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
       // ValidationPipeを手動で適用
       const validationPipe = new ValidationPipe()
-      try {
-        const validatedDto = await validationPipe.transform(body, {
-          type: 'body',
-          metatype: UpdateBookStatusDto,
-        })
-        await this.booksService.updateStatus(bookId, validatedDto)
-        res.redirect(`/books/${bookId}`)
-      } catch (error) {
-        // ValidationPipeのエラーはグローバルフィルターで処理される
-        throw error
-      }
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateBookStatusDto,
+      })
+      await this.booksService.updateStatus(bookId, validatedDto)
+      res.redirect(`/books/${bookId}`)
     } else {
       res.status(404).send('Not Found')
     }
@@ -317,7 +312,7 @@ export class BooksController {
         },
         errors: {},
       }
-    } catch (error) {
+    } catch (_error) {
       throw new NotFoundException('書籍が見つかりません')
     }
   }

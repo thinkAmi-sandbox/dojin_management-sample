@@ -30,7 +30,7 @@ export class UpdateDeadlineDto {
   dueDate: string
 
   @IsOptional()
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsString({ message: '説明は文字列で入力してください' })
   description?: string
 

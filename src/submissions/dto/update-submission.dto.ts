@@ -51,19 +51,25 @@ export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
   specificationNotes?: string
 
   @IsOptional()
-  @Transform(({ value }) => value && value !== '' ? Number.parseInt(value, 10) : null)
+  @Transform(({ value }) =>
+    value && value !== '' ? Number.parseInt(value, 10) : null,
+  )
   @IsInt({ message: '印刷費は整数で入力してください' })
   @Min(0, { message: '印刷費は0以上で入力してください' })
   printingCost?: number | null
 
   @IsOptional()
-  @Transform(({ value }) => value && value !== '' ? Number.parseInt(value, 10) : null)
+  @Transform(({ value }) =>
+    value && value !== '' ? Number.parseInt(value, 10) : null,
+  )
   @IsInt({ message: '送料は整数で入力してください' })
   @Min(0, { message: '送料は0以上で入力してください' })
   shippingCost?: number | null
 
   @IsOptional()
-  @Transform(({ value }) => value && value !== '' ? Number.parseInt(value, 10) : null)
+  @Transform(({ value }) =>
+    value && value !== '' ? Number.parseInt(value, 10) : null,
+  )
   @IsInt({ message: 'その他費用は整数で入力してください' })
   @Min(0, { message: 'その他費用は0以上で入力してください' })
   otherCost?: number | null

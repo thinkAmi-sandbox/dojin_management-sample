@@ -18,13 +18,13 @@ export class UpdateBookDto {
   @MaxLength(255, { message: 'タイトルは255文字以内で入力してください' })
   title?: string
 
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
   @IsString({ message: 'サブタイトルは文字列で入力してください' })
   @MaxLength(255, { message: 'サブタイトルは255文字以内で入力してください' })
   subtitle?: string
 
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
   @IsString({ message: '説明は文字列で入力してください' })
   description?: string

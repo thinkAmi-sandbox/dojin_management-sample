@@ -2,6 +2,12 @@ import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import { BadRequestException, Catch } from '@nestjs/common'
 import type { Response } from 'express'
 
+interface ValidationExceptionResponse {
+  message: string[]
+  error: string
+  statusCode: number
+}
+
 @Catch(BadRequestException)
 export class ValidationExceptionFilter implements ExceptionFilter {
   catch(exception: BadRequestException, host: ArgumentsHost) {
@@ -16,10 +22,10 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       typeof exceptionResponse === 'object' &&
       exceptionResponse !== null &&
       'message' in exceptionResponse &&
-      Array.isArray((exceptionResponse as any).message)
+      Array.isArray((exceptionResponse as ValidationExceptionResponse).message)
     ) {
       // ValidationPipeからのエラーの場合
-      const validationErrors = (exceptionResponse as any).message as string[]
+      const validationErrors = (exceptionResponse as ValidationExceptionResponse).message
 
       // エラーメッセージをフィールド名ベースのオブジェクトに変換
       const errors: Record<string, string> = {}
@@ -206,7 +212,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     })
   }
 
-  private prepareFormData(formData: any, path: string): any {
+  private prepareFormData(formData: Record<string, unknown>, path: string): Record<string, unknown> {
     // より具体的なパターンを先に判定
     if (path.match(/\/books\/\d+\/deadlines/)) {
       // 書籍の締切関連パス

@@ -89,14 +89,17 @@ export class AuthorsController {
   }
 
   @Post(':id')
-  async updateViaPost(
+  updateViaPost(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
+    @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
       // 空文字列の名前の事前チェック（PartialTypeとTransformの相互作用回避）
-      if (body.name === '' || (body.name && body.name.trim() === '')) {
+      if (
+        body.name === '' ||
+        (body.name && typeof body.name === 'string' && body.name.trim() === '')
+      ) {
         throw new BadRequestException({
           statusCode: 400,
           message: ['名前は必須です'],

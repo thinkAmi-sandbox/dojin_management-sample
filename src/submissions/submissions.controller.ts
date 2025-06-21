@@ -182,7 +182,7 @@ export class SubmissionsController {
   @Post(':id')
   async updateViaPost(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
+    @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
@@ -254,7 +254,7 @@ export class SubmissionsController {
     }
   }
 
-  async remove(id: number, res: Response) {
+  remove(_id: number, res: Response) {
     // 削除機能は Phase 2-2 で実装予定
     res.status(404).send('Not Found')
   }

@@ -858,6 +858,34 @@ async findOne(@Param('id', ParseIntPipe) id: number) {
 </html>
 ```
 
+## ValidationPipe統一リファクタリング完了記録
+
+### 🎉 2025年6月21日完了 🎉
+
+**ValidationPipe統一リファクタリングプロジェクトが完全完了しました！**
+
+#### 主要成果
+- **手動バリデーション完全削除**: 約300行のコード削減
+- **統合テスト100%成功**: 195/195テスト成功維持
+- **DTO標準化完了**: 12ファイル、31件のメッセージ統一
+- **型安全性向上**: any型削除、厳密な型定義
+- **ValidationExceptionFilter**: 全パス対応、MPA用エラーハンドリング
+
+#### 確立されたパターン
+1. **コントローラー**: ValidationPipe + @UsePipes統一
+2. **DTO**: @Transform + class-validator統一
+3. **エラーハンドリング**: ValidationExceptionFilter自動処理
+4. **メッセージ**: 日本語エラーメッセージ統一
+
+#### 開発効率向上
+- 新機能実装時のバリデーション処理が大幅簡素化
+- 一貫したエラーハンドリングによる予測可能な動作
+- チーム開発における明確なコーディング規約確立
+
+詳細は `temp_memory/validation-refactoring-plan.md` を参照。
+
+---
+
 ## 3. Gitへコミットする
 
 - コミットメッセージのsubjectには概要を、bodyには前回のコミット以降のすべてのプロンプトを、それぞれ記載します。

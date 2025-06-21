@@ -3,7 +3,7 @@ import { Breadcrumb, BreadcrumbItem } from '../interfaces/common-view-models'
 
 @Injectable()
 export class ViewService {
-  formatDate(date: Date, format: string = 'YYYY-MM-DD'): string {
+  formatDate(date: Date, _format: string = 'YYYY-MM-DD'): string {
     return new Intl.DateTimeFormat('ja-JP', {
       year: 'numeric',
       month: '2-digit',

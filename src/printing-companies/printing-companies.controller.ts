@@ -116,7 +116,7 @@ export class PrintingCompaniesController {
   // @UsePipes(new ValidationPipe({ whitelist: true }))
   async updateViaPost(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
+    @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
     console.log('🚀 updateViaPost called')

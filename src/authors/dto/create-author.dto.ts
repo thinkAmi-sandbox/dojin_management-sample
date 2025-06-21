@@ -12,12 +12,12 @@ export class CreateAuthorDto {
   name: string
 
   @IsOptional()
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsEmail({}, { message: '有効なメールアドレスを入力してください' })
   email?: string | null
 
   @IsOptional()
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsString()
   bio?: string | null
 }

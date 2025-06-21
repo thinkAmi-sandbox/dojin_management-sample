@@ -52,26 +52,21 @@ export class DeadlineEditController {
   @Post(':id')
   async updateViaPost(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
+    @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
       // ValidationPipeを手動で適用
       const validationPipe = new ValidationPipe()
-      try {
-        const validatedDto = await validationPipe.transform(body, {
-          type: 'body',
-          metatype: UpdateDeadlineDto,
-        })
-        await this.deadlinesService.update(id, validatedDto)
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateDeadlineDto,
+      })
+      await this.deadlinesService.update(id, validatedDto)
 
-        const deadline = await this.deadlinesService.findOne(id)
-        const book = await this.deadlinesService.findBook(deadline.bookId)
-        res.redirect(`/books/${book.id}/deadlines`)
-      } catch (error) {
-        // ValidationPipeのエラーはグローバルフィルターで処理される
-        throw error
-      }
+      const deadline = await this.deadlinesService.findOne(id)
+      const book = await this.deadlinesService.findBook(deadline.bookId)
+      res.redirect(`/books/${book.id}/deadlines`)
     } else if (body._method === 'DELETE') {
       return this.remove(id, res)
     } else {

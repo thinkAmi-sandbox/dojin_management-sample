@@ -86,10 +86,10 @@ export class BookAuthorsController {
   }
 
   @Post(':authorId')
-  async removeViaPost(
+  removeViaPost(
     @Param('bookId', ParseIntPipe) bookId: number,
     @Param('authorId', ParseIntPipe) authorId: number,
-    @Body() body: any,
+    @Body() body: { _method?: string },
     @Res() res: Response,
   ) {
     if (body._method === 'DELETE') {

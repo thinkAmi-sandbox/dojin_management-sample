@@ -161,7 +161,15 @@ export class SubmissionsService {
     }
 
     // 入稿データの作成
-    const submissionData: any = {
+    const submissionData: {
+      bookId: number
+      printingCompanyId: number
+      quantity: number
+      status: string
+      submissionDate?: Date
+      notes?: string | null
+      printingCost?: number | null
+    } = {
       bookId,
       printingCompanyId: createSubmissionDto.printingCompanyId,
       quantity: createSubmissionDto.quantity,
