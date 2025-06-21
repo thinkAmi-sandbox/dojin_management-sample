@@ -122,10 +122,10 @@ export class PrintingCompaniesController {
     console.log('🚀 updateViaPost called')
     console.log('body:', body)
     console.log('body._method:', body._method)
-    
+
     if (body._method === 'PUT') {
       console.log('🔄 Calling update method')
-      
+
       // 手動でバリデーション実行してみる
       const validationPipe = new ValidationPipe({ whitelist: true })
       try {

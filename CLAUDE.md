@@ -460,6 +460,8 @@ Priority: 低 - 表示の問題、機能への影響は軽微
 | `Cannot find package 'express'` | 通常importでの型参照 | `import type { Response }` | 印刷所機能 |
 | `Failed to lookup view` | ビューファイル未コピー | `pnpm build`でdist/にコピー | ビューファイル作成時 |
 | テストでHTML不一致 | 改行・インデント問題 | 部分文字列検証に変更 | 入稿編集テスト |
+| ValidationPipeエラーがJSONで返される | ValidationExceptionFilter未適用 | パスをフィルターに追加 | 書籍機能 |
+| 空文字列でバリデーションスキップ | PartialType + Transform相互作用 | 事前チェック追加 | 書籍更新機能 |
 
 ### **YOU MUST**: デバッグ効率化のための事前準備
 
@@ -547,6 +549,77 @@ console.log('✅ 処理完了')
 - **権限エラー**: `ForbiddenException`を使用
 - **サービス層**: 適切な例外を投げる
 - **コントローラー層**: 基本的にはcatchせず、NestJSのグローバルフィルターに任せる
+
+#### ValidationPipe統一ガイドライン
+
+##### **YOU MUST**: ValidationPipeの使用方針
+- 新規実装では必ずValidationPipeを使用（手動バリデーションは避ける）
+- ValidationExceptionFilterがMPA用のエラーハンドリングを提供
+- DTOでclass-validatorデコレータを使用してバリデーション定義
+
+##### バリデーション実装パターン
+```typescript
+// コントローラーでの実装
+@Post()
+@UsePipes(ValidationPipe)
+@Redirect('/resources')
+async create(@Body() createDto: CreateDto) {
+  await this.service.create(createDto)
+}
+
+// HTTPメソッドオーバーライド対応（_method使用時）
+@Post(':id')
+async updateViaPost(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() body: any,
+  @Res() res: Response,
+) {
+  if (body._method === 'PUT') {
+    const validationPipe = new ValidationPipe()
+    const validatedDto = await validationPipe.transform(body, {
+      type: 'body',
+      metatype: UpdateDto,
+    })
+    await this.service.update(id, validatedDto)
+    res.redirect(`/resources/${id}`)
+  }
+}
+```
+
+##### DTO実装の注意点
+```typescript
+// 空文字列処理とオプショナルフィールド
+export class CreateDto {
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsOptional()
+  @IsString()
+  optionalField?: string
+
+  // 数値フィールドの変換
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined) return undefined
+    const num = Number(value)
+    return isNaN(num) ? value : num
+  })
+  @IsOptional()
+  @IsPositive()
+  numberField?: number
+}
+```
+
+##### UpdateDtoの特殊対応
+- PartialTypeを使用する場合、空文字列の扱いに注意
+- 必須フィールドが空文字列で送信される場合は特別な処理が必要
+```typescript
+// 空文字列タイトルの事前チェック例
+if (body.title === '' || (body.title && body.title.trim() === '')) {
+  throw new BadRequestException({
+    statusCode: 400,
+    message: ['タイトルは必須です'],
+    error: 'Bad Request',
+  })
+}
+```
 
 #### **YOU MUST**: ParseIntPipeと例外の適切な組み合わせ
 

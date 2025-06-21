@@ -35,10 +35,24 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         // 日本語エラーメッセージから推測
         if (error.includes('印刷所名') || error.includes('name')) {
           errors.name = error
-        } else if (error.includes('Webサイト') || error.includes('website') || error.includes('有効なURL')) {
+        } else if (
+          error.includes('Webサイト') ||
+          error.includes('website') ||
+          error.includes('有効なURL')
+        ) {
           errors.website = error
         } else if (error.includes('備考') || error.includes('notes')) {
           errors.notes = error
+        } else if (error.includes('タイトル')) {
+          errors.title = error
+        } else if (error.includes('サブタイトル')) {
+          errors.subtitle = error
+        } else if (error.includes('説明')) {
+          errors.description = error
+        } else if (error.includes('ページ数')) {
+          errors.pageCount = error
+        } else if (error.includes('ステータス')) {
+          errors.status = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -73,13 +87,24 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'printing-companies/edit'
           title = '印刷所編集'
         }
-      } else if (path.includes('/books/')) {
-        if (path.includes('/edit')) {
+      } else if (path.includes('/books')) {
+        if (path.includes('/status/edit')) {
+          templatePath = 'books/status-edit'
+          title = 'ステータス変更'
+        } else if (path.includes('/status')) {
+          // POST /books/:id/status (PUT via _method)
+          templatePath = 'books/status-edit'
+          title = 'ステータス変更'
+        } else if (path.includes('/edit')) {
           templatePath = 'books/edit'
           title = '書籍編集'
         } else if (path.endsWith('/books')) {
           templatePath = 'books/new'
-          title = '書籍新規作成'
+          title = '新規書籍作成'
+        } else if (path.match(/\/books\/\d+$/)) {
+          // POST /books/:id (PUT via _method)
+          templatePath = 'books/edit'
+          title = '書籍編集'
         }
       } else if (path.includes('/authors/')) {
         if (path.includes('/edit')) {
@@ -101,7 +126,11 @@ export class ValidationExceptionFilter implements ExceptionFilter {
 
       if (templatePath) {
         console.log('🎯 Rendering template:', templatePath)
-        console.log('🎯 Template data:', { title, errors, ...this.prepareFormData(formData, path) })
+        console.log('🎯 Template data:', {
+          title,
+          errors,
+          ...this.prepareFormData(formData, path),
+        })
         return response.status(200).render(templatePath, {
           title,
           errors,
@@ -124,7 +153,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       // パスからIDを抽出 (例: /printing-companies/1 -> 1)
       const idMatch = path.match(/\/printing-companies\/(\d+)/)
       const id = idMatch ? parseInt(idMatch[1], 10) : null
-      
+
       return {
         printingCompany: {
           id,
@@ -132,21 +161,74 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           websiteUrl: formData.website || '',
           notes: formData.notes || '',
         },
-        breadcrumbs: id ? [
-          { name: '印刷所一覧', url: '/printing-companies' },
-          { name: `印刷所 #${id}`, url: `/printing-companies/${id}` },
-          { name: '編集', url: null },
-        ] : [],
+        breadcrumbs: id
+          ? [
+              { name: '印刷所一覧', url: '/printing-companies' },
+              { name: `印刷所 #${id}`, url: `/printing-companies/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
       }
-    } else if (path.includes('/books/')) {
+    } else if (path.includes('/books')) {
+      // パスからIDを抽出 (例: /books/1 -> 1)
+      const idMatch = path.match(/\/books\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // ステータス編集の場合
+      if (path.includes('/status')) {
+        const statusOptions = [
+          { value: 'planning', label: '企画中' },
+          { value: 'writing', label: '執筆中' },
+          { value: 'editing', label: '校正中' },
+          { value: 'completed', label: '完成' },
+        ]
+
+        return {
+          book: {
+            id,
+            title: formData.title || '',
+            status: formData.status || 'planning',
+          },
+          statusOptions,
+          breadcrumbs: id
+            ? [
+                { name: '書籍一覧', url: '/books' },
+                { name: `書籍 #${id}`, url: `/books/${id}` },
+                { name: 'ステータス変更', url: null },
+              ]
+            : [],
+        }
+      }
+
+      // 新規作成の場合
+      if (path === '/books') {
+        return {
+          book: {
+            title: formData.title || '',
+            subtitle: formData.subtitle || '',
+            description: formData.description || '',
+            pageCount: formData.pageCount || '',
+          },
+        }
+      }
+
+      // 通常の編集の場合
       return {
         book: {
+          id,
           title: formData.title || '',
           subtitle: formData.subtitle || '',
           description: formData.description || '',
           pageCount: formData.pageCount || '',
           status: formData.status || 'planning',
         },
+        breadcrumbs: id
+          ? [
+              { name: '書籍一覧', url: '/books' },
+              { name: `書籍 #${id}`, url: `/books/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
       }
     } else if (path.includes('/authors/')) {
       return {

@@ -12,6 +12,8 @@ import {
   Redirect,
   Render,
   Res,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { PrintingCompaniesService } from '../printing-companies/printing-companies.service'
@@ -117,6 +119,7 @@ export class BooksController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   @Redirect('/books')
   async create(@Body() createBookDto: CreateBookDto) {
     await this.booksService.create(createBookDto)
@@ -129,44 +132,44 @@ export class BooksController {
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
-      return this.update(id, body, res)
-    }
-    if (body._method === 'DELETE') {
-      return this.removeViaPost(id, res)
-    }
+      // タイトルが空文字列の場合、バリデーションエラーとして処理
+      if (body.title === '' || (body.title && body.title.trim() === '')) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: ['タイトルは必須です'],
+          error: 'Bad Request',
+        })
+      }
 
-    res.status(404).send('Not Found')
+      // ValidationPipeを手動で適用
+      const validationPipe = new ValidationPipe()
+      try {
+        const validatedDto = await validationPipe.transform(body, {
+          type: 'body',
+          metatype: UpdateBookDto,
+        })
+        await this.booksService.update(id, validatedDto)
+        res.redirect(`/books/${id}`)
+      } catch (error) {
+        // ValidationPipeのエラーはグローバルフィルターで処理される
+        throw error
+      }
+    } else if (body._method === 'DELETE') {
+      return this.removeViaPost(id, res)
+    } else {
+      res.status(404).send('Not Found')
+    }
   }
 
   @Put(':id')
+  @UsePipes(ValidationPipe)
+  @Redirect()
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookDto: UpdateBookDto,
-    @Res() res: Response,
   ) {
-    if (!updateBookDto.title || updateBookDto.title.trim() === '') {
-      const book = await this.booksService.findOne(id)
-
-      return res.status(200).render('books/edit', {
-        title: '書籍編集',
-        book: {
-          id: book.id,
-          title: updateBookDto.title || book.title,
-          subtitle: updateBookDto.subtitle || book.subtitle || '',
-          description: updateBookDto.description || book.description || '',
-          pageCount: updateBookDto.pageCount || book.pageCount || '',
-        },
-        errors: { title: 'タイトルは必須です' },
-        breadcrumbs: [
-          { name: '書籍一覧', url: '/books' },
-          { name: book.title, url: `/books/${book.id}` },
-          { name: '編集', url: null },
-        ],
-      })
-    }
-
     await this.booksService.update(id, updateBookDto)
-    res.redirect(`/books/${id}`)
+    return { url: `/books/${id}` }
   }
 
   @Delete(':id')
@@ -216,73 +219,33 @@ export class BooksController {
     @Res() res: Response,
   ) {
     if (body._method === 'PUT') {
-      return this.updateStatus(bookId, body, res)
+      // ValidationPipeを手動で適用
+      const validationPipe = new ValidationPipe()
+      try {
+        const validatedDto = await validationPipe.transform(body, {
+          type: 'body',
+          metatype: UpdateBookStatusDto,
+        })
+        await this.booksService.updateStatus(bookId, validatedDto)
+        res.redirect(`/books/${bookId}`)
+      } catch (error) {
+        // ValidationPipeのエラーはグローバルフィルターで処理される
+        throw error
+      }
+    } else {
+      res.status(404).send('Not Found')
     }
-
-    res.status(404).send('Not Found')
   }
 
   @Put(':bookId/status')
+  @UsePipes(ValidationPipe)
+  @Redirect()
   async updateStatus(
     @Param('bookId', ParseIntPipe) bookId: number,
     @Body() updateBookStatusDto: UpdateBookStatusDto,
-    @Res() res: Response,
   ) {
-    if (!updateBookStatusDto.status) {
-      const book = await this.booksService.findOne(bookId)
-      const statusOptions = [
-        { value: 'planning', label: '企画中' },
-        { value: 'writing', label: '執筆中' },
-        { value: 'editing', label: '校正中' },
-        { value: 'completed', label: '完成' },
-      ]
-
-      return res.status(200).render('books/status-edit', {
-        title: 'ステータス変更',
-        book: {
-          id: book.id,
-          title: book.title,
-          status: book.status,
-        },
-        statusOptions,
-        errors: { status: 'ステータスは必須です' },
-        breadcrumbs: [
-          { name: '書籍一覧', url: '/books' },
-          { name: book.title, url: `/books/${book.id}` },
-          { name: 'ステータス変更', url: null },
-        ],
-      })
-    }
-
-    const validStatuses = ['planning', 'writing', 'editing', 'completed']
-    if (!validStatuses.includes(updateBookStatusDto.status)) {
-      const book = await this.booksService.findOne(bookId)
-      const statusOptions = [
-        { value: 'planning', label: '企画中' },
-        { value: 'writing', label: '執筆中' },
-        { value: 'editing', label: '校正中' },
-        { value: 'completed', label: '完成' },
-      ]
-
-      return res.status(200).render('books/status-edit', {
-        title: 'ステータス変更',
-        book: {
-          id: book.id,
-          title: book.title,
-          status: book.status,
-        },
-        statusOptions,
-        errors: { status: '有効なステータスを選択してください' },
-        breadcrumbs: [
-          { name: '書籍一覧', url: '/books' },
-          { name: book.title, url: `/books/${book.id}` },
-          { name: 'ステータス変更', url: null },
-        ],
-      })
-    }
-
     await this.booksService.updateStatus(bookId, updateBookStatusDto)
-    res.redirect(`/books/${bookId}`)
+    return { url: `/books/${bookId}` }
   }
 
   @Get(':bookId/submissions')

@@ -131,10 +131,11 @@ describe('Books Creation', () => {
       const response = await request(app.getHttpServer())
         .post('/books')
         .send(bookData)
-        .expect(400) // バッドリクエスト
+        .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
       // Assert: エラーメッセージが含まれていることを確認
-      expect(response.text).toMatch(/タイトル.*必須|title.*required/i)
+      expect(response.text).toMatch(/タイトルは必須です/)
+      expect(response.text).toContain('新規書籍作成')
 
       // データベースに保存されていないことを確認
       const savedBooks = await drizzleService.db.select().from(schema.books)
@@ -155,12 +156,11 @@ describe('Books Creation', () => {
       const response = await request(app.getHttpServer())
         .post('/books')
         .send(bookData)
-        .expect(400)
+        .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
       // Assert: バリデーションエラーメッセージを確認
-      expect(response.text).toMatch(
-        /タイトルは255文字以下である必要があります|title.*too long/i,
-      )
+      expect(response.text).toMatch(/タイトルは255文字以下である必要があります/)
+      expect(response.text).toContain('新規書籍作成')
 
       // データベースに保存されていないことを確認
       const savedBooks = await drizzleService.db.select().from(schema.books)
@@ -178,10 +178,11 @@ describe('Books Creation', () => {
       const response = await request(app.getHttpServer())
         .post('/books')
         .send(bookData)
-        .expect(400)
+        .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
       // Assert: バリデーションエラーメッセージを確認
-      expect(response.text).toMatch(/ページ数.*正の数|pageCount.*positive/i)
+      expect(response.text).toMatch(/ページ数は正の数である必要があります/)
+      expect(response.text).toContain('新規書籍作成')
 
       // データベースに保存されていないことを確認
       const savedBooks = await drizzleService.db.select().from(schema.books)

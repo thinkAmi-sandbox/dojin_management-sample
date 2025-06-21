@@ -55,12 +55,14 @@ export class PrintingCompaniesService {
       .update(printingCompanies)
       .set({
         name: updatePrintingCompanyDto.name,
-        websiteUrl: updatePrintingCompanyDto.website === undefined
-          ? null
-          : updatePrintingCompanyDto.website || null,
-        notes: updatePrintingCompanyDto.notes === undefined
-          ? null
-          : updatePrintingCompanyDto.notes || null,
+        websiteUrl:
+          updatePrintingCompanyDto.website === undefined
+            ? null
+            : updatePrintingCompanyDto.website || null,
+        notes:
+          updatePrintingCompanyDto.notes === undefined
+            ? null
+            : updatePrintingCompanyDto.notes || null,
         updatedAt: new Date(),
       })
       .where(eq(printingCompanies.id, id))
