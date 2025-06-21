@@ -159,7 +159,7 @@ describe('Books Creation', () => {
         .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
       // Assert: バリデーションエラーメッセージを確認
-      expect(response.text).toMatch(/タイトルは255文字以下である必要があります/)
+      expect(response.text).toMatch(/タイトルは255文字以内で入力してください/)
       expect(response.text).toContain('新規書籍作成')
 
       // データベースに保存されていないことを確認
@@ -181,7 +181,7 @@ describe('Books Creation', () => {
         .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
       // Assert: バリデーションエラーメッセージを確認
-      expect(response.text).toMatch(/ページ数は正の数である必要があります/)
+      expect(response.text).toMatch(/ページ数は正の数で入力してください/)
       expect(response.text).toContain('新規書籍作成')
 
       // データベースに保存されていないことを確認

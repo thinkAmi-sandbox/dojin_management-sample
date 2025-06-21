@@ -173,7 +173,7 @@ describe('Submissions - Create (Integration)', () => {
         .expect(HttpStatus.OK) // ValidationExceptionFilterが200でHTMLエラーページを返す
 
       expect(response.text).toContain('印刷所を選択してください')
-      expect(response.text).toContain('部数を入力してください')
+      expect(response.text).toContain('部数は必須です')
     })
 
     it('should return 404 for non-existent book', async () => {

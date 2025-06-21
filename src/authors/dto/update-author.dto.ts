@@ -8,7 +8,7 @@ import { IsEmail, IsOptional, IsString, ValidateIf } from 'class-validator'
 export class UpdateAuthorDto {
   @ValidateIf((o) => o.name !== undefined)
   @Transform(({ value }) => value?.trim() || '')
-  @IsString({ message: '名前は文字列である必要があります' })
+  @IsString({ message: '名前は文字列で入力してください' })
   name?: string
 
   @IsOptional()

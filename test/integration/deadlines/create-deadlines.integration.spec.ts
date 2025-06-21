@@ -179,7 +179,7 @@ describe('Deadlines Creation', () => {
 
       // Assert: バリデーションエラーメッセージを確認
       expect(response.text).toMatch(
-        /タイトルは255文字以下である必要があります|title.*too long/i,
+        /タイトルは255文字以内で入力してください|title.*too long/i,
       )
 
       // データベースに保存されていないことを確認

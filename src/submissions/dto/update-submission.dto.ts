@@ -20,7 +20,7 @@ export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
     if (value === '' || value === null || value === undefined) return undefined
     return Number.parseInt(value, 10)
   })
-  @IsInt({ message: '印刷所IDが不正です' })
+  @IsInt({ message: '印刷所IDは整数で入力してください' })
   printingCompanyId?: number
 
   @IsOptional()
@@ -39,11 +39,11 @@ export class UpdateSubmissionDto extends PartialType(CreateSubmissionDto) {
   quantity?: number
 
   @IsOptional()
-  @IsDateString({}, { message: '入稿日の形式が不正です' })
+  @IsDateString({}, { message: '入稿日には有効な日付を入力してください' })
   submissionDate?: string
 
   @IsOptional()
-  @IsDateString({}, { message: '納品予定日の形式が不正です' })
+  @IsDateString({}, { message: '納品予定日には有効な日付を入力してください' })
   expectedDeliveryDate?: string
 
   @IsOptional()

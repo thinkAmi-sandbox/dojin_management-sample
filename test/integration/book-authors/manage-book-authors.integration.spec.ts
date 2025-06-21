@@ -234,10 +234,10 @@ describe('Book Authors Management (Integration)', () => {
 
       // このケースでは無効な文字列が送信されるため、どちらかのエラーメッセージが表示される
       const hasIntegerError = response.text.includes(
-        '執筆者IDは整数である必要があります',
+        '執筆者IDは整数で入力してください',
       )
       const hasPositiveError = response.text.includes(
-        '執筆者IDは正の数である必要があります',
+        '執筆者IDは正の数で入力してください',
       )
       expect(hasIntegerError || hasPositiveError).toBe(true)
     })

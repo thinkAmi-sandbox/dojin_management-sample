@@ -555,10 +555,11 @@ console.log('✅ 処理完了')
 ##### **YOU MUST**: ValidationPipeの使用方針
 - **全コントローラーでValidationPipe統一完了済み**（2025-06-21時点）
 - **全DTOで@Transform設定統一完了済み**（2025-06-21時点）
+- **全DTOで日本語エラーメッセージ統一完了済み**（2025-06-21時点）
 - ValidationExceptionFilterがMPA用のエラーハンドリングを提供
 - DTOでclass-validatorデコレータを使用してバリデーション定義
 - **手動バリデーションは全廃済み**（約300行削除完了）
-- **12ファイルのDTO標準化完了**（一貫したTransformパターン確立）
+- **12ファイルのDTO標準化完了**（一貫したTransform・メッセージパターン確立）
 
 ##### バリデーション実装パターン
 ```typescript
@@ -591,24 +592,24 @@ async updateViaPost(
 
 ##### **YOU MUST**: 標準化されたDTO実装パターン（2025-06-21統一完了）
 
-**Phase 3で統一された@Transformパターンを必ず使用**：
+**Phase 3で統一された@Transformパターン・メッセージパターンを必ず使用**：
 
 ```typescript
 /**
  * リソース作成用DTO
- * 標準化された@Transform設定を使用
+ * 標準化された@Transform設定・エラーメッセージを使用
  */
 export class CreateDto {
   // 文字列の空文字列→undefined変換（標準）
   @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'フィールド名は文字列で入力してください' })
   optionalField?: string
 
   // trim処理付き（必須フィールド用）
   @Transform(({ value }) => value?.trim())
   @IsNotEmpty({ message: '名前は必須です' })
-  @IsString()
+  @IsString({ message: '名前は文字列で入力してください' })
   name: string
 
   // 数値変換（オプショナル）
@@ -618,7 +619,7 @@ export class CreateDto {
     return isNaN(num) ? value : num
   })
   @IsOptional()
-  @IsPositive({ message: 'ページ数は正の数である必要があります' })
+  @IsPositive({ message: 'ページ数は正の数で入力してください' })
   pageCount?: number
 
   // 数値変換（null許可）
@@ -627,10 +628,47 @@ export class CreateDto {
   @IsInt({ message: '印刷費は整数で入力してください' })
   @Min(0, { message: '印刷費は0以上で入力してください' })
   printingCost?: number | null
+
+  // URL・メール・日付の例
+  @Transform(({ value }) => value === '' ? undefined : value)
+  @IsOptional()
+  @IsUrl({}, { message: 'WebサイトURLには有効なURLを入力してください' })
+  @MaxLength(500, { message: 'WebサイトURLは500文字以内で入力してください' })
+  websiteUrl?: string
+
+  @Transform(({ value }) => value === '' ? undefined : value)
+  @IsOptional()
+  @IsEmail({}, { message: 'メールアドレスには有効なメールアドレスを入力してください' })
+  email?: string
+
+  @IsNotEmpty({ message: '締切日は必須です' })
+  @IsDateString({}, { message: '締切日には有効な日付を入力してください' })
+  dueDate: string
 }
 ```
 
 **重要**: これらのパターンは全12ファイルのDTOで統一済み。新しいDTOを作成する際は必ずこのパターンを使用すること。
+
+##### **YOU MUST**: 統一されたエラーメッセージパターン（2025-06-21完了）
+
+**必須フィールド**:
+- `{フィールド名}は必須です`
+
+**型チェック**:
+- 文字列: `{フィールド名}は文字列で入力してください`
+- 整数: `{フィールド名}は整数で入力してください`
+- 正の数: `{フィールド名}は正の数で入力してください`
+
+**フォーマット**:
+- URL: `{フィールド名}には有効なURLを入力してください`
+- メール: `{フィールド名}には有効なメールアドレスを入力してください`
+- 日付: `{フィールド名}には有効な日付を入力してください`
+
+**範囲チェック**:
+- 最大文字数: `{フィールド名}は{数}文字以内で入力してください`
+- 最小値: `{フィールド名}は{数}以上で入力してください`
+
+これらのメッセージパターンは全31件のエラーメッセージで統一済み。新規DTO作成時は必ずこのパターンに従うこと。
 
 ##### UpdateDtoの特殊対応
 - PartialTypeを使用する場合、空文字列の扱いに注意

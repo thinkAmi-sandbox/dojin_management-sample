@@ -14,17 +14,17 @@ import {
 export class CreateDeadlineDto {
   @Transform(({ value }) => value?.trim())
   @IsNotEmpty({ message: 'タイトルは必須です' })
-  @IsString({ message: 'タイトルは文字列である必要があります' })
-  @MaxLength(255, { message: 'タイトルは255文字以下である必要があります' })
+  @IsString({ message: 'タイトルは文字列で入力してください' })
+  @MaxLength(255, { message: 'タイトルは255文字以内で入力してください' })
   title: string
 
   @Transform(({ value }) => value?.trim())
   @IsNotEmpty({ message: '締切日は必須です' })
-  @IsDateString({}, { message: '締切日は有効な日付である必要があります' })
+  @IsDateString({}, { message: '締切日には有効な日付を入力してください' })
   dueDate: string
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : value)
-  @IsString({ message: '説明は文字列である必要があります' })
+  @IsString({ message: '説明は文字列で入力してください' })
   description?: string
 }

@@ -11,7 +11,7 @@ export class AddAuthorToBookDto {
     const parsed = parseInt(value, 10)
     return isNaN(parsed) ? value : parsed
   })
-  @IsInt({ message: '執筆者IDは整数である必要があります' })
-  @IsPositive({ message: '執筆者IDは正の数である必要があります' })
+  @IsInt({ message: '執筆者IDは整数で入力してください' })
+  @IsPositive({ message: '執筆者IDは正の数で入力してください' })
   authorId: number
 }

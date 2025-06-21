@@ -12,7 +12,7 @@ export class CreatePrintingCompanyDto {
 
   @Transform(({ value }) => value === '' ? undefined : value)
   @IsOptional()
-  @IsUrl({}, { message: '有効なURLを入力してください' })
+  @IsUrl({}, { message: 'WebサイトURLには有効なURLを入力してください' })
   @MaxLength(500, { message: 'Webサイトは500文字以内で入力してください' })
   website?: string
 
