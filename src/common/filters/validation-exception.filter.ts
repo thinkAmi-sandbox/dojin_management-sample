@@ -25,7 +25,9 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       Array.isArray((exceptionResponse as ValidationExceptionResponse).message)
     ) {
       // ValidationPipeからのエラーの場合
-      const validationErrors = (exceptionResponse as ValidationExceptionResponse).message
+      const validationErrors = (
+        exceptionResponse as ValidationExceptionResponse
+      ).message
 
       // エラーメッセージをフィールド名ベースのオブジェクトに変換
       const errors: Record<string, string> = {}
@@ -212,7 +214,10 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     })
   }
 
-  private prepareFormData(formData: Record<string, unknown>, path: string): Record<string, unknown> {
+  private prepareFormData(
+    formData: Record<string, unknown>,
+    path: string,
+  ): Record<string, unknown> {
     // より具体的なパターンを先に判定
     if (path.match(/\/books\/\d+\/deadlines/)) {
       // 書籍の締切関連パス

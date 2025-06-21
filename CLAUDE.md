@@ -149,6 +149,7 @@ export class BooksController {
   - `Author`: 執筆者情報の管理（名前、メールアドレス、プロフィール）
   - `BookAuthor`: 書籍と執筆者の多対多関連テーブル
   - `PrintingCompany`: 印刷所情報の管理（印刷所名、公式サイト、備考）
+  - `Submission`: 入稿情報の管理（書籍・印刷所との関連、ステータス、部数、コスト、配送情報）
 
 ### テスト設計
 - 詳細は`docs/test/overview.md`を参照
@@ -537,6 +538,7 @@ console.log('✅ 処理完了')
 - **YOU MUST**: 類似機能が既にある場合は、そのパターンを踏襲する
 - 特に以下の実装は良いパターンとして参考にする：
   - 印刷所機能（CRUD全体の実装）
+  - 入稿機能（複雑なCRUD、JOIN処理、コスト計算の実装）
   - 書籍のステータス更新（部分更新の実装）
   - 書籍と執筆者の関連（多対多関係の実装）
 
@@ -743,7 +745,7 @@ async findOne(id: number) {
 - 書籍: `/books`, `/books/:id`, `/books/:id/status`
 - 執筆者: `/authors`, `/authors/:id`
 - 締切: `/books/:bookId/deadlines`, `/deadlines/:id`
-- 入稿: `/books/:bookId/submissions`, `/submissions/:id`
+- 入稿: `/books/:bookId/submissions`, `/submissions/:id`, `/submissions/:id/edit`
 - 書籍執筆者: `/books/:bookId/authors`
 
 ## 効率的実装パターン集
@@ -786,6 +788,16 @@ async findOne(id: number) {
 
   return result[0]
 }
+
+// 削除処理（存在確認付き）
+async remove(id: number): Promise<void> {
+  // 存在確認（NotFoundExceptionを投げる）
+  await this.findOne(id)
+
+  await this.drizzleService.db
+    .delete(schema.mainTable)
+    .where(eq(schema.mainTable.id, id))
+}
 ```
 
 #### コントローラー層のテンプレート
@@ -816,6 +828,25 @@ async findOne(@Param('id', ParseIntPipe) id: number) {
     editUrl: `/resources/${resource.id}/edit`,
     deleteUrl: `/resources/${resource.id}`,
     listUrl: '/resources',
+  }
+}
+
+// 削除処理パターン
+@Delete(':id')
+async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  try {
+    // ID形式の妥当性チェック
+    if (id <= 0 || isNaN(id)) {
+      return res.status(400).send('無効なIDです')
+    }
+
+    await this.service.remove(id)
+    res.redirect('/resources')
+  } catch (error) {
+    if (error instanceof HttpException && error.getStatus() === 404) {
+      return res.status(404).send('リソースが見つかりませんでした')
+    }
+    throw error
   }
 }
 ```
@@ -883,6 +914,51 @@ async findOne(@Param('id', ParseIntPipe) id: number) {
 - チーム開発における明確なコーディング規約確立
 
 詳細は `temp_memory/validation-refactoring-plan.md` を参照。
+
+## 入稿機能実装完了記録
+
+### 🎉 2025年6月21日完了 🎉
+
+**入稿機能（Submissions）の完全実装が完了しました！**
+
+#### 主要成果
+- **Phase 1 基本機能**: 一覧・詳細・作成機能完全実装
+- **Phase 2 編集・削除機能**: 編集・削除機能完全実装
+- **統合テスト197件全通過**: 新機能含む全テスト成功維持
+- **外部キー関連**: 書籍・印刷所との適切な関連実装
+- **JavaScript UI**: 削除確認ダイアログ等のユーザビリティ機能
+
+#### 実装されたエンドポイント
+- `GET /submissions` - 入稿一覧
+- `GET /books/:bookId/submissions` - 書籍別入稿履歴
+- `GET /books/:bookId/submissions/new` - 新規入稿作成フォーム
+- `POST /books/:bookId/submissions` - 入稿作成処理
+- `GET /submissions/:id` - 入稿詳細
+- `GET /submissions/:id/edit` - 入稿編集フォーム
+- `PUT /submissions/:id` - 入稿更新処理（HTTPメソッドオーバーライド対応）
+- `DELETE /submissions/:id` - 入稿削除処理（HTTPメソッドオーバーライド対応）
+
+#### 技術的な実装内容
+- **Drizzle ORM**: JOIN処理による関連データ取得
+- **ValidationPipe統一**: class-validator + @Transform統一パターン適用
+- **コスト自動計算**: 印刷費+送料+その他費用=合計の自動計算機能
+- **ステータス管理**: 5段階ステータス（準備中・入稿済み・印刷中・納品済み・キャンセル）
+- **レスポンシブUI**: セクション構造化によるモバイル対応
+- **エラーハンドリング**: 404・400エラーの適切な処理
+
+#### 確立された開発パターン
+1. **実装前チェックリスト**: スキーマ定義確認、既存パターン分析の4段階手順
+2. **段階的テスト実装**: ミニマム→バリデーション→エッジケースの3段階アプローチ
+3. **削除機能パターン**: 存在確認→削除→リダイレクトの標準パターン確立
+4. **型安全性**: TypeScript型定義の事前修正によるエラー回避
+
+#### 開発効率向上への貢献
+- 既存パターン（印刷所機能）踏襲による高速実装
+- 統合テスト駆動開発による仕様明確化・エラー早期発見
+- エラー解決パターン辞書による効率的デバッグ
+- 段階的実装戦略による複雑性回避
+
+詳細は `temp_memory/submissions-todo.md` を参照。
 
 ---
 

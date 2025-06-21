@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpException,
   Param,
   ParseIntPipe,
   Post,
@@ -254,8 +256,21 @@ export class SubmissionsController {
     }
   }
 
-  remove(_id: number, res: Response) {
-    // 削除機能は Phase 2-2 で実装予定
-    res.status(404).send('Not Found')
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    try {
+      // ID形式の妥当性チェック
+      if (id <= 0 || isNaN(id)) {
+        return res.status(400).send('無効なIDです')
+      }
+
+      await this.submissionsService.remove(id)
+      res.redirect('/submissions')
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 404) {
+        return res.status(404).send('入稿が見つかりませんでした')
+      }
+      throw error
+    }
   }
 }

@@ -167,8 +167,17 @@ export class SubmissionsService {
       quantity: number
       status: string
       submissionDate?: Date
-      notes?: string | null
+      expectedDeliveryDate?: Date
+      specificationNotes?: string | null
       printingCost?: number | null
+      shippingCost?: number | null
+      otherCost?: number | null
+      totalCost?: number | null
+      discountType?: string | null
+      deliveryDestination?: string | null
+      deliveryNotes?: string | null
+      submissionFileNotes?: string | null
+      generalNotes?: string | null
     } = {
       bookId,
       printingCompanyId: createSubmissionDto.printingCompanyId,
@@ -391,6 +400,16 @@ export class SubmissionsService {
     await this.drizzleService.db
       .update(schema.submissions)
       .set(updateData)
+      .where(eq(schema.submissions.id, id))
+  }
+
+  async remove(id: number): Promise<void> {
+    // 入稿の存在確認
+    await this.findOne(id)
+
+    // 入稿データを削除
+    await this.drizzleService.db
+      .delete(schema.submissions)
       .where(eq(schema.submissions.id, id))
   }
 }

@@ -175,22 +175,22 @@ export const submissions = pgTable('Submission', {
 - [x] 2-6. ビルド実行（pnpm build）とビューファイルコピー確認
 - [x] 2-7. ユーザー確認（動作確認完了）
 
-### 6. 入稿削除（DELETE /submissions/:id）
+### ✅ 6. 入稿削除（DELETE /submissions/:id）**【完了】**
 
 #### 設計フェーズ
-- [ ] 削除確認の仕様確認（JavaScript confirm()ダイアログ使用）
-- [ ] 関連データとの整合性確認
+- [x] 削除確認の仕様確認（JavaScript confirm()ダイアログ使用）
+- [x] 関連データとの整合性確認（外部キー制約確認済み）
 
 #### 実装フェーズ
-- [ ] 2-1. 統合テスト作成（test/integration/submissions/delete-submission.integration.spec.ts）
-- [ ] 2-2. プロダクションコード実装
-  - [ ] コントローラーにremove()追加（DELETEデコレータ、HTTPメソッドオーバーライド対応）
-  - [ ] サービスにremove()追加（存在確認付き削除処理）
-  - [ ] 削除確認UI追加（詳細画面に削除ボタンとJavaScript確認ダイアログ）
-- [ ] 2-3. 型チェック（pnpm type-check）
-- [ ] 2-4. Linter実行（pnpm format）
-- [ ] 2-5. テスト実行（pnpm test:integration）
-- [ ] 2-6. ユーザー確認
+- [x] 2-1. 統合テスト作成（test/integration/submissions/delete-submission.integration.spec.ts）**【2件全通過】**
+- [x] 2-2. プロダクションコード実装
+  - [x] コントローラーにremove()追加（DELETEデコレータ、HTTPメソッドオーバーライド対応）
+  - [x] サービスにremove()追加（存在確認付き削除処理）
+  - [x] 削除確認UI追加（詳細画面に削除ボタンとJavaScript確認ダイアログ）**【既実装済み発見】**
+- [x] 2-3. 型チェック（pnpm type-check）**【submissionData型定義修正完了】**
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト197件全通過】**
+- [x] 2-6. ユーザー確認（動作確認完了）
 
 ## Phase 3: 集計機能（将来実装）
 
@@ -271,11 +271,13 @@ test/
 - [x] Phase 1-3: 新規入稿作成 **【完了 - 動作確認済み】**
 - [x] Phase 1-4: 入稿詳細画面 **【完了 - 統合テスト186件全通過】**
 - [x] Phase 2-1: 入稿編集 **【完了 - 統合テスト9件全通過】**
-- [ ] Phase 2-2: 入稿削除 **【未着手】**
+- [x] Phase 2-2: 入稿削除 **【完了 - 統合テスト197件全通過】**
 
 ## **🎉 Phase 1 基本機能 完全実装完了！**
 
-## **🎯 Phase 2-1 編集機能 実装完了！**
+## **🎉 Phase 2 編集・削除機能 完全実装完了！**
+
+## **🎯 入稿機能 Phase 1-2 完全実装達成！**
 
 ## 完了報告
 
@@ -471,7 +473,47 @@ test/
 - 手動バリデーション + class-validator組み合わせパターンの確立
 - コスト計算ロジックの自動化実装
 
-**次のステップ**: Phase 2-2（入稿削除機能）の実装
+**次のステップ**: Phase 2-2（入稿削除機能）の実装 **【実装完了】**
+
+### Phase 2-2: 入稿削除機能 実装完了 ✅
+
+**実装日時**: 2025/06/21 15:00完了  
+**テスト結果**: 統合テスト197件全て通過（入稿削除テスト2件含む）  
+**動作確認**: ユーザーによる動作確認完了（2025/06/21 15:10）
+
+**主な成果物**:
+- 入稿削除機能（DELETE /submissions/:id）
+- JavaScript確認ダイアログ付き削除UI（既実装済み発見）
+- HTTPメソッドオーバーライド対応（_method=DELETE）
+- 包括的エラーハンドリング（404・400エラー対応）
+- 統合テスト2パターン実装
+
+**技術的な実装内容**:
+- SubmissionsServiceに `remove()` メソッド追加（存在確認→削除処理）
+- SubmissionsControllerに `@Delete` デコレータ付き `remove()` メソッド追加
+- 印刷所削除機能と同様のエラーハンドリングパターン適用
+- 削除後は入稿一覧（/submissions）への自動リダイレクト
+- JavaScript confirm()ダイアログによる削除確認
+
+**解決した課題**:
+- **型定義エラー**: submissionData型定義の不足プロパティ追加で解決
+- **UI実装**: 削除ボタンとJavaScript確認ダイアログが既実装済みを発見
+- **統合テスト**: 正常削除・404エラーの2パターンテスト完全実装
+
+**実装済みファイル（新規作成・修正）**:
+```
+✅ test/integration/submissions/delete-submission.integration.spec.ts（統合テスト2件）
+✅ src/submissions/submissions.service.ts（remove()メソッド追加）
+✅ src/submissions/submissions.controller.ts（@Deleteデコレータ、remove()メソッド更新）
+✅ src/views/submissions/show.ejs（削除ボタン・JavaScript確認ダイアログ既実装済み）
+```
+
+**効率化ポイント**:
+- 既存パターン（印刷所削除機能）の完全踏襲による高速実装
+- 事前設計フェーズでの外部キー制約確認による安全な削除処理
+- 段階的テスト実装（ミニマム→フル）による効率的開発
+
+**次のステップ**: Phase 3（集計機能）の設計・実装検討
 
 ## 🎯 Phase 1 完了による効率化の学習ポイント
 
@@ -495,7 +537,7 @@ test/
 - **効果**: 5件のテストパターンで網羅的な動作確認
 
 これらの学習を活かして、Phase 2の編集・削除機能をより効率的に実装予定  
-**更新**: Phase 2-1（編集機能）実装完了、Phase 2-2（削除機能）が残り
+**更新**: Phase 2-1（編集機能）実装完了、Phase 2-2（削除機能）実装完了 **【Phase 2完全完了！】**
 
 ## URL設計（docs/01_url.mdより）
 
