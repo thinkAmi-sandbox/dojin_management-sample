@@ -84,8 +84,22 @@
         執筆者管理
       </a>
       <a 
-        href="<%= book.statusEditUrl %>"
+        href="/books/<%= book.id %>/submissions"
+        style="display: inline-block; padding: 10px 20px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px;"
+        title="この書籍の入稿履歴を確認します"
+      >
+        📋 入稿履歴
+      </a>
+      <a 
+        href="/books/<%= book.id %>/submissions/new"
         style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;"
+        title="この書籍の新しい入稿を作成します"
+      >
+        ➕ 新規入稿
+      </a>
+      <a 
+        href="<%= book.statusEditUrl %>"
+        style="display: inline-block; padding: 10px 20px; background-color: #ffc107; color: #212529; text-decoration: none; border-radius: 4px;"
       >
         ステータス変更
       </a>

@@ -130,7 +130,7 @@ describe('Submissions Costs (Integration)', () => {
 
       // 各項目が表示されていることを確認
       expect(response.text).toContain('55,000円')
-      expect(response.text).toContain('85,000円')  
+      expect(response.text).toContain('85,000円')
       expect(response.text).toContain('65,000円')
     })
 

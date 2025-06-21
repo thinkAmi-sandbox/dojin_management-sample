@@ -258,6 +258,13 @@
             <h1><%= title %></h1>
         </div>
 
+        <!-- サブナビゲーション -->
+        <div class="sub-navigation" style="margin-bottom: 20px; border-bottom: 1px solid #ddd;">
+            <a href="/submissions" class="tab" style="display: inline-block; padding: 10px 16px; text-decoration: none; color: #666; border-bottom: 2px solid transparent; margin-right: 20px; transition: color 0.2s, border-color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#666'">全て</a>
+            <a href="/submissions/in-progress" class="tab" style="display: inline-block; padding: 10px 16px; text-decoration: none; color: #666; border-bottom: 2px solid transparent; margin-right: 20px; transition: color 0.2s, border-color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#666'">進行中のみ</a>
+            <a href="/submissions/costs" class="tab active" style="display: inline-block; padding: 10px 16px; text-decoration: none; color: #007bff; border-bottom: 2px solid #007bff; margin-right: 20px;">コスト集計</a>
+        </div>
+
         <!-- フィルター -->
         <div class="filter-section">
             <form class="filter-form" method="GET" action="/submissions/costs">
