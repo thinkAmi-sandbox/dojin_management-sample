@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Render,
   Res,
   UsePipes,
@@ -55,6 +56,97 @@ export class SubmissionsController {
         detailUrl: `/submissions/${submission.id}`,
         editUrl: `/submissions/${submission.id}/edit`,
       })),
+    }
+  }
+
+  @Get('costs')
+  @Render('submissions/costs')
+  async findCosts(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('status') status?: string,
+  ) {
+    const result = await this.submissionsService.findCosts({
+      startDate,
+      endDate,
+      status,
+    })
+
+    // ステータスの日本語変換
+    const statusMap = {
+      draft: '準備中',
+      submitted: '入稿済み',
+      printing: '印刷中',
+      delivered: '納品済み',
+      cancelled: 'キャンセル',
+    }
+
+    // 金額フォーマット関数
+    const formatCurrency = (amount: number) => {
+      return Math.round(amount).toLocaleString('ja-JP')
+    }
+
+    // 統計情報の計算
+    const urgentCount = result.printingCompanyCosts.filter((item) => {
+      return item.count >= 3 // 3件以上を多発注として扱う
+    }).length
+
+    return {
+      title: '入稿コスト集計',
+
+      // 印刷所別集計
+      printingCompanyCosts: result.printingCompanyCosts.map((item) => ({
+        printingCompanyId: item.printingCompanyId,
+        printingCompanyName: item.printingCompanyName,
+        totalCost: formatCurrency(item.totalCost),
+        count: item.count,
+        avgCost: formatCurrency(Math.round(item.avgCost)),
+      })),
+
+      // 書籍別集計
+      bookCosts: result.bookCosts.map((item) => ({
+        bookId: item.bookId,
+        bookTitle: item.bookTitle,
+        bookSubtitle: item.bookSubtitle || '',
+        totalCost: formatCurrency(item.totalCost),
+        count: item.count,
+        avgCost: formatCurrency(Math.round(item.avgCost)),
+      })),
+
+      // 月別集計
+      monthlyCosts: result.monthlyCosts.map((item) => ({
+        yearMonth: item.yearMonth || '不明',
+        totalCost: formatCurrency(item.totalCost),
+        count: item.count,
+      })),
+
+      // 統計情報
+      statistics: {
+        totalCost: formatCurrency(result.statistics.totalCost),
+        avgCost: formatCurrency(Math.round(result.statistics.avgCost)),
+        maxCost: formatCurrency(result.statistics.maxCost),
+        minCost: formatCurrency(result.statistics.minCost),
+        totalCount: result.statistics.totalCount,
+      },
+
+      // フィルター情報
+      filters: {
+        startDate: startDate || '',
+        endDate: endDate || '',
+        status: status || '',
+        statusLabel: status
+          ? statusMap[status as keyof typeof statusMap] || status
+          : '',
+      },
+
+      // データ有無フラグ
+      hasData: result.statistics.totalCount > 0,
+
+      // パンくずリスト
+      breadcrumbs: [
+        { name: '入稿一覧', url: '/submissions' },
+        { name: 'コスト集計', url: null },
+      ],
     }
   }
 

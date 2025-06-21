@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { asc, desc, eq, inArray } from 'drizzle-orm'
+import { asc, desc, eq, inArray, sql, and, gte, lte } from 'drizzle-orm'
 import * as schema from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateSubmissionDto } from './dto/create-submission.dto'
@@ -442,5 +442,116 @@ export class SubmissionsService {
     await this.drizzleService.db
       .delete(schema.submissions)
       .where(eq(schema.submissions.id, id))
+  }
+
+  async findCosts(filters?: {
+    startDate?: string
+    endDate?: string
+    status?: string
+  }) {
+    // WHERE条件の構築
+    const whereConditions = []
+
+    if (filters?.startDate) {
+      whereConditions.push(
+        gte(schema.submissions.submissionDate, new Date(filters.startDate)),
+      )
+    }
+
+    if (filters?.endDate) {
+      whereConditions.push(
+        lte(schema.submissions.submissionDate, new Date(filters.endDate)),
+      )
+    }
+
+    if (filters?.status) {
+      whereConditions.push(eq(schema.submissions.status, filters.status))
+    }
+
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined
+
+    // 印刷所別集計
+    const printingCompanyCosts = await this.drizzleService.db
+      .select({
+        printingCompanyId: schema.submissions.printingCompanyId,
+        printingCompanyName: schema.printingCompanies.name,
+        totalCost: sql<number>`COALESCE(SUM(${schema.submissions.totalCost}), 0)`,
+        count: sql<number>`COUNT(*)`,
+        avgCost: sql<number>`COALESCE(AVG(${schema.submissions.totalCost}), 0)`,
+      })
+      .from(schema.submissions)
+      .innerJoin(
+        schema.printingCompanies,
+        eq(schema.submissions.printingCompanyId, schema.printingCompanies.id),
+      )
+      .where(whereClause)
+      .groupBy(
+        schema.submissions.printingCompanyId,
+        schema.printingCompanies.name,
+      )
+      .orderBy(desc(sql<number>`SUM(${schema.submissions.totalCost})`))
+
+    // 書籍別集計
+    const bookCosts = await this.drizzleService.db
+      .select({
+        bookId: schema.submissions.bookId,
+        bookTitle: schema.books.title,
+        bookSubtitle: schema.books.subtitle,
+        totalCost: sql<number>`COALESCE(SUM(${schema.submissions.totalCost}), 0)`,
+        count: sql<number>`COUNT(*)`,
+        avgCost: sql<number>`COALESCE(AVG(${schema.submissions.totalCost}), 0)`,
+      })
+      .from(schema.submissions)
+      .innerJoin(schema.books, eq(schema.submissions.bookId, schema.books.id))
+      .where(whereClause)
+      .groupBy(
+        schema.submissions.bookId,
+        schema.books.title,
+        schema.books.subtitle,
+      )
+      .orderBy(desc(sql<number>`SUM(${schema.submissions.totalCost})`))
+
+    // 月別集計
+    const monthlyCosts = await this.drizzleService.db
+      .select({
+        yearMonth: sql<string>`TO_CHAR(${schema.submissions.submissionDate}, 'YYYY-MM')`,
+        totalCost: sql<number>`COALESCE(SUM(${schema.submissions.totalCost}), 0)`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(schema.submissions)
+      .where(
+        and(whereClause, sql`${schema.submissions.submissionDate} IS NOT NULL`),
+      )
+      .groupBy(sql`TO_CHAR(${schema.submissions.submissionDate}, 'YYYY-MM')`)
+      .orderBy(
+        desc(sql`TO_CHAR(${schema.submissions.submissionDate}, 'YYYY-MM')`),
+      )
+
+    // 統計情報の取得
+    const statistics = await this.drizzleService.db
+      .select({
+        totalCost: sql<number>`COALESCE(SUM(${schema.submissions.totalCost}), 0)`,
+        avgCost: sql<number>`COALESCE(AVG(${schema.submissions.totalCost}), 0)`,
+        maxCost: sql<number>`COALESCE(MAX(${schema.submissions.totalCost}), 0)`,
+        minCost: sql<number>`COALESCE(MIN(${schema.submissions.totalCost}), 0)`,
+        totalCount: sql<number>`COUNT(*)`,
+      })
+      .from(schema.submissions)
+      .where(whereClause)
+
+    return {
+      printingCompanyCosts,
+      bookCosts,
+      monthlyCosts,
+      statistics: statistics[0] || {
+        totalCost: 0,
+        avgCost: 0,
+        maxCost: 0,
+        minCost: 0,
+        totalCount: 0,
+      },
+      filters,
+    }
   }
 }

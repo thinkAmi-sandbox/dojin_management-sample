@@ -213,15 +213,24 @@ export const submissions = pgTable('Submission', {
 - [x] 2-6. ビルド実行（pnpm build）とビューファイルコピー確認
 - [x] 2-7. ユーザー確認（動作確認完了）
 
-### 8. コスト一覧・集計（GET /submissions/costs）
+### ✅ 8. コスト一覧・集計（GET /submissions/costs）**【完了】**
 
 #### 設計フェーズ
-- [ ] コスト集計機能の仕様確認
-- [ ] 印刷所別・期間別集計の設計
+- [x] コスト集計機能の仕様確認（印刷所別・書籍別・期間別集計）
+- [x] フィルタリング機能の設計（期間指定・ステータス絞り込み）
+- [x] 統計情報表示の設計（総・平均・最大・最小コスト）
 
 #### 実装フェーズ
-- [ ] 統合テスト・プロダクションコード実装
-- [ ] 集計処理・ビューファイル作成
+- [x] 2-1. 統合テスト作成（test/integration/submissions/costs-submissions.integration.spec.ts）**【5件全通過】**
+- [x] 2-2. プロダクションコード実装
+  - [x] SubmissionsServiceにfindCosts()追加（Drizzle集計処理）
+  - [x] SubmissionsControllerにfindCosts()エンドポイント追加（クエリパラメータ対応）
+  - [x] ビューファイル作成（src/views/submissions/costs.ejs）
+- [x] 2-3. 型チェック（pnpm type-check）
+- [x] 2-4. Linter実行（pnpm format）
+- [x] 2-5. テスト実行（pnpm test:integration）**【統合テスト207件全通過】**
+- [x] 2-6. ビルド実行（pnpm build）とビューファイルコピー確認
+- [x] 2-7. 実装完了（2025/06/21 19:15完了）
 
 ## 必要なファイル構成
 
@@ -243,6 +252,7 @@ src/views/
 └── submissions/
     ├── index.ejs（全入稿一覧）
     ├── in-progress.ejs（進行中入稿一覧）
+    ├── costs.ejs（コスト集計画面）
     ├── book-index.ejs（書籍別入稿履歴）
     ├── new.ejs（新規作成）
     ├── show.ejs（詳細）
@@ -253,6 +263,7 @@ test/
     └── submissions/
         ├── list-submissions.integration.spec.ts
         ├── in-progress-submissions.integration.spec.ts
+        ├── costs-submissions.integration.spec.ts
         ├── book-submissions.integration.spec.ts
         ├── create-submission.integration.spec.ts
         ├── show-submission.integration.spec.ts
@@ -284,14 +295,15 @@ test/
 - [x] Phase 2-1: 入稿編集 **【完了 - 統合テスト9件全通過】**
 - [x] Phase 2-2: 入稿削除 **【完了 - 統合テスト197件全通過】**
 - [x] Phase 3-1: 進行中入稿一覧 **【完了 - 統合テスト202件全通過】**
+- [x] Phase 3-2: コスト集計機能 **【完了 - 統合テスト207件全通過】**
 
 ## **🎉 Phase 1 基本機能 完全実装完了！**
 
 ## **🎉 Phase 2 編集・削除機能 完全実装完了！**
 
-## **🎉 Phase 3-1 進行中入稿一覧機能 完全実装完了！**
+## **🎉 Phase 3 集計機能 完全実装完了！**
 
-## **🎯 入稿機能 基本・編集・削除・集計(一部) 完全実装達成！**
+## **🎯 入稿機能 完全制覇達成！ 全機能実装完了！**
 
 ## 完了報告
 
@@ -574,7 +586,49 @@ test/
 - 業務効率向上に直結する実用的な管理機能
 - 納期管理・進捗管理の自動化による運用負荷軽減
 
-**次のステップ**: Phase 3-2（コスト集計機能）の設計・実装検討
+**次のステップ**: ✅ **全機能実装完了！**
+
+### Phase 3-2: コスト集計機能 実装完了 ✅
+
+**実装日時**: 2025/06/21 19:15完了  
+**テスト結果**: 統合テスト207件全て通過（コスト集計テスト5件含む）  
+**動作確認**: 全機能正常動作確認済み
+
+**主な成果物**:
+- コスト集計画面（/submissions/costs）
+- 印刷所別・書籍別・期間別の多軸集計機能
+- フィルタリング機能（期間指定・ステータス絞り込み）
+- 統計情報表示（総・平均・最大・最小コスト）
+- レスポンシブ対応の集計UI
+
+**技術的な実装内容**:
+- SubmissionsServiceに `findCosts()` メソッド追加（Drizzle ORM集計処理）
+- SubmissionsControllerにクエリパラメータ対応エンドポイント追加
+- GROUP BY、SUM()、AVG()、COUNT()等の集計関数活用
+- 動的WHERE条件構築によるフィルタリング機能
+- レスポンシブ対応のEJSビューファイル（costs.ejs）
+
+**解決した課題**:
+- **集計クエリ設計**: Drizzle ORMでの複雑な集計処理実装
+- **型安全な集計**: TypeScriptでの集計関数型定義
+- **フィルタリング**: 動的WHERE条件によるクエリ最適化
+- **UI設計**: 複数軸集計データの見やすい表示
+
+**実装済みファイル（新規作成・修正）**:
+```
+✅ src/submissions/submissions.service.ts（findCosts()メソッド追加）
+✅ src/submissions/submissions.controller.ts（costsエンドポイント追加）
+✅ src/views/submissions/costs.ejs（コスト集計画面）
+✅ test/integration/submissions/costs-submissions.integration.spec.ts（統合テスト5件）
+```
+
+**Phase 3-2の特徴・効果**:
+- **業務分析支援**: 印刷所別・書籍別のコスト分析による経営判断支援
+- **フィルタリング**: 期間・ステータス指定による柔軟な分析
+- **統計情報**: 自動計算による即座な数値把握
+- **Drizzle ORM活用**: 型安全で高性能な集計処理実現
+
+**🎉 入稿機能全8機能完全制覇達成！**
 
 ## 🎯 Phase 1 完了による効率化の学習ポイント
 
