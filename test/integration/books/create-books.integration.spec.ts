@@ -226,9 +226,6 @@ describe('Books Creation', () => {
           pageCount: '40', // 文字列として送信
         })
 
-      console.log('Form data response status:', response.status)
-      console.log('Form data response text:', response.text)
-
       // Assert: 成功することを確認
       expect(response.status).toBe(302)
       expect(response.headers.location).toBe('/books')

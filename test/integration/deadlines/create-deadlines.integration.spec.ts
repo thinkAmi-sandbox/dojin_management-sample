@@ -250,9 +250,6 @@ describe('Deadlines Creation', () => {
           description: '印刷所への入稿締切',
         })
 
-      console.log('Form data response status:', response.status)
-      console.log('Form data response text:', response.text)
-
       // Assert: 成功することを確認
       expect(response.status).toBe(302)
       expect(response.headers.location).toBe(`/books/${testBookId}/deadlines`)

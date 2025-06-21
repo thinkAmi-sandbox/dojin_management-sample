@@ -119,13 +119,7 @@ export class PrintingCompaniesController {
     @Body() body: { _method?: string; [key: string]: unknown },
     @Res() res: Response,
   ) {
-    console.log('🚀 updateViaPost called')
-    console.log('body:', body)
-    console.log('body._method:', body._method)
-
     if (body._method === 'PUT') {
-      console.log('🔄 Calling update method')
-
       // 手動でバリデーション実行してみる
       const validationPipe = new ValidationPipe({ whitelist: true })
       try {
@@ -133,18 +127,15 @@ export class PrintingCompaniesController {
           type: 'body',
           metatype: UpdatePrintingCompanyDto,
         })
-        console.log('✅ Validation passed:', validatedDto)
         const result = await this.update(id, validatedDto)
         return res.redirect(result.url)
       } catch (error) {
-        console.log('❌ Validation failed:', error)
         throw error
       }
     }
     if (body._method === 'DELETE') {
       return this.remove(id, res)
     }
-    console.log('❌ Not Found case')
     res.status(404).send('Not Found')
   }
 
