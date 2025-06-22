@@ -3,7 +3,6 @@ import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import {
   afterAll,
-  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -40,6 +39,9 @@ describe('Remove Author from Book', () => {
   })
 
   beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
+    await testDbUtils.cleanupDatabase()
+    
     // 各テスト前にタイムスタンプベースのユニークなデータを作成
     const timestamp = Date.now()
 
@@ -77,10 +79,6 @@ describe('Remove Author from Book', () => {
     testAuthor2Id = author2Result[0].id
   })
 
-  afterEach(async () => {
-    // 各テスト後に全データをクリーンアップ（削除系テストでは必要）
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('DELETE /books/:bookId/authors/:authorId', () => {
     it('有効なauthorIdで執筆者が書籍から正常に削除される', async () => {
