@@ -170,7 +170,7 @@ describe('Remove Author from Book', () => {
       expect(beforeDelete).toHaveLength(2)
 
       // Act: author1のみを削除
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .delete(`/books/${testBookId}/authors/${testAuthor1Id}`)
         .expect(302)
 
@@ -236,7 +236,7 @@ describe('Remove Author from Book', () => {
       })
 
       // Act: 無効な_methodでPOST
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/authors/${testAuthor1Id}`)
         .send({ _method: 'PUT' }) // DELETEではない
         .expect(404)

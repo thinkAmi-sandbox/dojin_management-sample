@@ -122,16 +122,12 @@ export class PrintingCompaniesController {
     if (body._method === 'PUT') {
       // 手動でバリデーション実行してみる
       const validationPipe = new ValidationPipe({ whitelist: true })
-      try {
-        const validatedDto = await validationPipe.transform(body, {
-          type: 'body',
-          metatype: UpdatePrintingCompanyDto,
-        })
-        const result = await this.update(id, validatedDto)
-        return res.redirect(result.url)
-      } catch (error) {
-        throw error
-      }
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdatePrintingCompanyDto,
+      })
+      const result = await this.update(id, validatedDto)
+      return res.redirect(result.url)
     }
     if (body._method === 'DELETE') {
       return this.remove(id, res)

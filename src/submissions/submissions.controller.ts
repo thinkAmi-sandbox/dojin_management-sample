@@ -89,7 +89,7 @@ export class SubmissionsController {
     }
 
     // 統計情報の計算
-    const urgentCount = result.printingCompanyCosts.filter((item) => {
+    const _urgentCount = result.printingCompanyCosts.filter((item) => {
       return item.count >= 3 // 3件以上を多発注として扱う
     }).length
 

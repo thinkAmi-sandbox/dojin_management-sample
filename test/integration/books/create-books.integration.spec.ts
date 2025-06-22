@@ -105,7 +105,7 @@ describe('Books Creation', () => {
       }
 
       // Act: POST /booksにリクエスト
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .post('/books')
         .send(bookData)
         .expect(302)

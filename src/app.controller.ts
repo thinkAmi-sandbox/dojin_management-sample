@@ -3,7 +3,9 @@ import { AppService } from './app.service'
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor() {
+    // このコンストラクタは将来の依存関係注入のために予約されています
+  }
 
   @Get()
   @Render('home/index')

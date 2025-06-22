@@ -178,7 +178,7 @@ describe('印刷所編集機能 (Integration)', () => {
         notes: '',
       }
 
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .post(`/printing-companies/${testCompany.id}`)
         .type('form')
         .send(updateData)

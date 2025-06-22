@@ -319,7 +319,7 @@ export class SubmissionsService {
     }
 
     // 更新データの構築
-    const updateData: any = {}
+    const updateData: Partial<typeof submissions.$inferInsert> = {}
 
     // 基本情報の更新
     if (updateSubmissionDto.printingCompanyId !== undefined) {

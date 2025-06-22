@@ -10,7 +10,7 @@ import { setupTestApp } from '../setup-test-app'
 
 describe('入稿一覧画面 サブナビゲーション機能', () => {
   let app: INestApplication
-  let drizzleService: DrizzleService
+  let _drizzleService: DrizzleService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -19,7 +19,7 @@ describe('入稿一覧画面 サブナビゲーション機能', () => {
 
     app = moduleRef.createNestApplication()
     setupTestApp(app)
-    drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
+    _drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
   })
 

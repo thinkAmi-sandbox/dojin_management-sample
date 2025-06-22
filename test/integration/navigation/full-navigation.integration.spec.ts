@@ -97,7 +97,7 @@ describe('フル ナビゲーション E2E テスト', () => {
         })
         .returning()
 
-      const [testPrintingCompany] = await drizzleService.db
+      const [_testPrintingCompany] = await drizzleService.db
         .insert(schema.printingCompanies)
         .values({
           name: 'テスト印刷所',
@@ -184,7 +184,7 @@ describe('フル ナビゲーション E2E テスト', () => {
         })
         .returning()
 
-      const [testAuthor] = await drizzleService.db
+      const [_testAuthor] = await drizzleService.db
         .insert(schema.authors)
         .values({
           name: 'テスト執筆者',
@@ -193,7 +193,7 @@ describe('フル ナビゲーション E2E テスト', () => {
         })
         .returning()
 
-      const [testPrintingCompany] = await drizzleService.db
+      const [_testPrintingCompany] = await drizzleService.db
         .insert(schema.printingCompanies)
         .values({
           name: 'フルテスト印刷所',
@@ -312,7 +312,7 @@ describe('フル ナビゲーション E2E テスト', () => {
   describe('ナビゲーションエラーハンドリング', () => {
     it('存在しないページでも基本ナビゲーションが機能する', async () => {
       // 404ページでも基本的なナビゲーションは表示されるべき
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .get('/nonexistent-page')
         .expect(404)
 

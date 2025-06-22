@@ -92,7 +92,7 @@ describe('Deadlines Creation', () => {
       }
 
       // Act: POST /books/:bookId/deadlinesにリクエスト
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .post(`/books/${testBookId}/deadlines`)
         .send(deadlineData)
         .expect(302)

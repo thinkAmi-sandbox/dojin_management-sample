@@ -10,7 +10,7 @@ import { setupTestApp } from '../setup-test-app'
 
 describe('グローバルナビゲーション', () => {
   let app: INestApplication
-  let drizzleService: DrizzleService
+  let _drizzleService: DrizzleService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -19,7 +19,7 @@ describe('グローバルナビゲーション', () => {
 
     app = moduleRef.createNestApplication()
     setupTestApp(app)
-    drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
+    _drizzleService = moduleRef.get<DrizzleService>(DrizzleService)
     await app.init()
   })
 

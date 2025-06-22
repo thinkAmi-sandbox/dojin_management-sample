@@ -48,7 +48,7 @@ export class DeadlinesService {
     createDeadlineDto: CreateDeadlineDto,
   ): Promise<Deadline> {
     // 書籍が存在するか確認
-    const book = await this.findBook(bookId)
+    const _book = await this.findBook(bookId)
 
     const [deadline] = await this.drizzle.db
       .insert(deadlines)

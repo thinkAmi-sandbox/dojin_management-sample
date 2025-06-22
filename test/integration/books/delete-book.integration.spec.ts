@@ -93,7 +93,7 @@ describe('Books Delete (Integration)', () => {
 
     it('複数の書籍がある場合、指定した書籍のみ削除すること', async () => {
       // 複数のテストデータを準備
-      const [book1, book2, book3] = await drizzleService.db
+      const [book1, _book2, _book3] = await drizzleService.db
         .insert(books)
         .values([
           { title: '削除対象書籍' },
