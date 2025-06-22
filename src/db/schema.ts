@@ -1,4 +1,5 @@
 import {
+  date,
   integer,
   pgEnum,
   pgTable,
@@ -161,3 +162,23 @@ export const submissions = pgTable('Submission', {
 
 export type Submission = typeof submissions.$inferSelect
 export type NewSubmission = typeof submissions.$inferInsert
+
+export const events = pgTable('Event', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  eventDate: date('eventDate').notNull(),
+  venue: varchar('venue', { length: 255 }).notNull(),
+  applicationStartDate: date('applicationStartDate').notNull(),
+  applicationEndDate: date('applicationEndDate').notNull(),
+  description: text('description'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Event = typeof events.$inferSelect
+export type NewEvent = typeof events.$inferInsert

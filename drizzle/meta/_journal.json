@@ -43,6 +43,13 @@
       "when": 1750255166089,
       "tag": "0005_magical_scarecrow",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1750595687571,
+      "tag": "0006_huge_omega_sentinel",
+      "breakpoints": true
     }
   ]
 }

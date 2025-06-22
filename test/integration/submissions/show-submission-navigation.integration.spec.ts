@@ -4,10 +4,10 @@ import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
-import { setupTestApp } from '../setup-test-app'
-import { testDbUtils } from '../../helpers/db-utils'
+import { books, printingCompanies, submissions } from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
-import { books, submissions, printingCompanies } from '../../../src/db/schema'
+import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('Submissions Show Navigation (Integration)', () => {
   let app: INestApplication

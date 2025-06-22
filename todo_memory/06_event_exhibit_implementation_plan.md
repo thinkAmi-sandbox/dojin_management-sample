@@ -32,27 +32,39 @@ CLAUDE.mdの開発ルールに従い、統合テスト駆動開発（TDD）で�
 
 ### データベーススキーマ実装順序（修正版）
 
-**段階的スキーマ実装アプローチ**:
+**段階的スキーマ実装アプローチ** (Phase 1-A完了済み):
 ```typescript
-// Phase 1-A: 最初のテーブル (eventsテーブルのみ)
-export const events = pgTable('events', { 
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+// ✅ Phase 1-A: 完了済み (eventsテーブル実装済み)
+export const events = pgTable('Event', {
+  id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  eventDate: date('event_date').notNull(),
+  eventDate: date('eventDate').notNull(),
   venue: varchar('venue', { length: 255 }).notNull(),
-  applicationStartDate: date('application_start_date').notNull(),
-  applicationEndDate: date('application_end_date').notNull(),
+  applicationStartDate: date('applicationStartDate').notNull(),
+  applicationEndDate: date('applicationEndDate').notNull(),
   description: text('description'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
-// Phase 1-B以降: 残りのテーブル（段階的追加）
-// export const circles = pgTable('circles', { /* サークル基本情報 */ });
-// export const exhibits = pgTable('exhibits', { /* 出展申込（event_id, circle_id） */ });
-// export const exhibitBooks = pgTable('exhibit_books', { /* 出展書籍（exhibit_id, book_id） */ });
-// export const circleAuthors = pgTable('circle_authors', { /* サークルメンバー（circle_id, author_id） */ });
+// Phase 1-B以降: 残りのテーブル（段階的追加予定）
+// export const circles = pgTable('Circle', { /* サークル基本情報 */ });
+// export const exhibits = pgTable('Exhibit', { /* 出展申込（eventId, circleId） */ });
+// export const exhibitBooks = pgTable('ExhibitBook', { /* 出展書籍（exhibitId, bookId） */ });
+// export const circleAuthors = pgTable('CircleAuthor', { /* サークルメンバー（circleId, authorId） */ });
 ```
+
+**実装状況**: 
+- ✅ **eventsテーブル**: 完了 (マイグレーション適用済み)
+- ⏳ **circlesテーブル**: Phase 1-B以降で実装予定
+- ⏳ **exhibitsテーブル**: Phase 1-B以降で実装予定  
+- ⏳ **exhibitBooksテーブル**: Phase 2で実装予定
+- ⏳ **circleAuthorsテーブル**: Phase 3で実装予定
 
 **データベース変更優先の理由**:
 - マイグレーション失敗リスクを早期に特定
@@ -82,21 +94,36 @@ export const events = pgTable('events', {
    - ビューファイル作成 (`src/views/events/`)
    - モジュール統合 (`src/events/events.module.ts`)
 
-**Phase 1-A: 詳細な実装計画**:
+**Phase 1-A: 実装完了済み** ✅:
 ```typescript
-// 追加するスキーマ定義 (src/db/schema.ts)
-export const events = pgTable('events', {
-  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+// 実装済みスキーマ定義 (src/db/schema.ts)
+export const events = pgTable('Event', {
+  id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  eventDate: date('event_date').notNull(),
+  eventDate: date('eventDate').notNull(),
   venue: varchar('venue', { length: 255 }).notNull(),
-  applicationStartDate: date('application_start_date').notNull(),
-  applicationEndDate: date('application_end_date').notNull(),
+  applicationStartDate: date('applicationStartDate').notNull(),
+  applicationEndDate: date('applicationEndDate').notNull(),
   description: text('description'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
+
+export type Event = typeof events.$inferSelect;
+export type NewEvent = typeof events.$inferInsert;
 ```
+
+**実装詳細**:
+- テーブル名: `'Event'` (既存パターンに合わせてPascalCase)
+- 主キー: `serial('id')` (既存パターンに合わせて)
+- カラム名: camelCase (既存パターンに合わせて)
+- 型定義: Event, NewEvent をexport済み
+- マイグレーションファイル: `drizzle/0006_huge_omega_sentinel.sql`
 
 **Phase 1-A: リスク対策**:
 - PostgreSQL接続確認（Docker起動、ポート15432）
@@ -104,14 +131,16 @@ export const events = pgTable('events', {
 - マイグレーション失敗時は定義修正して再実行
 - 既存テーブル（books, printingCompanies等）のパターンを踏襲
 
-**Phase 1-A: 成功指標**:
-- [ ] スキーマ定義がschema.tsに正しく追加される
-- [ ] マイグレーション生成が成功する
-- [ ] テスト用DBへの適用が成功する
-- [ ] プロダクション用DBへの適用が成功する
-- [ ] 型チェックエラー0件
-- [ ] Lintエラー0件
-- [ ] コミットが正常に完了する
+**Phase 1-A: 成功指標** ✅ **完了済み**:
+- [x] スキーマ定義がschema.tsに正しく追加される
+- [x] マイグレーション生成が成功する (`drizzle/0006_huge_omega_sentinel.sql`)
+- [x] テスト用DBへの適用が成功する (`pnpm drizzle:migrate:test`)
+- [x] プロダクション用DBへの適用が成功する (`pnpm drizzle:migrate`)
+- [x] 型チェックエラー0件 (beforeEach import修正完了)
+- [x] Lintエラー0件 (import順序修正完了)
+- [x] コミットが正常に完了する (コミットハッシュ: `d3020ea`)
+- [x] アプリケーション正常起動確認 (ユーザー確認済み)
+- [x] 全統合テスト250件通過確認
 
 **URL実装**:
 ```
@@ -393,14 +422,16 @@ describe('Events Integration Tests', () => {
 
 ## 実装スケジュール
 
-### Day 1: Phase 1-A データベーススキーマ実装
-- [ ] **Phase 1-A: eventsテーブルスキーマ実装とマイグレーション**
-  - [ ] 既存スキーマ確認 (30分)
-  - [ ] Drizzleスキーマ定義追加 (60分)
-  - [ ] マイグレーション生成・適用 (30分)
-  - [ ] 型チェック・Lint確認 (15分)
-  - [ ] コミット実行 (15分)
-  - **合計時間**: 約2.5時間
+### ✅ 完了: Phase 1-A データベーススキーマ実装
+- [x] **Phase 1-A: eventsテーブルスキーマ実装とマイグレーション完了**
+  - [x] 既存スキーマ確認 (30分) - 既存パターンを踏襲したスキーマ設計
+  - [x] Drizzleスキーマ定義追加 (60分) - PascalCaseテーブル名、camelCaseカラム名
+  - [x] マイグレーション生成・適用 (30分) - テスト用・プロダクション用両方成功
+  - [x] 型チェック・Lint確認 (15分) - beforeEach import修正でエラー解消
+  - [x] コミット実行 (15分) - コミットハッシュ: `d3020ea`
+  - **実際の所要時間**: 約2.5時間 (計画通り)
+  - **完了日時**: 2025年6月22日 21:40
+  - **成果物**: eventsテーブル, マイグレーションファイル, 型定義
 
 ### Week 1-2: Phase 1 基本機能
 - [ ] **Phase 1-B: イベント管理アプリケーション実装完成**

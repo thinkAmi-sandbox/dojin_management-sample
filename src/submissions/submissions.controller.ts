@@ -16,9 +16,9 @@ import {
 } from '@nestjs/common'
 import type { Response } from 'express'
 import { PrintingCompaniesService } from '../printing-companies/printing-companies.service'
-import { UpdateSubmissionDto } from './dto/update-submission.dto'
-import { UpdateSubmissionStatusDto } from './dto/update-submission-status.dto'
 import { UpdateSubmissionCostsDto } from './dto/update-submission-costs.dto'
+import { UpdateSubmissionStatusDto } from './dto/update-submission-status.dto'
+import { UpdateSubmissionDto } from './dto/update-submission.dto'
 import { SubmissionsService } from './submissions.service'
 
 @Controller('submissions')
