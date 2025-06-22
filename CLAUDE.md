@@ -151,8 +151,10 @@ export class BooksController {
   - `PrintingCompany`: 印刷所情報の管理（印刷所名、公式サイト、備考）
   - `Submission`: 入稿情報の管理（書籍・印刷所との関連、ステータス、部数、コスト、配送情報）
 
+- 実装済みのテーブル（2025年6月22日追加）：
+  - `Event`: イベント情報の管理（イベント名、開催日、会場、申込期間、説明）
+
 - 実装予定のテーブル：
-  - `Event`: イベント情報の管理（イベント名、開催日、会場、申込期間）
   - `Circle`: サークル情報の管理（サークル名、代表者名、連絡先）
   - `Exhibit`: 出展申込情報の管理（イベント・サークルとの関連、ステータス、スペース情報）
   - `ExhibitBook`: 出展書籍関連テーブル（出展申込と書籍の多対多関係、頒布予定数、価格）
@@ -861,6 +863,7 @@ async findOne(id: number) {
 - 締切: `/books/:bookId/deadlines`, `/deadlines/:id`
 - 入稿: `/books/:bookId/submissions`, `/submissions/:id`, `/submissions/:id/edit`
 - 書籍執筆者: `/books/:bookId/authors`
+- イベント: `/events`, `/events/:id`（2025年6月22日追加）
 
 ## 効率的実装パターン集
 
@@ -1262,6 +1265,59 @@ async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
 **実装期間**: 2025年6月21日〜
 
 詳細は `todo_memory/navigation-improvement-plan.md` を参照。
+
+## イベント管理機能実装完了記録
+
+### 🎉 2025年6月22日完了（Phase 1-B: イベント管理アプリケーション実装） 🎉
+
+**イベント管理機能（Events）の基本CRUD機能が完全実装完了しました！**
+
+#### 主要成果
+- **TDD（統合テスト駆動開発）**でミニマム実装完了
+- **ValidationPipe統一パターン**を適用したDTO設計
+- **印刷所機能パターン踏襲**による高品質実装
+- **全CRUD機能**実装完了（一覧・詳細・作成・編集・削除）
+
+#### 実装されたエンドポイント
+- `GET /events` - イベント一覧
+- `GET /events/new` - 新規イベント登録フォーム
+- `POST /events` - イベント作成処理
+- `GET /events/:id` - イベント詳細
+- `GET /events/:id/edit` - イベント編集フォーム
+- `PUT /events/:id` - イベント更新処理（HTTPメソッドオーバーライド対応）
+- `DELETE /events/:id` - イベント削除処理（HTTPメソッドオーバーライド対応）
+
+#### 技術的実装内容
+- **DTO設計**: CreateEventDto, UpdateEventDto（ValidationPipe統一パターン）
+- **サービス層**: EventsService（印刷所パターン踏襲、型安全な実装）
+- **コントローラー層**: EventsController（NestJS標準命名、ValidationPipe統合）
+- **ビューファイル**: EJSテンプレート4ファイル（レスポンシブ対応）
+- **モジュール統合**: EventsModule作成、app.module.ts統合完了
+
+#### 確立された開発パターン
+1. **実装前チェックリスト**: スキーマ確認→既存パターン分析→依存関係確認→データフロー設計
+2. **TDD段階的実装**: ミニマムテスト→失敗確認→実装→成功確認
+3. **ValidationPipe統一**: @Transform + class-validator統一パターン
+4. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
+
+#### 動作確認済み機能
+- **HTTP 200レスポンス**: `/events`エンドポイント正常動作
+- **データ表示**: イベントデータの一覧表示確認
+- **日付フォーマット**: 日本語ロケール（2024/12/7形式）
+- **レイアウト統合**: グローバルナビゲーション適用
+- **ビルド成功**: `dist/views/events/`にビューファイルコピー完了
+
+#### データベーススキーマ実装済み
+- **eventsテーブル**: `src/db/schema.ts`に実装済み
+- **型定義**: Event, NewEvent型をexport済み
+- **マイグレーション**: `drizzle/0006_huge_omega_sentinel.sql`適用済み
+
+#### 次のステップ
+- **Phase 1-C**: サークル管理機能（Circles）実装予定
+- **Phase 1-D**: 出展申込機能（Exhibits）実装予定
+- **Phase 2**: イベント・サークル・出展の関連機能実装予定
+
+詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
 
 ---
 

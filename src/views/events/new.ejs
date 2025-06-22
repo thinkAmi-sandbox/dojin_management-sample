@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .required {
+      color: red;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      display: inline-block;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><%= title %></h1>
+    </div>
+
+    <form action="/events" method="POST">
+      <div class="form-group">
+        <label for="name">イベント名 <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          required
+          maxlength="255"
+          placeholder="イベント名を入力してください（例：技術書典17）"
+          value="<%= locals.event ? event.name : '' %>"
+        >
+        <% if (locals.errors && errors.name) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.name %></div>
+        <% } %>
+        <div class="help-text">必須項目です。255文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="eventDate">開催日 <span class="required">*</span></label>
+        <input 
+          type="date" 
+          id="eventDate" 
+          name="eventDate" 
+          required
+          value="<%= locals.event ? event.eventDate : '' %>"
+        >
+        <% if (locals.errors && errors.eventDate) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.eventDate %></div>
+        <% } %>
+        <div class="help-text">必須項目です。イベントの開催日を選択してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="venue">会場 <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="venue" 
+          name="venue" 
+          required
+          maxlength="255"
+          placeholder="会場名を入力してください（例：東京ビッグサイト）"
+          value="<%= locals.event ? event.venue : '' %>"
+        >
+        <% if (locals.errors && errors.venue) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.venue %></div>
+        <% } %>
+        <div class="help-text">必須項目です。255文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="applicationStartDate">申込開始日 <span class="required">*</span></label>
+        <input 
+          type="date" 
+          id="applicationStartDate" 
+          name="applicationStartDate" 
+          required
+          value="<%= locals.event ? event.applicationStartDate : '' %>"
+        >
+        <% if (locals.errors && errors.applicationStartDate) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.applicationStartDate %></div>
+        <% } %>
+        <div class="help-text">必須項目です。申込受付開始日を選択してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="applicationEndDate">申込締切日 <span class="required">*</span></label>
+        <input 
+          type="date" 
+          id="applicationEndDate" 
+          name="applicationEndDate" 
+          required
+          value="<%= locals.event ? event.applicationEndDate : '' %>"
+        >
+        <% if (locals.errors && errors.applicationEndDate) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.applicationEndDate %></div>
+        <% } %>
+        <div class="help-text">必須項目です。申込締切日を選択してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">説明</label>
+        <textarea 
+          id="description" 
+          name="description" 
+          rows="4"
+          placeholder="イベントの説明があれば入力してください"
+        ><%= locals.event ? event.description : '' %></textarea>
+        <% if (locals.errors && errors.description) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.description %></div>
+        <% } %>
+        <div class="help-text">任意項目です。イベントの詳細や特徴を記載してください。</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">登録</button>
+        <a href="/events" class="btn btn-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
