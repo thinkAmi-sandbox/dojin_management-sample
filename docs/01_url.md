@@ -90,6 +90,73 @@
 | GET | `/submissions/:id/costs/edit` | コスト情報更新フォーム |
 | PUT | `/submissions/:id/costs` | コスト情報更新処理（_method=PUT） |
 
+### イベント（Events）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/events` | イベント一覧ページ |
+| GET | `/events/new` | 新規イベント登録フォーム |
+| POST | `/events` | イベント作成処理 |
+| GET | `/events/:id` | イベント詳細ページ |
+| GET | `/events/:id/edit` | イベント編集フォーム |
+| PUT | `/events/:id` | イベント更新処理（_method=PUT） |
+| DELETE | `/events/:id` | イベント削除処理（_method=DELETE） |
+
+### サークル（Circles）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/circles` | サークル一覧ページ |
+| GET | `/circles/new` | 新規サークル登録フォーム |
+| POST | `/circles` | サークル作成処理 |
+| GET | `/circles/:id` | サークル詳細ページ |
+| GET | `/circles/:id/edit` | サークル編集フォーム |
+| PUT | `/circles/:id` | サークル更新処理（_method=PUT） |
+| DELETE | `/circles/:id` | サークル削除処理（_method=DELETE） |
+
+### 出展申込（Exhibits）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/exhibits` | 出展申込一覧ページ |
+| GET | `/exhibits/new` | 新規出展申込フォーム |
+| POST | `/exhibits` | 出展申込作成処理 |
+| GET | `/exhibits/:id` | 出展申込詳細ページ |
+| GET | `/exhibits/:id/edit` | 出展申込編集フォーム |
+| PUT | `/exhibits/:id` | 出展申込更新処理（_method=PUT） |
+| DELETE | `/exhibits/:id` | 出展申込削除処理（_method=DELETE） |
+
+### イベント別出展管理
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/events/:eventId/exhibits` | イベント別出展申込一覧 |
+| GET | `/events/:eventId/exhibits/new` | イベントへの新規出展申込フォーム |
+| POST | `/events/:eventId/exhibits` | イベントへの出展申込作成処理 |
+
+### サークル別出展管理
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/circles/:circleId/exhibits` | サークル別出展履歴一覧 |
+| GET | `/circles/:circleId/exhibits/new` | サークルからの新規出展申込フォーム |
+| POST | `/circles/:circleId/exhibits` | サークルからの出展申込作成処理 |
+
+### 出展書籍管理（ExhibitBooks）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/exhibits/:exhibitId/books` | 出展の頒布書籍一覧 |
+| GET | `/exhibits/:exhibitId/books/add` | 頒布書籍追加フォーム |
+| POST | `/exhibits/:exhibitId/books` | 頒布書籍追加処理 |
+| GET | `/exhibits/:exhibitId/books/:bookId/edit` | 頒布情報編集フォーム |
+| PUT | `/exhibits/:exhibitId/books/:bookId` | 頒布情報更新処理（_method=PUT） |
+| DELETE | `/exhibits/:exhibitId/books/:bookId` | 頒布書籍削除処理（_method=DELETE） |
+
+### サークルメンバー管理（CircleAuthors）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/circles/:circleId/members` | サークルメンバー一覧 |
+| GET | `/circles/:circleId/members/add` | メンバー追加フォーム |
+| POST | `/circles/:circleId/members` | メンバー追加処理 |
+| GET | `/circles/:circleId/members/:authorId/edit` | メンバー情報編集フォーム |
+| PUT | `/circles/:circleId/members/:authorId` | メンバー情報更新処理（_method=PUT） |
+| DELETE | `/circles/:circleId/members/:authorId` | メンバー削除処理（_method=DELETE） |
+
 ## 実装時の注意事項
 
 ### HTTPメソッドオーバーライド
