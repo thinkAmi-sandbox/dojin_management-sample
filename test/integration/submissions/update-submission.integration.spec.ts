@@ -4,7 +4,6 @@ import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import {
   afterAll,
-  afterEach,
   beforeAll,
   beforeEach,
   describe,

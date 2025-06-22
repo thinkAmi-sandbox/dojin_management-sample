@@ -28,7 +28,8 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
     await app.close()
   })
 
-  afterEach(async () => {
+  beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
     await testDbUtils.cleanupDatabase()
   })
 

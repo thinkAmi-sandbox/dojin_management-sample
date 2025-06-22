@@ -1,7 +1,7 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import { books } from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -33,10 +33,6 @@ describe('Books Delete (Integration)', () => {
     await testDbUtils.cleanupDatabase()
   })
 
-  afterEach(async () => {
-    // testDbUtilsを使用して全テーブルをクリーンアップ
-    await testDbUtils.cleanupDatabase()
-  })
 
   describe('DELETE /books/:id', () => {
     it('書籍を正常に削除すること', async () => {

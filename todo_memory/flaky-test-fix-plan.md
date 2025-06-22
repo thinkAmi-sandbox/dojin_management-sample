@@ -1,65 +1,71 @@
-# フレーキーテスト修正計画 - afterEach削除による二重クリーンアップ解消
+# フレーキーテスト完全解消計画 - 全ファイル beforeEach 統一プロジェクト
 
-## 🎯 段階的アプローチ
-**1ファイルずつ修正→テスト→確認のサイクルで進行**
+## 🎯 目標
+全36の統合テストファイルを業界標準の `beforeEach` のみパターンに統一し、フレーキーテスト完全解消とパフォーマンス向上を実現する。
 
-## 📋 作業手順
+## 📊 現状分析結果
 
-### Phase 1: 問題ファイルの修正・検証
-**対象**: `test/integration/book-authors/add-author-to-book.integration.spec.ts`
+### パターン分類
+1. **beforeEach + afterEach 両方** (6ファイル)
+   - 削除系: `books/delete-book.integration.spec.ts`, `book-authors/remove-author-from-book.integration.spec.ts`
+   - 非削除系: `book-authors/manage-book-authors.integration.spec.ts`, `deadlines/create-deadlines.integration.spec.ts`, `book-authors/add-author-to-book.integration.spec.ts`, `deadlines/deadlines-list.integration.spec.ts`
 
-1. **修正作業**
-   - 74行目の `afterEach` ブロック削除
-   - beforeEachのクリーンアップは維持
+2. **afterEachのみ** (25ファイル)
+   - `authors/delete-author.integration.spec.ts` 等25ファイル
 
-2. **単体テスト実行**
-   ```bash
-   pnpm test:integration test/integration/book-authors/add-author-to-book.integration.spec.ts
-   ```
+3. **afterEachのimportのみ（未使用）** (9ファイル)
+   - `submissions/update-submission.integration.spec.ts`
+   - `deadlines/update-deadline.integration.spec.ts`
+   - `deadlines/new-deadline-form.integration.spec.ts`
+   - `printing-companies/show-printing-company.integration.spec.ts`
+   - `printing-companies/update-printing-company.integration.spec.ts`
+   - `book-authors/list-book-authors.integration.spec.ts`
+   - 等（import文だけでコードなし）
 
-3. **フレーキーテスト検証**
-   - 同じテストファイルを5-10回連続実行
-   - 403エラーが発生しないことを確認
+4. **afterEach使用なし** (残りファイル)
 
-4. **結果評価**
-   - ✅ 成功 → Phase 2へ進行
-   - ❌ 失敗 → 他の原因調査が必要
+### テスト状況
+- **総ファイル数**: 36ファイル
+- **現在のテスト結果**: 238/238全成功
+- **フレーキーテスト**: 現在発生なし（潜在的リスクあり）
 
-### Phase 2: 他の統合テストファイルの確認・修正
-**手順**: 1ファイルずつ段階的に処理
+## 🚀 実装計画
 
-1. **パターン検索**
-   - afterEach + cleanupDatabase のパターンを持つファイル特定
+### Phase 1: 不要import削除（リスク: 最低）
+**対象**: afterEachのimportのみで実際の使用なしファイル（9ファイル）
+- `afterEach` のimport文削除のみ
+- **リスク**: なし（未使用コード削除）
+- **所要時間**: 15分
 
-2. **ファイル別処理ループ**
-   ```
-   For each ファイル:
-     a. afterEach削除
-     b. 該当ファイルの統合テスト実行
-     c. パス確認
-     d. 次のファイルへ
-   ```
+### Phase 2: afterEachのみファイルをbeforeEachに移行（リスク: 低）
+**対象**: `authors/delete-author.integration.spec.ts` 等25ファイル
+- `afterEach(cleanupDatabase)` → `beforeEach(cleanupDatabase)` に変更
+- **利点**: 各テスト開始時に確実にクリーンな状態
+- **リスク**: 低（業界標準パターンへの移行）
+- **所要時間**: 30分
 
-3. **各ファイルでの実行コマンド例**
-   ```bash
-   # 例1
-   pnpm test:integration test/integration/books/create-books.integration.spec.ts
-   
-   # 例2  
-   pnpm test:integration test/integration/deadlines/create-deadlines.integration.spec.ts
-   ```
+### Phase 3: beforeEach+afterEach両方ファイルの統一（リスク: 中）
+**対象**: 6ファイル
+- `afterEach(cleanupDatabase)` を削除
+- `beforeEach(cleanupDatabase)` は保持
+- **特別考慮**: 削除系テストでも beforeEach のみで十分（他テストファイルの影響除去が主目的）
+- **所要時間**: 20分
 
-### Phase 3: 全体統合確認
-**最終確認のみ**
+## ⚡ 段階的実行戦略
 
-1. **全統合テスト実行**
-   ```bash
-   pnpm test:integration
-   ```
+### Step 1: 低リスクファイルから開始
+1. **9ファイルの不要import削除** → テスト実行 → 確認
+2. **5ファイルずつafterEachのみファイル変更** → テスト実行 → 確認  
+3. **残り25ファイル完了** → テスト実行 → 確認
 
-2. **結果確認**
-   - 全238テストがパスすることを確認
-   - パフォーマンス向上の確認
+### Step 2: 両方パターンファイル変更
+1. **非削除系4ファイル変更** → テスト実行 → 確認
+2. **削除系2ファイル変更** → テスト実行 → 確認
+
+### Step 3: 最終検証
+- **全238テスト実行** → 成功確認
+- **5-10回連続実行** → フレーキーテスト解消確認
+- **パフォーマンス測定** → 実行時間短縮確認
 
 ## 🔄 各段階での判断基準
 
@@ -69,9 +75,21 @@
 - **全体**: 238/238テスト成功
 
 ### 失敗時の対応
-- **段階1失敗**: 他の方法（方法1-6）を検討
+- **段階1失敗**: 他の方法を検討
 - **段階2失敗**: 該当ファイルのみ元に戻して次へ
 - **段階3失敗**: 前段階まで戻って原因調査
+
+## 🎉 期待される効果
+
+### 即座の効果
+- **フレーキーテスト完全解消**: 二重クリーンアップ競合状態解消
+- **パフォーマンス向上**: 不要なafterEach処理削除
+- **コード統一**: 全36ファイルで一貫したクリーンアップパターン
+
+### 長期的効果  
+- **デバッグ性向上**: テスト失敗時にデータ残留で状態確認可能
+- **保守性向上**: 統一されたパターンで新規テスト作成が容易
+- **業界標準準拠**: Ruby DatabaseCleaner、Jest、pytest等と同じパターン
 
 ## ⚡ 利点
 - **リスク最小化**: 1ファイルずつなので問題を局所化
@@ -80,32 +98,34 @@
 - **ロールバック容易**: 問題があれば該当ファイルのみ戻せる
 
 ## 📊 予想所要時間
-- **Phase 1**: 10分（修正2分 + テスト8分）
-- **Phase 2**: 20-30分（ファイル数による）
-- **Phase 3**: 5分（最終確認）
+- **Phase 1**: 15分（import削除のみ）
+- **Phase 2**: 30分（25ファイル × 1分 + テスト確認）
+- **Phase 3**: 20分（6ファイル + 最終検証）
+- **合計**: 約65分
 
-**合計**: 35-45分
+## 🔒 安全対策
+- **1ファイルずつ変更**して段階的にテスト実行
+- **各段階でロールバック可能**な設計
+- **テスト成功確認**してから次段階進行
+- **最終的に238/238テスト成功**確認
 
 ## 🔍 背景情報
-
-### 問題の詳細
-- `test/integration/book-authors/add-author-to-book.integration.spec.ts` で時々403エラーが発生
-- エラー: `expected 200 "OK", got 403 "Forbidden"` at line 82
-- vitestは `singleFork: true` で順次実行のため並行実行は原因ではない
 
 ### 修正方針の根拠
 - **業界標準**: Ruby DatabaseCleaner、Jest、pytest等でbeforeEachのみが推奨
 - **二重クリーンアップ**: 現在はbeforeEach + afterEachで冗長
 - **タイミング問題**: afterEachでの不要な処理が競合状態を引き起こす可能性
 
-### 期待される効果
-- **フレーキーテスト解消**: 403エラーの根本解決
-- **パフォーマンス向上**: 不要なクリーンアップ処理削除
-- **デバッグ性向上**: テスト失敗時にデータが残り状態確認可能
-- **業界標準準拠**: ベストプラクティスに従った実装
+### 技術的背景
+- vitestは `singleFork: true` で順次実行のため並行実行は原因ではない
+- 各テスト開始時のクリーンアップが最も確実で安全
+- テスト後のクリーンアップは基本的に不要（次のテストが開始時にクリーンアップするため）
 
 ## 📝 実行ログ
-- [ ] Phase 1: 問題ファイル修正・検証
-- [ ] Phase 2: 他ファイル確認・修正
-- [ ] Phase 3: 全体統合確認
-- [ ] 完了確認・ドキュメント更新
+- [ ] Phase 1: 不要import削除（9ファイル）
+- [ ] Phase 2: afterEachのみファイル変更（25ファイル）
+- [ ] Phase 3: 両方パターンファイル変更（6ファイル）
+- [ ] 最終検証: 238/238テスト成功確認
+- [ ] パフォーマンス測定・ドキュメント更新
+
+この計画により、フレーキーテスト問題を根本解決し、業界標準に準拠した安定したテストスイートを実現できます。

@@ -1,7 +1,7 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -28,7 +28,8 @@ describe('Printing Companies List Integration Tests', () => {
     await app.close()
   })
 
-  afterEach(async () => {
+  beforeEach(async () => {
+    // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
     await testDbUtils.cleanupDatabase()
   })
 

@@ -78,7 +78,7 @@ describe('Remove Author from Book', () => {
   })
 
   afterEach(async () => {
-    // 各テスト後に全データをクリーンアップ
+    // 各テスト後に全データをクリーンアップ（削除系テストでは必要）
     await testDbUtils.cleanupDatabase()
   })
 
