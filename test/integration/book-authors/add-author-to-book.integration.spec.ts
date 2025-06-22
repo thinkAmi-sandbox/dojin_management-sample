@@ -1,14 +1,7 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -67,7 +60,6 @@ describe('Add Author to Book', () => {
       .returning()
     testAuthorId = authorResult[0].id
   })
-
 
   describe('GET /books/:bookId/authors', () => {
     it('書籍の執筆者一覧ページが表示される', async () => {

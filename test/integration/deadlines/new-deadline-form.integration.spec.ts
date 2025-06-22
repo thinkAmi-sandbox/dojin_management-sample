@@ -1,14 +1,7 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -45,7 +38,6 @@ describe('Deadlines New Form', () => {
       .returning()
     testBookId = bookResult[0].id
   })
-
 
   afterAll(async () => {
     await testDbUtils.closeConnection()

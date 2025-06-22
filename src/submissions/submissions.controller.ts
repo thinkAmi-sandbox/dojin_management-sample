@@ -17,6 +17,8 @@ import {
 import type { Response } from 'express'
 import { PrintingCompaniesService } from '../printing-companies/printing-companies.service'
 import { UpdateSubmissionDto } from './dto/update-submission.dto'
+import { UpdateSubmissionStatusDto } from './dto/update-submission-status.dto'
+import { UpdateSubmissionCostsDto } from './dto/update-submission-costs.dto'
 import { SubmissionsService } from './submissions.service'
 
 @Controller('submissions')
@@ -410,5 +412,117 @@ export class SubmissionsController {
       }
       throw error
     }
+  }
+
+  @Get(':id/status/edit')
+  @Render('submissions/status/edit')
+  async renderStatusEditForm(@Param('id', ParseIntPipe) id: number) {
+    const submission = await this.submissionsService.findOne(id)
+
+    return {
+      title: 'ステータス変更',
+      submission: {
+        id: submission.id,
+        status: submission.status,
+        book: {
+          title: submission.book.title,
+          subtitle: submission.book.subtitle || '',
+        },
+        printingCompany: {
+          name: submission.printingCompany.name,
+        },
+      },
+      errors: {},
+      breadcrumbs: [
+        { name: '入稿一覧', url: '/submissions' },
+        { name: '入稿詳細', url: `/submissions/${id}` },
+        { name: 'ステータス変更', url: null },
+      ],
+    }
+  }
+
+  @Post(':id/status')
+  async updateStatusViaPost(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { _method?: string; [key: string]: unknown },
+    @Res() res: Response,
+  ) {
+    if (body._method === 'PUT') {
+      const validationPipe = new ValidationPipe({ transform: true })
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateSubmissionStatusDto,
+      })
+      return this.updateStatus(id, validatedDto, res)
+    }
+    res.status(404).send('Not Found')
+  }
+
+  @Put(':id/status')
+  @UsePipes(ValidationPipe)
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSubmissionStatusDto: UpdateSubmissionStatusDto,
+    @Res() res: Response,
+  ) {
+    await this.submissionsService.updateStatus(id, updateSubmissionStatusDto)
+    return res.redirect(`/submissions/${id}`)
+  }
+
+  @Get(':id/costs/edit')
+  @Render('submissions/costs/edit')
+  async renderCostsEditForm(@Param('id', ParseIntPipe) id: number) {
+    const submission = await this.submissionsService.findOne(id)
+
+    return {
+      title: 'コスト情報変更',
+      submission: {
+        id: submission.id,
+        printingCost: submission.printingCost || '',
+        shippingCost: submission.shippingCost || '',
+        otherCost: submission.otherCost || '',
+        book: {
+          title: submission.book.title,
+          subtitle: submission.book.subtitle || '',
+        },
+        printingCompany: {
+          name: submission.printingCompany.name,
+        },
+      },
+      errors: {},
+      breadcrumbs: [
+        { name: '入稿一覧', url: '/submissions' },
+        { name: '入稿詳細', url: `/submissions/${id}` },
+        { name: 'コスト情報変更', url: null },
+      ],
+    }
+  }
+
+  @Post(':id/costs')
+  async updateCostsViaPost(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { _method?: string; [key: string]: unknown },
+    @Res() res: Response,
+  ) {
+    if (body._method === 'PUT') {
+      const validationPipe = new ValidationPipe({ transform: true })
+      const validatedDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateSubmissionCostsDto,
+      })
+      return this.updateCosts(id, validatedDto, res)
+    }
+    res.status(404).send('Not Found')
+  }
+
+  @Put(':id/costs')
+  @UsePipes(ValidationPipe)
+  async updateCosts(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSubmissionCostsDto: UpdateSubmissionCostsDto,
+    @Res() res: Response,
+  ) {
+    await this.submissionsService.updateCosts(id, updateSubmissionCostsDto)
+    return res.redirect(`/submissions/${id}`)
   }
 }

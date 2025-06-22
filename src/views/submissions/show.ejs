@@ -51,6 +51,8 @@
     <div class="actions">
         <a href="<%= listUrl %>" class="btn btn-secondary">一覧に戻る</a>
         <a href="<%= bookSubmissionsUrl %>" class="btn btn-secondary">書籍の入稿履歴</a>
+        <a href="/submissions/<%= submission.id %>/status/edit" class="btn" style="background-color: #fd7e14;" title="ステータスを素早く変更します">📊 ステータス変更</a>
+        <a href="/submissions/<%= submission.id %>/costs/edit" class="btn" style="background-color: #6f42c1;" title="コスト情報を更新します">💰 コスト更新</a>
         <a href="<%= editUrl %>" class="btn">編集</a>
         <button onclick="confirmDelete()" class="btn btn-danger">削除</button>
     </div>

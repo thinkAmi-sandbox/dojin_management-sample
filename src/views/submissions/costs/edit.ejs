@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .submission-info {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .submission-info h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .submission-info p {
+      margin: 5px 0;
+      color: #666;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #333;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .btn {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .error {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .breadcrumbs {
+      margin-bottom: 20px;
+    }
+    .breadcrumbs a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      text-decoration: underline;
+    }
+    .breadcrumbs span {
+      margin: 0 5px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .cost-summary {
+      background: #e8f5e8;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+    }
+    .cost-summary h4 {
+      margin: 0 0 10px 0;
+      color: #155724;
+    }
+    .cost-summary p {
+      margin: 5px 0;
+      color: #155724;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <%- include('../../shared/breadcrumbs', { breadcrumbs }) %>
+    
+    <h1><%= title %></h1>
+    
+    <div class="submission-info">
+      <h3><%= submission.book.title %><% if (submission.book.subtitle) { %> - <%= submission.book.subtitle %><% } %></h3>
+      <p><strong>印刷所:</strong> <%= submission.printingCompany.name %></p>
+    </div>
+    
+    <form action="/submissions/<%= submission.id %>/costs" method="POST" id="costForm">
+      <input type="hidden" name="_method" value="PUT">
+      
+      <div class="form-group">
+        <label for="printingCost">印刷費（円）</label>
+        <input type="number" name="printingCost" id="printingCost" value="<%= submission.printingCost %>" min="0" step="1">
+        <div class="help-text">印刷にかかる基本費用を入力してください</div>
+        <% if (errors.printingCost) { %>
+          <div class="error"><%= errors.printingCost %></div>
+        <% } %>
+      </div>
+      
+      <div class="form-group">
+        <label for="shippingCost">送料（円）</label>
+        <input type="number" name="shippingCost" id="shippingCost" value="<%= submission.shippingCost %>" min="0" step="1">
+        <div class="help-text">配送にかかる費用を入力してください</div>
+        <% if (errors.shippingCost) { %>
+          <div class="error"><%= errors.shippingCost %></div>
+        <% } %>
+      </div>
+      
+      <div class="form-group">
+        <label for="otherCost">その他費用（円）</label>
+        <input type="number" name="otherCost" id="otherCost" value="<%= submission.otherCost %>" min="0" step="1">
+        <div class="help-text">印刷費・送料以外の費用があれば入力してください</div>
+        <% if (errors.otherCost) { %>
+          <div class="error"><%= errors.otherCost %></div>
+        <% } %>
+      </div>
+      
+      <div class="cost-summary">
+        <h4>💰 コスト自動計算</h4>
+        <p>合計金額は送信時に自動で計算されます</p>
+        <p>合計 = 印刷費 + 送料 + その他費用</p>
+      </div>
+      
+      <button type="submit" class="btn">更新</button>
+      <a href="/submissions/<%= submission.id %>" class="btn btn-secondary">キャンセル</a>
+    </form>
+  </div>
+
+  <script>
+    // リアルタイム合計計算（オプション）
+    function updateTotal() {
+      const printingCost = parseInt(document.getElementById('printingCost').value) || 0;
+      const shippingCost = parseInt(document.getElementById('shippingCost').value) || 0;
+      const otherCost = parseInt(document.getElementById('otherCost').value) || 0;
+      const total = printingCost + shippingCost + otherCost;
+      
+      const summaryEl = document.querySelector('.cost-summary p:last-child');
+      summaryEl.innerHTML = `合計 = ${printingCost.toLocaleString()} + ${shippingCost.toLocaleString()} + ${otherCost.toLocaleString()} = <strong>${total.toLocaleString()}円</strong>`;
+    }
+
+    // 入力時にリアルタイム更新
+    ['printingCost', 'shippingCost', 'otherCost'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateTotal);
+    });
+
+    // 初期表示時に一度実行
+    updateTotal();
+  </script>
+</body>
+</html>

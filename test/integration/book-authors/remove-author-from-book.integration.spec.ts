@@ -1,14 +1,7 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -41,7 +34,7 @@ describe('Remove Author from Book', () => {
   beforeEach(async () => {
     // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
     await testDbUtils.cleanupDatabase()
-    
+
     // 各テスト前にタイムスタンプベースのユニークなデータを作成
     const timestamp = Date.now()
 
@@ -78,7 +71,6 @@ describe('Remove Author from Book', () => {
       .returning()
     testAuthor2Id = author2Result[0].id
   })
-
 
   describe('DELETE /books/:bookId/authors/:authorId', () => {
     it('有効なauthorIdで執筆者が書籍から正常に削除される', async () => {

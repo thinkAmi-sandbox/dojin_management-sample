@@ -2,14 +2,7 @@ import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { eq } from 'drizzle-orm'
 import request from 'supertest'
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -38,7 +31,6 @@ describe('入稿編集機能 (Integration)', () => {
     await testDbUtils.closeConnection()
     await app.close()
   })
-
 
   beforeEach(async () => {
     // テスト用データの作成

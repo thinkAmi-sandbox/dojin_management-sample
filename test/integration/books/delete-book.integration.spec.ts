@@ -33,7 +33,6 @@ describe('Books Delete (Integration)', () => {
     await testDbUtils.cleanupDatabase()
   })
 
-
   describe('DELETE /books/:id', () => {
     it('書籍を正常に削除すること', async () => {
       // テストデータの準備

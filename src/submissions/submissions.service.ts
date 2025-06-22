@@ -8,6 +8,8 @@ import * as schema from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateSubmissionDto } from './dto/create-submission.dto'
 import { UpdateSubmissionDto } from './dto/update-submission.dto'
+import { UpdateSubmissionStatusDto } from './dto/update-submission-status.dto'
+import { UpdateSubmissionCostsDto } from './dto/update-submission-costs.dto'
 
 @Injectable()
 export class SubmissionsService {
@@ -553,5 +555,70 @@ export class SubmissionsService {
       },
       filters,
     }
+  }
+
+  /**
+   * 入稿のステータスを更新する
+   */
+  async updateStatus(
+    id: number,
+    updateSubmissionStatusDto: UpdateSubmissionStatusDto,
+  ): Promise<void> {
+    // 入稿の存在確認
+    const existingSubmission = await this.drizzleService.db
+      .select({ id: schema.submissions.id })
+      .from(schema.submissions)
+      .where(eq(schema.submissions.id, id))
+      .limit(1)
+
+    if (existingSubmission.length === 0) {
+      throw new NotFoundException('入稿が見つかりません')
+    }
+
+    // ステータス更新
+    await this.drizzleService.db
+      .update(schema.submissions)
+      .set({
+        status: updateSubmissionStatusDto.status,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.submissions.id, id))
+  }
+
+  /**
+   * 入稿のコスト情報を更新する
+   */
+  async updateCosts(
+    id: number,
+    updateSubmissionCostsDto: UpdateSubmissionCostsDto,
+  ): Promise<void> {
+    // 入稿の存在確認
+    const existingSubmission = await this.drizzleService.db
+      .select({ id: schema.submissions.id })
+      .from(schema.submissions)
+      .where(eq(schema.submissions.id, id))
+      .limit(1)
+
+    if (existingSubmission.length === 0) {
+      throw new NotFoundException('入稿が見つかりません')
+    }
+
+    // 合計コストの計算
+    const printingCost = updateSubmissionCostsDto.printingCost || 0
+    const shippingCost = updateSubmissionCostsDto.shippingCost || 0
+    const otherCost = updateSubmissionCostsDto.otherCost || 0
+    const totalCost = printingCost + shippingCost + otherCost
+
+    // コスト情報更新
+    await this.drizzleService.db
+      .update(schema.submissions)
+      .set({
+        printingCost: updateSubmissionCostsDto.printingCost,
+        shippingCost: updateSubmissionCostsDto.shippingCost,
+        otherCost: updateSubmissionCostsDto.otherCost,
+        totalCost: totalCost,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.submissions.id, id))
   }
 }

@@ -2,14 +2,7 @@ import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { eq } from 'drizzle-orm'
 import request from 'supertest'
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import { books, deadlines } from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -55,7 +48,6 @@ describe('Deadlines Update (Integration)', () => {
       .returning()
     testDeadlineId = testDeadline.id
   })
-
 
   afterAll(async () => {
     await testDbUtils.closeConnection()

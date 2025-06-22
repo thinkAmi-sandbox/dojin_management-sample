@@ -55,7 +55,6 @@ describe('Deadlines Creation', () => {
     testBookId = bookResult[0].id
   })
 
-
   describe('POST /books/:bookId/deadlines', () => {
     it('有効なデータで締切が正常に作成される', async () => {
       // Arrange: 締切データを準備
