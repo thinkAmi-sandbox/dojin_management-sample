@@ -30,31 +30,88 @@ CLAUDE.mdの開発ルールに従い、統合テスト駆動開発（TDD）で�
 4. **ExhibitBook（出展書籍）**: `docs/db/10_exhibit_book.md`
 5. **CircleAuthor（サークルメンバー）**: `docs/db/11_circle_author.md`
 
-### データベーススキーマ実装順序
-```typescript
-// 1. 独立テーブル（外部キー依存なし）
-export const events = pgTable('events', { /* イベント基本情報 */ });
-export const circles = pgTable('circles', { /* サークル基本情報 */ });
+### データベーススキーマ実装順序（修正版）
 
-// 2. 関連テーブル（外部キー有り）
-export const exhibits = pgTable('exhibits', { /* 出展申込（event_id, circle_id） */ });
-export const exhibitBooks = pgTable('exhibit_books', { /* 出展書籍（exhibit_id, book_id） */ });
-export const circleAuthors = pgTable('circle_authors', { /* サークルメンバー（circle_id, author_id） */ });
+**段階的スキーマ実装アプローチ**:
+```typescript
+// Phase 1-A: 最初のテーブル (eventsテーブルのみ)
+export const events = pgTable('events', { 
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar('name', { length: 255 }).notNull(),
+  eventDate: date('event_date').notNull(),
+  venue: varchar('venue', { length: 255 }).notNull(),
+  applicationStartDate: date('application_start_date').notNull(),
+  applicationEndDate: date('application_end_date').notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Phase 1-B以降: 残りのテーブル（段階的追加）
+// export const circles = pgTable('circles', { /* サークル基本情報 */ });
+// export const exhibits = pgTable('exhibits', { /* 出展申込（event_id, circle_id） */ });
+// export const exhibitBooks = pgTable('exhibit_books', { /* 出展書籍（exhibit_id, book_id） */ });
+// export const circleAuthors = pgTable('circle_authors', { /* サークルメンバー（circle_id, author_id） */ });
 ```
+
+**データベース変更優先の理由**:
+- マイグレーション失敗リスクを早期に特定
+- アプリケーション実装前にDB構造を確定
+- 型定義の整合性を事前に確保
+- チーム開発での並行作業を可能にする
 
 ## Phase 1: 基本機能実装（2-3週間）
 
 ### 1-1. イベント管理機能（Events）
 
-**実装順序**:
-1. 統合テスト作成 (`test/integration/events/`)
-   - 一覧表示、詳細表示、作成、編集、削除
-2. Drizzleスキーマ定義 (`src/db/schema.ts`)
-3. DTO定義 (`src/events/dto/`)
-4. サービス層実装 (`src/events/events.service.ts`)
-5. コントローラー実装 (`src/events/events.controller.ts`)
-6. ビューファイル作成 (`src/views/events/`)
-7. モジュール統合 (`src/events/events.module.ts`)
+**修正された実装順序（データベース変更優先）**:
+1. **Phase 1-A: データベーススキーマ実装**
+   - 既存スキーマ確認 (`src/db/schema.ts`)
+   - Drizzleスキーマ定義追加（eventsテーブル）
+   - マイグレーション生成 (`pnpm drizzle:generate`)
+   - テスト用DB適用 (`pnpm drizzle:migrate:test`) 
+   - プロダクション用DB適用 (`pnpm drizzle:migrate`)
+   - 型チェック・Lint確認 (`pnpm type-check`, `pnpm lint`)
+   - **コミット実行**
+
+2. **Phase 1-B: アプリケーション実装**
+   - 統合テスト作成 (`test/integration/events/`)
+   - DTO定義 (`src/events/dto/`)
+   - サービス層実装 (`src/events/events.service.ts`)
+   - コントローラー実装 (`src/events/events.controller.ts`)
+   - ビューファイル作成 (`src/views/events/`)
+   - モジュール統合 (`src/events/events.module.ts`)
+
+**Phase 1-A: 詳細な実装計画**:
+```typescript
+// 追加するスキーマ定義 (src/db/schema.ts)
+export const events = pgTable('events', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar('name', { length: 255 }).notNull(),
+  eventDate: date('event_date').notNull(),
+  venue: varchar('venue', { length: 255 }).notNull(),
+  applicationStartDate: date('application_start_date').notNull(),
+  applicationEndDate: date('application_end_date').notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+```
+
+**Phase 1-A: リスク対策**:
+- PostgreSQL接続確認（Docker起動、ポート15432）
+- テスト用DBで先に確認してからプロダクション適用
+- マイグレーション失敗時は定義修正して再実行
+- 既存テーブル（books, printingCompanies等）のパターンを踏襲
+
+**Phase 1-A: 成功指標**:
+- [ ] スキーマ定義がschema.tsに正しく追加される
+- [ ] マイグレーション生成が成功する
+- [ ] テスト用DBへの適用が成功する
+- [ ] プロダクション用DBへの適用が成功する
+- [ ] 型チェックエラー0件
+- [ ] Lintエラー0件
+- [ ] コミットが正常に完了する
 
 **URL実装**:
 ```
@@ -336,8 +393,17 @@ describe('Events Integration Tests', () => {
 
 ## 実装スケジュール
 
+### Day 1: Phase 1-A データベーススキーマ実装
+- [ ] **Phase 1-A: eventsテーブルスキーマ実装とマイグレーション**
+  - [ ] 既存スキーマ確認 (30分)
+  - [ ] Drizzleスキーマ定義追加 (60分)
+  - [ ] マイグレーション生成・適用 (30分)
+  - [ ] 型チェック・Lint確認 (15分)
+  - [ ] コミット実行 (15分)
+  - **合計時間**: 約2.5時間
+
 ### Week 1-2: Phase 1 基本機能
-- [ ] イベント管理機能完成
+- [ ] **Phase 1-B: イベント管理アプリケーション実装完成**
 - [ ] サークル管理機能完成  
 - [ ] 出展申込基本機能完成
 
