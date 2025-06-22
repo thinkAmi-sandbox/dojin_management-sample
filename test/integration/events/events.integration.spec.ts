@@ -91,7 +91,7 @@ describe('Events Integration Tests', () => {
       expect(response.text).toContain('<html')
       expect(response.text).toContain('<title>イベント一覧</title>')
 
-      // 空リストメッセージを確認
+      // 空リストメッセージを確認（グローバルナビゲーション実装により部分文字列で検証）
       expect(response.text).toContain('イベントが登録されていません')
       expect(response.text).toContain('新規登録')
     })

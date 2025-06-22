@@ -182,3 +182,21 @@ export const events = pgTable('Event', {
 
 export type Event = typeof events.$inferSelect
 export type NewEvent = typeof events.$inferInsert
+
+export const circles = pgTable('Circle', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  representativeName: varchar('representativeName', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Circle = typeof circles.$inferSelect
+export type NewCircle = typeof circles.$inferInsert

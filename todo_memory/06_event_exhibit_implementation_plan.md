@@ -52,8 +52,23 @@ export const events = pgTable('Event', {
     .$onUpdate(() => new Date()),
 });
 
-// Phase 1-B以降: 残りのテーブル（段階的追加予定）
-// export const circles = pgTable('Circle', { /* サークル基本情報 */ });
+// ✅ Phase 1-C-A: 完了済み (circlesテーブル実装済み)
+export const circles = pgTable('Circle', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  representativeName: varchar('representativeName', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+// Phase 1-D以降: 残りのテーブル（段階的追加予定）
 // export const exhibits = pgTable('Exhibit', { /* 出展申込（eventId, circleId） */ });
 // export const exhibitBooks = pgTable('ExhibitBook', { /* 出展書籍（exhibitId, bookId） */ });
 // export const circleAuthors = pgTable('CircleAuthor', { /* サークルメンバー（circleId, authorId） */ });
@@ -61,8 +76,8 @@ export const events = pgTable('Event', {
 
 **実装状況**: 
 - ✅ **eventsテーブル**: 完了 (マイグレーション適用済み)
-- ⏳ **circlesテーブル**: Phase 1-B以降で実装予定
-- ⏳ **exhibitsテーブル**: Phase 1-B以降で実装予定  
+- ✅ **circlesテーブル**: 完了 (Phase 1-C-A完了済み、2025年6月22日)
+- ⏳ **exhibitsテーブル**: Phase 1-D以降で実装予定  
 - ⏳ **exhibitBooksテーブル**: Phase 2で実装予定
 - ⏳ **circleAuthorsテーブル**: Phase 3で実装予定
 
@@ -447,8 +462,59 @@ describe('Events Integration Tests', () => {
   - **完了日時**: 2025年6月22日 22:10
   - **成果物**: イベント管理の完全CRUD機能、統合テスト、レスポンシブビュー
 
+### ✅ 完了: Phase 1-C-A サークル管理用データベーススキーマ実装
+- [x] **Phase 1-C-A: circlesテーブルスキーマ実装とマイグレーション完了** ✅ **完了済み（2025年6月22日）**
+  - [x] 既存スキーマ確認 (15分) - 既存パターンを踏襲したスキーマ設計
+  - [x] Drizzleスキーマ定義追加 (30分) - PascalCaseテーブル名、camelCaseフィールド名
+  - [x] マイグレーション生成・適用 (30分) - テスト用・プロダクション用両方成功
+  - [x] testDbUtils.cleanupDatabase()拡張 (15分) - Event、Submission、Circle対応
+  - [x] イベント統合テスト修正 (15分) - レイアウトシステム対応
+  - [x] コミット実行 (15分) - コミットハッシュ: `2626d56`
+  - **実際の所要時間**: 約2時間 (計画通り)
+  - **完了日時**: 2025年6月22日 22:40
+  - **成果物**: circlesテーブル, マイグレーションファイル, 型定義, testDbUtils修正
+
+**Phase 1-C-A: 実装完了済み** ✅:
+```typescript
+// 実装済みスキーマ定義 (src/db/schema.ts)
+export const circles = pgTable('Circle', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  representativeName: varchar('representativeName', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export type Circle = typeof circles.$inferSelect;
+export type NewCircle = typeof circles.$inferInsert;
+```
+
+**実装詳細**:
+- テーブル名: `'Circle'` (既存パターンに合わせてPascalCase)
+- 主キー: `serial('id')` (既存パターンに合わせて)
+- カラム名: camelCase (既存パターンに合わせて)
+- 型定義: Circle, NewCircle をexport済み
+- マイグレーションファイル: `drizzle/0007_exotic_felicia_hardy.sql`
+
+**Phase 1-C-A: 成功指標** ✅ **完了済み**:
+- [x] スキーマ定義がschema.tsに正しく追加される
+- [x] マイグレーション生成が成功する (`drizzle/0007_exotic_felicia_hardy.sql`)
+- [x] テスト用DBへの適用が成功する (`pnpm drizzle:migrate:test`)
+- [x] プロダクション用DBへの適用が成功する (`pnpm drizzle:migrate`)
+- [x] 型チェックエラー0件
+- [x] 統合テスト252件通過確認（testDbUtils修正完了）
+- [x] イベント統合テスト修正完了（レイアウトシステム対応）
+- [x] コミットが正常に完了する (コミットハッシュ: `2626d56`)
+
 ### Week 1-2: Phase 1 基本機能（残り）
-- [ ] **Phase 1-C: サークル管理機能実装**
+- [ ] **Phase 1-C-B: サークル管理アプリケーション実装**
 - [ ] **Phase 1-D: 出展申込基本機能実装**
 
 ### Week 3-4: Phase 2 関連機能
@@ -469,10 +535,11 @@ describe('Events Integration Tests', () => {
 ## 成功指標
 
 ### 技術指標
-- [ ] 統合テスト300件以上実装・全通過（現在: イベント基本テスト2件実装済み）
+- [ ] 統合テスト300件以上実装・全通過（現在: 252件実装・全通過済み、イベント・サークルスキーマ対応完了）
 - [x] 型安全性100%（TypeScriptエラー0件） ✅ 確認済み
-- [x] Lintエラー0件（イベント機能） ✅ 確認済み
+- [x] Lintエラー0件（新規実装部分） ✅ 確認済み（既存コードの18件は今回作業と無関係）
 - [x] ValidationPipe統一パターン100%適用（イベント機能） ✅ 確認済み
+- [x] データベースクリーンアップ戦略統一（Event/Submission/Circle対応） ✅ 確認済み
 
 ### 機能指標
 - [x] 全CRUD操作正常動作（イベント機能） ✅ 確認済み

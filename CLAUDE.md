@@ -153,9 +153,9 @@ export class BooksController {
 
 - 実装済みのテーブル（2025年6月22日追加）：
   - `Event`: イベント情報の管理（イベント名、開催日、会場、申込期間、説明）
+  - `Circle`: サークル情報の管理（サークル名、代表者名、連絡先、説明）
 
 - 実装予定のテーブル：
-  - `Circle`: サークル情報の管理（サークル名、代表者名、連絡先）
   - `Exhibit`: 出展申込情報の管理（イベント・サークルとの関連、ステータス、スペース情報）
   - `ExhibitBook`: 出展書籍関連テーブル（出展申込と書籍の多対多関係、頒布予定数、価格）
   - `CircleAuthor`: サークルメンバー関連テーブル（サークルと執筆者の多対多関係、役割）
@@ -593,9 +593,10 @@ beforeEach(async () => {
 2. 削除系テストも含めて全ファイル統一
 
 **最終検証結果（完了）**:
-1. 全統合テスト実行で238/238テスト成功確認
+1. 全統合テスト実行で252/252テスト成功確認（2025年6月22日更新）
 2. フレーキーテスト完全解消とパフォーマンス向上を確認
 3. 36ファイル全てでbeforeEchのみパターン統一
+4. testDbUtils.cleanupDatabase()にEvent/Submission/Circle対応追加完了
 
 #### **YOU MUST**: 解決済み問題パターンと対処法
 
@@ -646,7 +647,7 @@ describe('Feature Test', () => {
 3. **テストファイル依存**: 単体実行では成功、全体実行で失敗 → ✅ 全ファイル統一で解決済み
 4. **データベースリセット**: `pnpm drizzle:push:test` で強制リセット可能（緊急時のみ）
 
-**現在の状況**: 238/238テスト成功、フレーキーテスト完全解消、業界標準準拠完了
+**現在の状況**: 252/252テスト成功、フレーキーテスト完全解消、業界標準準拠完了（2025年6月22日更新）
 
 ### 既存パターンの活用
 
@@ -864,6 +865,7 @@ async findOne(id: number) {
 - 入稿: `/books/:bookId/submissions`, `/submissions/:id`, `/submissions/:id/edit`
 - 書籍執筆者: `/books/:bookId/authors`
 - イベント: `/events`, `/events/:id`（2025年6月22日追加）
+- サークル: `/circles`, `/circles/:id`（2025年6月22日追加予定）
 
 ## 効率的実装パターン集
 
@@ -1316,6 +1318,63 @@ async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
 - **Phase 1-C**: サークル管理機能（Circles）実装予定
 - **Phase 1-D**: 出展申込機能（Exhibits）実装予定
 - **Phase 2**: イベント・サークル・出展の関連機能実装予定
+
+詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
+
+## サークル管理機能スキーマ実装完了記録
+
+### 🎉 2025年6月22日完了（Phase 1-C-A: サークル管理用データベーススキーマ実装） 🎉
+
+**サークル管理機能（Circles）のデータベーススキーマ実装が完全完了しました！**
+
+#### 主要成果
+- **circlesテーブルスキーマ実装**: 既存パターン踏襲のPascalCase命名
+- **マイグレーション適用完了**: テスト用・プロダクション用両方成功
+- **testDbUtils.cleanupDatabase()拡張**: Event/Submission/Circle対応追加
+- **統合テスト252件全通過**: データベースクリーンアップ問題根本解決
+
+#### 実装されたテーブル定義
+```typescript
+export const circles = pgTable('Circle', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  representativeName: varchar('representativeName', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export type Circle = typeof circles.$inferSelect;
+export type NewCircle = typeof circles.$inferInsert;
+```
+
+#### 技術的実装内容
+- **データベーススキーマ**: PascalCase テーブル名、camelCase フィールド名
+- **マイグレーションファイル**: `drizzle/0007_exotic_felicia_hardy.sql`
+- **型定義**: Circle, NewCircle型をexport
+- **testDbUtils修正**: Event/Submission/Circleテーブル対応追加
+
+#### 重要な修正内容
+- **データベースクリーンアップ問題解決**: testDbUtils.cleanupDatabase()にEvent/Submission/Circle対応追加
+- **統合テスト修正**: イベント機能のレイアウトシステム対応
+- **フレーキーテスト根本解決**: データベースクリーンアップ統一で252件全通過
+
+#### 検証結果
+- **統合テスト**: 252/252テスト通過 ✅
+- **型チェック**: エラー0件 ✅
+- **マイグレーション**: テスト用・プロダクション用両方成功 ✅
+- **コミット**: `2626d56` 正常完了 ✅
+
+#### 次のステップ
+- **Phase 1-C-B**: サークル管理アプリケーション実装（TDD統合テスト駆動）
+- **Phase 1-D**: 出展申込機能スキーマ・アプリケーション実装
+- **Phase 2**: イベント・サークル・出展の関連機能実装
 
 詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
 

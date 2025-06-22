@@ -49,6 +49,30 @@ export class TestDbUtils {
       } catch {
         // テーブルが存在しない場合は無視
       }
+      // Submissionテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "Submission" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
+      // Eventテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "Event" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
+      // Circleテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "Circle" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
     } catch (error) {
       console.error(
         'データベースのクリーンアップでエラーが発生しました:',
