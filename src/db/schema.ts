@@ -17,6 +17,13 @@ export const writingStatusEnum = pgEnum('writing_status', [
   'completed',
 ])
 
+export const exhibitStatusEnum = pgEnum('exhibit_status', [
+  'applied',
+  'accepted',
+  'rejected',
+  'cancelled',
+])
+
 export const books = pgTable('Book', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -200,3 +207,32 @@ export const circles = pgTable('Circle', {
 
 export type Circle = typeof circles.$inferSelect
 export type NewCircle = typeof circles.$inferInsert
+
+export const exhibits = pgTable('Exhibit', {
+  id: serial('id').primaryKey(),
+  eventId: integer('eventId')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  circleId: integer('circleId')
+    .notNull()
+    .references(() => circles.id, { onDelete: 'cascade' }),
+  status: exhibitStatusEnum('status').notNull().default('applied'),
+  applicationDate: timestamp('applicationDate', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  resultDate: timestamp('resultDate', { mode: 'date', precision: 3 }),
+  spaceNumber: varchar('spaceNumber', { length: 50 }),
+  spaceType: varchar('spaceType', { length: 50 }),
+  applicationNotes: text('applicationNotes'),
+  resultNotes: text('resultNotes'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Exhibit = typeof exhibits.$inferSelect
+export type NewExhibit = typeof exhibits.$inferInsert
