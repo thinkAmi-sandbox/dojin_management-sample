@@ -1,0 +1,170 @@
+<style>
+    .header { margin-bottom: 20px; }
+    .actions { margin-bottom: 20px; }
+    .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+    .btn:hover { background: #0056b3; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    .detail-section { margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+    .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .detail-item { display: flex; margin-bottom: 10px; }
+    .detail-label { font-weight: bold; min-width: 150px; }
+    .detail-value { flex: 1; }
+    .status-applied { color: #007bff; }
+    .status-accepted { color: #28a745; font-weight: bold; }
+    .status-rejected { color: #dc3545; }
+    .status-cancelled { color: #6c757d; }
+
+    @media (max-width: 768px) {
+        .detail-grid { grid-template-columns: 1fr; }
+        .detail-item { flex-direction: column; }
+        .detail-label { min-width: auto; margin-bottom: 5px; }
+    }
+</style>
+
+<div class="header">
+    <h1><%= title %></h1>
+</div>
+
+<div class="actions">
+    <a href="<%= exhibit.editUrl %>" class="btn">編集</a>
+    <form style="display: inline;" method="POST" action="/exhibits/<%= exhibit.id %>" onsubmit="return confirm('この出展申込を削除してもよろしいですか？')">
+        <input type="hidden" name="_method" value="DELETE">
+        <button type="submit" class="btn btn-danger">削除</button>
+    </form>
+    <a href="/exhibits" class="btn" style="background: #6c757d;">一覧に戻る</a>
+</div>
+
+<!-- 申込基本情報 -->
+<div class="detail-section">
+    <div class="section-title">📝 申込基本情報</div>
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">ステータス:</span>
+                <span class="detail-value status-<%= exhibit.status %>"><%= exhibit.statusText %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">申込日:</span>
+                <span class="detail-value"><%= exhibit.formattedApplicationDate %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">結果発表日:</span>
+                <span class="detail-value"><%= exhibit.formattedResultDate %></span>
+            </div>
+        </div>
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">スペース番号:</span>
+                <span class="detail-value"><%= exhibit.spaceNumber %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">スペース種別:</span>
+                <span class="detail-value"><%= exhibit.spaceType %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- イベント情報 -->
+<div class="detail-section">
+    <div class="section-title">🎪 イベント情報</div>
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">イベント名:</span>
+                <span class="detail-value">
+                    <a href="/events/<%= exhibit.event.id %>"><%= exhibit.event.name %></a>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">開催日:</span>
+                <span class="detail-value"><%= exhibit.event.formattedEventDate %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">会場:</span>
+                <span class="detail-value"><%= exhibit.event.venue %></span>
+            </div>
+        </div>
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">申込期間:</span>
+                <span class="detail-value">
+                    <%= exhibit.event.formattedApplicationStartDate %> 〜 <%= exhibit.event.formattedApplicationEndDate %>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">説明:</span>
+                <span class="detail-value"><%= exhibit.event.description %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- サークル情報 -->
+<div class="detail-section">
+    <div class="section-title">🎯 サークル情報</div>
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">サークル名:</span>
+                <span class="detail-value">
+                    <a href="/circles/<%= exhibit.circle.id %>"><%= exhibit.circle.name %></a>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">代表者名:</span>
+                <span class="detail-value"><%= exhibit.circle.representativeName %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">連絡先:</span>
+                <span class="detail-value"><%= exhibit.circle.email %></span>
+            </div>
+        </div>
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">説明:</span>
+                <span class="detail-value"><%= exhibit.circle.description %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 備考・メモ -->
+<div class="detail-section">
+    <div class="section-title">📋 備考・メモ</div>
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">申込備考:</span>
+                <span class="detail-value"><%= exhibit.applicationNotes %></span>
+            </div>
+        </div>
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">結果備考:</span>
+                <span class="detail-value"><%= exhibit.resultNotes %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- システム情報 -->
+<div class="detail-section">
+    <div class="section-title">⚙️ システム情報</div>
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">作成日:</span>
+                <span class="detail-value"><%= exhibit.formattedCreatedAt %></span>
+            </div>
+        </div>
+        <div>
+            <div class="detail-item">
+                <span class="detail-label">更新日:</span>
+                <span class="detail-value"><%= exhibit.formattedUpdatedAt %></span>
+            </div>
+        </div>
+    </div>
+</div>
