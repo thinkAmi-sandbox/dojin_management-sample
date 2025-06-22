@@ -865,7 +865,7 @@ async findOne(id: number) {
 - 入稿: `/books/:bookId/submissions`, `/submissions/:id`, `/submissions/:id/edit`
 - 書籍執筆者: `/books/:bookId/authors`
 - イベント: `/events`, `/events/:id`（2025年6月22日追加）
-- サークル: `/circles`, `/circles/:id`（2025年6月22日追加予定）
+- サークル: `/circles`, `/circles/:id`（2025年6月23日追加）
 
 ## 効率的実装パターン集
 
@@ -1375,6 +1375,58 @@ export type NewCircle = typeof circles.$inferInsert;
 - **Phase 1-C-B**: サークル管理アプリケーション実装（TDD統合テスト駆動）
 - **Phase 1-D**: 出展申込機能スキーマ・アプリケーション実装
 - **Phase 2**: イベント・サークル・出展の関連機能実装
+
+詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
+
+## サークル管理機能実装完了記録
+
+### 🎉 2025年6月23日完了（Phase 1-C-B: サークル管理アプリケーション実装） 🎉
+
+**サークル管理機能（Circles）の基本CRUD機能が完全実装完了しました！**
+
+#### 主要成果
+- **TDD（統合テスト駆動開発）**でミニマム実装完了
+- **ValidationPipe統一パターン**を適用したDTO設計
+- **イベント機能パターン踏襲**による高品質実装
+- **全CRUD機能**実装完了（一覧・詳細・作成・編集・削除）
+
+#### 実装されたエンドポイント
+- `GET /circles` - サークル一覧
+- `GET /circles/new` - 新規サークル登録フォーム
+- `POST /circles` - サークル作成処理
+- `GET /circles/:id` - サークル詳細
+- `GET /circles/:id/edit` - サークル編集フォーム
+- `PUT /circles/:id` - サークル更新処理（HTTPメソッドオーバーライド対応）
+- `DELETE /circles/:id` - サークル削除処理（HTTPメソッドオーバーライド対応）
+
+#### 技術的実装内容
+- **DTO設計**: CreateCircleDto, UpdateCircleDto（ValidationPipe統一パターン）
+- **サービス層**: CirclesService（印刷所パターン踏襲、型安全な実装）
+- **コントローラー層**: CirclesController（NestJS標準命名、ValidationPipe統合）
+- **ビューファイル**: EJSテンプレート4ファイル（レスポンシブ対応）
+- **モジュール統合**: CirclesModule作成、app.module.ts統合完了
+
+#### 確立された開発パターン
+1. **実装前チェックリスト**: スキーマ確認→既存パターン分析→依存関係確認→データフロー設計
+2. **TDD段階的実装**: ミニマムテスト→失敗確認→実装→成功確認
+3. **ValidationPipe統一**: @Transform + class-validator統一パターン
+4. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
+
+#### 技術的検証結果
+- **ビルド**: ✅ 成功（dist/views/circles/ にビューファイルコピー確認）
+- **統合テスト**: ✅ 2/2テスト通過（サークル機能のみ）
+- **Lint**: ✅ 成功（6ファイル自動修正、コード品質向上）
+- **型チェック**: ✅ エラー0件
+- **動作確認**: ✅ ユーザー確認済み
+
+#### データベーススキーマ実装済み
+- **circlesテーブル**: `src/db/schema.ts`に実装済み
+- **型定義**: Circle, NewCircle型をexport済み
+- **マイグレーション**: `drizzle/0007_exotic_felicia_hardy.sql`適用済み
+
+#### 次のステップ
+- **Phase 1-D**: 出展申込機能（Exhibits）実装予定
+- **Phase 2**: イベント・サークル・出展の関連機能実装予定
 
 詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .required {
+      color: red;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      display: inline-block;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><%= title %></h1>
+    </div>
+
+    <form action="/circles" method="POST">
+      <div class="form-group">
+        <label for="name">サークル名 <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          required
+          maxlength="255"
+          placeholder="サークル名を入力してください（例：テックサークル）"
+          value="<%= locals.circle ? circle.name : '' %>"
+        >
+        <% if (locals.errors && errors.name) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.name %></div>
+        <% } %>
+        <div class="help-text">必須項目です。255文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="representativeName">代表者名 <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="representativeName" 
+          name="representativeName" 
+          required
+          maxlength="255"
+          placeholder="代表者名を入力してください（例：山田太郎）"
+          value="<%= locals.circle ? circle.representativeName : '' %>"
+        >
+        <% if (locals.errors && errors.representativeName) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.representativeName %></div>
+        <% } %>
+        <div class="help-text">必須項目です。255文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">メールアドレス <span class="required">*</span></label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required
+          maxlength="255"
+          placeholder="メールアドレスを入力してください（例：contact@example.com）"
+          value="<%= locals.circle ? circle.email : '' %>"
+        >
+        <% if (locals.errors && errors.email) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.email %></div>
+        <% } %>
+        <div class="help-text">必須項目です。有効なメールアドレスを255文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">説明</label>
+        <textarea 
+          id="description" 
+          name="description" 
+          rows="4"
+          placeholder="サークルの説明があれば入力してください"
+        ><%= locals.circle ? circle.description : '' %></textarea>
+        <% if (locals.errors && errors.description) { %>
+          <div class="error" style="color: #dc3545; font-size: 12px; margin-top: 5px;"><%= errors.description %></div>
+        <% } %>
+        <div class="help-text">任意項目です。サークルの活動内容や特徴を記載してください。</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">登録</button>
+        <a href="/circles" class="btn btn-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

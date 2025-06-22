@@ -4,6 +4,7 @@ import { AppService } from './app.service'
 import { AuthorsModule } from './authors/authors.module'
 import { BookAuthorsModule } from './book-authors/book-authors.module'
 import { BooksModule } from './books/books.module'
+import { CirclesModule } from './circles/circles.module'
 import { DeadlinesModule } from './deadlines/deadlines.module'
 import { DrizzleModule } from './drizzle/drizzle.module'
 import { EventsModule } from './events/events.module'
@@ -17,6 +18,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
     DeadlinesModule,
     AuthorsModule,
     BookAuthorsModule,
+    CirclesModule,
     EventsModule,
     PrintingCompaniesModule,
     SubmissionsModule,
