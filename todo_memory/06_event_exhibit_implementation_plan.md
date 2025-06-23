@@ -258,19 +258,33 @@ DELETE /exhibits/:id        # 申込削除処理
 
 ## Phase 2: 関連機能実装（2-3週間）
 
-### 2-1. イベント別出展管理
+### 2-1. イベント別出展管理 ✅ **完了済み（2025年6月23日）**
 
-**URL実装**:
+**URL実装** ✅ **完了済み**:
 ```
 GET    /events/:eventId/exhibits      # イベント別出展一覧
 GET    /events/:eventId/exhibits/new  # イベントへの新規申込
 POST   /events/:eventId/exhibits      # イベントへの申込作成
 ```
 
-**実装内容**:
-- イベント詳細画面からの出展申込管理
-- 申込状況の集計表示（申込数、当選数、落選数）
-- 申込期間チェック機能
+**実装内容** ✅ **完了済み**:
+- イベント詳細画面からの出展申込管理 ✅
+- 申込状況の集計表示（申込数、当選数、落選数） ✅
+- 申込期間チェック機能 ✅
+
+**実装成果**:
+- **ExhibitsService拡張**: findByEventIdメソッド追加（JOIN処理でイベント・サークル関連取得）
+- **EventsController拡張**: 3つの新規エンドポイント追加（一覧・フォーム・作成処理）
+- **レスポンシブビューファイル**: 2ファイル（index.ejs, new.ejs）、モバイル対応
+- **ValidationExceptionFilter拡張**: イベント別出展パス対応追加
+- **エラーハンドリング強化**: ValidationPipe処理順序問題解決
+- **統合テスト3件**: TDD段階的実装で品質保証
+
+**技術的実装詳細**:
+- **JOIN処理**: ExhibitsとEvents、Circlesテーブルの効率的な関連データ取得
+- **ステータス集計**: applied/accepted/rejected/cancelledの4段階集計表示
+- **バリデーション修正**: eventId設定後のValidationPipe適用で400エラー解決
+- **依存関係統合**: EventsModuleにExhibits/Circlesモジュール追加
 
 ### 2-2. サークル別出展管理
 
@@ -672,8 +686,66 @@ export type NewExhibit = typeof exhibits.$inferInsert;
 - [x] **Phase 1-D-A: 出展申込データベーススキーマ実装** ✅ **完了済み（2025年6月23日）**
 - [x] **Phase 1-D-B: 出展申込アプリケーション実装** ✅ **完了済み（2025年6月23日）**
 
+### ✅ 完了: Phase 2-1 イベント別出展管理機能実装
+- [x] **Phase 2-1: イベント別出展管理機能実装完成** ✅ **完了済み（2025年6月23日）**
+  - [x] 統合テスト作成 (45分) - TDD段階的実装で基本テスト3件作成完了
+  - [x] ExhibitsService拡張 (30分) - findByEventIdメソッド追加（JOIN処理）
+  - [x] EventsController拡張 (90分) - イベント別出展管理エンドポイント3件追加
+  - [x] EventsModule統合 (15分) - ExhibitsModule/CirclesModule依存関係追加
+  - [x] ビューファイル作成 (120分) - 2ファイル（レスポンシブ対応、エラー表示機能）
+  - [x] ValidationExceptionFilter拡張 (60分) - イベント・サークル・出展関連パス対応
+  - [x] バリデーションエラー修正 (45分) - ValidationPipe処理順序問題解決
+  - [x] ビルド・テスト・Lint (20分) - dist/views確認、型チェック、Lint修正
+  - [x] 動作確認・バグ修正 (30分) - ユーザー確認とエラー対応
+  - **実際の所要時間**: 約7.5時間 (計画より多め、バリデーションエラー対応含む)
+  - **完了日時**: 2025年6月23日 17:15
+  - **成果物**: イベント別出展管理の完全機能、統合テスト、エラーハンドリング強化
+
+### ✅ 完了: Phase 2-1 イベント別出展管理機能実装 詳細記録
+- [x] **Phase 2-1: イベント別出展管理機能実装完成** ✅ **完了済み（2025年6月23日）**
+  - [x] 統合テスト作成 (45分) - TDD段階的実装で基本テスト3件作成完了
+    - `test/integration/events/event-exhibits.integration.spec.ts` 作成
+    - `GET /events/:eventId/exhibits` テスト実装
+    - `GET /events/:eventId/exhibits/new` テスト実装  
+    - `POST /events/:eventId/exhibits` テスト実装
+  - [x] ExhibitsService拡張 (30分) - findByEventIdメソッド追加（JOIN処理）
+    - `findByEventId()` メソッド実装
+    - Events・Circlesテーブルとのinner join処理
+    - ステータス・スペース情報・日付フォーマット対応
+  - [x] EventsController拡張 (90分) - イベント別出展管理エンドポイント3件追加
+    - `findEventExhibits()` - イベント別出展一覧表示
+    - `renderEventExhibitForm()` - 新規出展申込フォーム表示
+    - `createEventExhibit()` - 出展申込作成処理（ValidationPipe手動適用）
+  - [x] EventsModule統合 (15分) - ExhibitsModule/CirclesModule依存関係追加
+    - imports配列にExhibitsModule、EventsModule追加
+    - 依存性注入でExhibitsService、CirclesService利用可能
+  - [x] ビューファイル作成 (120分) - 2ファイル（レスポンシブ対応、エラー表示機能）
+    - `src/views/events/exhibits/index.ejs` - 出展一覧画面（統計情報表示）
+    - `src/views/events/exhibits/new.ejs` - 出展申込フォーム（サークル選択）
+    - レスポンシブ対応、モバイル・タブレット最適化
+    - エラー表示、フォーム復元機能実装
+  - [x] ValidationExceptionFilter拡張 (60分) - イベント・サークル・出展関連パス対応
+    - `/events/:eventId/exhibits` パス対応追加
+    - エラー時のフォームデータ復元機能実装
+    - prepareFormData()メソッド拡張
+  - [x] バリデーションエラー修正 (45分) - ValidationPipe処理順序問題解決
+    - 400 Bad Request エラーの根本原因特定
+    - eventId設定後のValidationPipe適用に修正
+    - 手動ValidationPipe適用パターン確立
+  - [x] ビルド・テスト・Lint (20分) - dist/views確認、型チェック、Lint修正
+    - `pnpm build` でビューファイルdist/にコピー確認
+    - 型チェックエラー0件確認
+    - Lintエラー修正（Record<string, unknown>型使用）
+  - [x] 動作確認・バグ修正 (30分) - ユーザー確認とエラー対応
+    - ブラウザでの動作確認完了
+    - バリデーションエラー修正対応
+    - 最終的な機能動作確認完了
+  - **実際の所要時間**: 約7.5時間 (計画より多め、バリデーションエラー対応含む)
+  - **完了日時**: 2025年6月23日 17:15
+  - **成果物**: イベント別出展管理の完全機能、統合テスト、エラーハンドリング強化
+
 ### Week 3-4: Phase 2 関連機能
-- [ ] イベント別出展管理完成
+- [x] **イベント別出展管理完成** ✅ **完了済み（2025年6月23日）**
 - [ ] サークル別出展管理完成
 - [ ] 出展書籍管理完成
 
@@ -690,7 +762,7 @@ export type NewExhibit = typeof exhibits.$inferInsert;
 ## 成功指標
 
 ### 技術指標
-- [x] 統合テスト256件以上実装・全通過（現在: 256件実装・全通過済み、イベント・サークル・出展申込機能完了） ✅ 確認済み
+- [x] 統合テスト259件以上実装・全通過（現在: 259件実装・全通過済み、イベント・サークル・出展申込機能完了、Phase 2-1イベント別出展管理機能完了） ✅ 確認済み
 - [x] 型安全性100%（TypeScriptエラー0件） ✅ 確認済み
 - [x] Lintエラー0件（新規実装部分） ✅ 確認済み（既存コードの18件は今回作業と無関係）
 - [x] ValidationPipe統一パターン100%適用（イベント・サークル・出展申込機能） ✅ 確認済み
@@ -750,11 +822,34 @@ export type NewExhibit = typeof exhibits.$inferInsert;
 2. **既存パターン踏襲**: 印刷所・入稿機能の実装方式活用
 3. **段階的品質確認**: ビルド→型チェック→Lint→テスト→動作確認
 
+### 🎉 Phase 2-1 完了記録（2025年6月23日）
+
+**イベント別出展管理機能 Phase 2-1完了により、Phase 2の第一段階が完了しました！**
+
+#### 主要成果
+- **イベント別出展管理**: 3つのエンドポイント（一覧・申込フォーム・申込処理）完全実装
+- **JOIN処理実装**: ExhibitsとEvents・Circlesテーブルの効率的な関連データ取得
+- **統合テスト3件追加**: TDD実践による高品質実装（全259件通過）
+- **バリデーションエラー解決**: ValidationPipe処理順序問題の根本解決
+- **レスポンシブUI**: モバイル・タブレット対応の出展管理画面
+
+#### 技術的成果
+- **ExhibitsService拡張**: findByEventIdメソッドでJOIN処理実装
+- **EventsController拡張**: 依存性注入でExhibits・Circlesサービス統合
+- **ValidationExceptionFilter拡張**: イベント別出展パス対応追加
+- **エラーハンドリング強化**: 400エラーの根本原因特定・解決
+
+#### 確立されたパターン
+1. **サービス間連携**: 複数モジュール間の依存性注入パターン確立
+2. **ValidationPipe手動適用**: パラメータ設定後のバリデーション適用手法
+3. **JOIN処理パターン**: Drizzle ORMによる効率的な関連データ取得
+4. **エラー分析手法**: 400エラーの段階的切り分け・解決アプローチ
+
 ### Phase 2への展望
 
-Phase 1の成功により、以下の高度機能実装への基盤が確立されました：
-- イベント別出展管理（Phase 2-1）
-- サークル別出展管理（Phase 2-2）  
+Phase 1とPhase 2-1の成功により、以下の高度機能実装への基盤が確立されました：
+- ✅ イベント別出展管理（Phase 2-1）**完了済み**
+- サークル別出展管理（Phase 2-2）
 - 出展書籍管理（Phase 2-3）
 
 本実装計画書は、既存システムとの一貫性を保ちながら、同人誌即売会出展管理機能を段階的に実装するためのロードマップです。ValidationPipe統一パターン、TDD、データベースクリーンアップ戦略など、これまでに確立された開発パターンを最大限活用し、高品質な機能追加を実現しました。
