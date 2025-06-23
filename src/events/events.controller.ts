@@ -15,13 +15,20 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 import type { Response } from 'express'
+import { CirclesService } from '../circles/circles.service'
+import { CreateExhibitDto } from '../exhibits/dto/create-exhibit.dto'
+import { ExhibitsService } from '../exhibits/exhibits.service'
 import { CreateEventDto } from './dto/create-event.dto'
 import { UpdateEventDto } from './dto/update-event.dto'
 import { EventsService } from './events.service'
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly exhibitsService: ExhibitsService,
+    private readonly circlesService: CirclesService,
+  ) {}
 
   @Get()
   @Render('events/index')
@@ -182,5 +189,116 @@ export class EventsController {
       }
       throw error
     }
+  }
+
+  // イベント別出展申込一覧
+  @Get(':eventId/exhibits')
+  @Render('events/exhibits/index')
+  async findEventExhibits(@Param('eventId', ParseIntPipe) eventId: number) {
+    const event = await this.eventsService.findOne(eventId)
+    const exhibits = await this.exhibitsService.findByEventId(eventId)
+
+    // ステータス日本語変換
+    const statusMap = {
+      applied: '申込中',
+      accepted: '当選',
+      rejected: '落選',
+      cancelled: 'キャンセル',
+    }
+
+    return {
+      title: `${event.name} - 出展申込一覧`,
+      event: {
+        id: event.id,
+        name: event.name,
+        formattedEventDate: new Date(event.eventDate).toLocaleDateString(
+          'ja-JP',
+        ),
+        venue: event.venue,
+      },
+      exhibits: exhibits.map((exhibit) => ({
+        id: exhibit.id,
+        status: exhibit.status,
+        statusLabel: statusMap[exhibit.status],
+        spaceNumber: exhibit.spaceNumber || '-',
+        spaceType: exhibit.spaceType || '-',
+        applicationNotes: exhibit.applicationNotes || '-',
+        resultNotes: exhibit.resultNotes || '-',
+        formattedApplicationDate:
+          exhibit.applicationDate.toLocaleDateString('ja-JP'),
+        formattedResultDate: exhibit.resultDate
+          ? exhibit.resultDate.toLocaleDateString('ja-JP')
+          : '-',
+        circle: {
+          id: exhibit.circle.id,
+          name: exhibit.circle.name,
+          representativeName: exhibit.circle.representativeName,
+        },
+      })),
+      // 申込状況集計
+      stats: {
+        total: exhibits.length,
+        applied: exhibits.filter((e) => e.status === 'applied').length,
+        accepted: exhibits.filter((e) => e.status === 'accepted').length,
+        rejected: exhibits.filter((e) => e.status === 'rejected').length,
+        cancelled: exhibits.filter((e) => e.status === 'cancelled').length,
+      },
+    }
+  }
+
+  // イベントへの新規出展申込フォーム
+  @Get(':eventId/exhibits/new')
+  @Render('events/exhibits/new')
+  async renderEventExhibitForm(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    const event = await this.eventsService.findOne(eventId)
+    const circles = await this.circlesService.findAll()
+
+    return {
+      title: `${event.name}への出展申込`,
+      event: {
+        id: event.id,
+        name: event.name,
+        formattedEventDate: new Date(event.eventDate).toLocaleDateString(
+          'ja-JP',
+        ),
+        venue: event.venue,
+        formattedApplicationEndDate: new Date(
+          event.applicationEndDate,
+        ).toLocaleDateString('ja-JP'),
+      },
+      circles: circles.map((circle) => ({
+        id: circle.id,
+        name: circle.name,
+        representativeName: circle.representativeName,
+      })),
+    }
+  }
+
+  // イベントへの新規出展申込処理
+  @Post(':eventId/exhibits')
+  @Redirect()
+  async createEventExhibit(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Body() body: Record<string, unknown>,
+  ) {
+    // eventIdをbodyに追加してからバリデーション
+    body.eventId = eventId
+
+    // デフォルトステータスを設定
+    if (!body.status) {
+      body.status = 'applied'
+    }
+
+    // 手動でValidationPipeを適用
+    const validationPipe = new ValidationPipe({ transform: true })
+    const createExhibitDto = await validationPipe.transform(body, {
+      type: 'body',
+      metatype: CreateExhibitDto,
+    })
+
+    await this.exhibitsService.create(createExhibitDto)
+    return { url: `/events/${eventId}/exhibits` }
   }
 }

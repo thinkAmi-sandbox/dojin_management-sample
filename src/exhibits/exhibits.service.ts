@@ -9,6 +9,36 @@ import { UpdateExhibitDto } from './dto/update-exhibit.dto'
 export class ExhibitsService {
   constructor(private readonly drizzleService: DrizzleService) {}
 
+  // イベント別出展申込一覧取得
+  async findByEventId(eventId: number) {
+    return await this.drizzleService.db
+      .select({
+        id: schema.exhibits.id,
+        status: schema.exhibits.status,
+        applicationDate: schema.exhibits.applicationDate,
+        resultDate: schema.exhibits.resultDate,
+        spaceNumber: schema.exhibits.spaceNumber,
+        spaceType: schema.exhibits.spaceType,
+        applicationNotes: schema.exhibits.applicationNotes,
+        resultNotes: schema.exhibits.resultNotes,
+        createdAt: schema.exhibits.createdAt,
+        updatedAt: schema.exhibits.updatedAt,
+        circle: {
+          id: schema.circles.id,
+          name: schema.circles.name,
+          representativeName: schema.circles.representativeName,
+          email: schema.circles.email,
+        },
+      })
+      .from(schema.exhibits)
+      .innerJoin(
+        schema.circles,
+        eq(schema.exhibits.circleId, schema.circles.id),
+      )
+      .where(eq(schema.exhibits.eventId, eventId))
+      .orderBy(desc(schema.exhibits.applicationDate))
+  }
+
   async findAll() {
     return await this.drizzleService.db
       .select({

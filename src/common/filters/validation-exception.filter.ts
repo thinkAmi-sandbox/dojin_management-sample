@@ -83,6 +83,21 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.status = error
         } else if (error.includes('執筆者') || error.includes('authorId')) {
           errors.authorId = error
+        } else if (error.includes('イベント') || error.includes('eventId')) {
+          errors.eventId = error
+        } else if (error.includes('サークル') || error.includes('circleId')) {
+          errors.circleId = error
+        } else if (error.includes('スペース番号')) {
+          errors.spaceNumber = error
+        } else if (
+          error.includes('スペース種別') ||
+          error.includes('スペースタイプ')
+        ) {
+          errors.spaceType = error
+        } else if (error.includes('申込備考')) {
+          errors.applicationNotes = error
+        } else if (error.includes('結果備考')) {
+          errors.resultNotes = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -192,6 +207,49 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         } else {
           templatePath = 'submissions/new'
           title = '入稿新規作成'
+        }
+      } else if (path.match(/\/events\/\d+\/exhibits/)) {
+        // イベント別出展申込関連パス
+        if (path.match(/\/events\/\d+\/exhibits$/)) {
+          // POST /events/:eventId/exhibits (新規出展申込)
+          templatePath = 'events/exhibits/new'
+          title = 'イベントへの出展申込'
+        }
+      } else if (path.includes('/events')) {
+        if (path.includes('/edit')) {
+          templatePath = 'events/edit'
+          title = 'イベント編集'
+        } else if (path.endsWith('/events')) {
+          templatePath = 'events/new'
+          title = 'イベント新規作成'
+        } else if (path.match(/\/events\/\d+$/)) {
+          // POST /events/:id (PUT via _method)
+          templatePath = 'events/edit'
+          title = 'イベント編集'
+        }
+      } else if (path.includes('/circles')) {
+        if (path.includes('/edit')) {
+          templatePath = 'circles/edit'
+          title = 'サークル編集'
+        } else if (path.endsWith('/circles')) {
+          templatePath = 'circles/new'
+          title = 'サークル新規作成'
+        } else if (path.match(/\/circles\/\d+$/)) {
+          // POST /circles/:id (PUT via _method)
+          templatePath = 'circles/edit'
+          title = 'サークル編集'
+        }
+      } else if (path.includes('/exhibits')) {
+        if (path.includes('/edit')) {
+          templatePath = 'exhibits/edit'
+          title = '出展申込編集'
+        } else if (path.endsWith('/exhibits')) {
+          templatePath = 'exhibits/new'
+          title = '出展申込新規作成'
+        } else if (path.match(/\/exhibits\/\d+$/)) {
+          // POST /exhibits/:id (PUT via _method)
+          templatePath = 'exhibits/edit'
+          title = '出展申込編集'
         }
       }
 
@@ -472,6 +530,140 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           ? [
               { name: '入稿一覧', url: '/submissions' },
               { name: '入稿詳細', url: `/submissions/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.match(/\/events\/\d+\/exhibits/)) {
+      // イベント別出展申込関連パス
+      const eventIdMatch = path.match(/\/events\/(\d+)\/exhibits/)
+      if (eventIdMatch) {
+        const eventId = parseInt(eventIdMatch[1], 10)
+        return {
+          event: {
+            id: eventId,
+            name: `イベント #${eventId}`, // 実際のイベント名は取得困難
+            formattedEventDate: '2024/01/01', // ダミー値
+            venue: '会場名', // ダミー値
+            formattedApplicationEndDate: '2024/01/01', // ダミー値
+          },
+          circles: [
+            { id: 1, name: 'ダミーサークル', representativeName: '代表者' },
+          ], // エラー表示のためのダミーデータ
+        }
+      }
+    } else if (path.includes('/events')) {
+      // パスからIDを抽出 (例: /events/1 -> 1)
+      const idMatch = path.match(/\/events\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/events') {
+        return {
+          event: {
+            name: formData.name || '',
+            eventDate: formData.eventDate || '',
+            venue: formData.venue || '',
+            applicationStartDate: formData.applicationStartDate || '',
+            applicationEndDate: formData.applicationEndDate || '',
+            description: formData.description || '',
+          },
+        }
+      }
+
+      // 編集の場合
+      return {
+        event: {
+          id,
+          name: formData.name || '',
+          eventDate: formData.eventDate || '',
+          venue: formData.venue || '',
+          applicationStartDate: formData.applicationStartDate || '',
+          applicationEndDate: formData.applicationEndDate || '',
+          description: formData.description || '',
+        },
+        breadcrumbs: id
+          ? [
+              { name: 'イベント一覧', url: '/events' },
+              { name: `イベント #${id}`, url: `/events/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.includes('/circles')) {
+      // パスからIDを抽出 (例: /circles/1 -> 1)
+      const idMatch = path.match(/\/circles\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/circles') {
+        return {
+          circle: {
+            name: formData.name || '',
+            representativeName: formData.representativeName || '',
+            email: formData.email || '',
+            description: formData.description || '',
+          },
+        }
+      }
+
+      // 編集の場合
+      return {
+        circle: {
+          id,
+          name: formData.name || '',
+          representativeName: formData.representativeName || '',
+          email: formData.email || '',
+          description: formData.description || '',
+        },
+        breadcrumbs: id
+          ? [
+              { name: 'サークル一覧', url: '/circles' },
+              { name: `サークル #${id}`, url: `/circles/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.includes('/exhibits')) {
+      // パスからIDを抽出 (例: /exhibits/1 -> 1)
+      const idMatch = path.match(/\/exhibits\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/exhibits') {
+        return {
+          exhibit: {
+            eventId: formData.eventId || '',
+            circleId: formData.circleId || '',
+            status: formData.status || 'applied',
+            spaceNumber: formData.spaceNumber || '',
+            spaceType: formData.spaceType || '',
+            applicationNotes: formData.applicationNotes || '',
+            resultNotes: formData.resultNotes || '',
+          },
+          events: [], // イベントリストは取得困難
+          circles: [], // サークルリストは取得困難
+        }
+      }
+
+      // 編集の場合
+      return {
+        exhibit: {
+          id,
+          eventId: formData.eventId || '',
+          circleId: formData.circleId || '',
+          status: formData.status || 'applied',
+          spaceNumber: formData.spaceNumber || '',
+          spaceType: formData.spaceType || '',
+          applicationNotes: formData.applicationNotes || '',
+          resultNotes: formData.resultNotes || '',
+        },
+        events: [], // イベントリストは取得困難
+        circles: [], // サークルリストは取得困難
+        breadcrumbs: id
+          ? [
+              { name: '出展申込一覧', url: '/exhibits' },
+              { name: `出展申込 #${id}`, url: `/exhibits/${id}` },
               { name: '編集', url: null },
             ]
           : [],
