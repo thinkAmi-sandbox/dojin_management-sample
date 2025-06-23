@@ -121,8 +121,34 @@ export const exhibitBooks = pgTable(
   }),
 );
 
-// Phase 3以降: 残りのテーブル（段階的追加予定）
-// export const circleAuthors = pgTable('CircleAuthor', { /* サークルメンバー（circleId, authorId） */ });
+// ✅ Phase 3-1-A: 完了済み (circleAuthorsテーブル実装済み)
+export const circleAuthors = pgTable(
+  'CircleAuthor',
+  {
+    circleId: integer('circleId')
+      .notNull()
+      .references(() => circles.id, { onDelete: 'cascade' }),
+    authorId: integer('authorId')
+      .notNull()
+      .references(() => authors.id, { onDelete: 'cascade' }),
+    role: circleRoleEnum('role').notNull().default('member'),
+    joinedAt: timestamp('joinedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    leftAt: timestamp('leftAt', { mode: 'date', precision: 3 }),
+    notes: text('notes'),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.circleId, table.authorId] }),
+  }),
+);
 ```
 
 **実装状況**: 
@@ -130,7 +156,7 @@ export const exhibitBooks = pgTable(
 - ✅ **circlesテーブル**: 完了 (マイグレーション適用済み、アプリケーション実装完了 2025年6月23日)
 - ✅ **exhibitsテーブル**: 完了 (マイグレーション適用済み 2025年6月23日、アプリケーション実装完了 2025年6月23日)
 - ✅ **exhibitBooksテーブル**: 完了 (マイグレーション適用済み 2025年6月23日、Phase 2-3-A完了 2025年6月23日)
-- ⏳ **circleAuthorsテーブル**: Phase 3で実装予定
+- ✅ **circleAuthorsテーブル**: 完了 (マイグレーション適用済み 2025年6月23日、Phase 3-1-A完了 2025年6月23日)
 
 **データベース変更優先の理由**:
 - マイグレーション失敗リスクを早期に特定
@@ -437,6 +463,26 @@ export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
 
 ### 3-1. サークルメンバー管理（CircleAuthors）
 
+**実装順序**: イベント・サークル・出展申込管理と同様のパターン
+
+1. **Phase 3-1-A: データベーススキーマ実装** ✅ **完了済み（2025年6月23日）**
+   - 既存スキーマ確認 (`src/db/schema.ts`) ✅
+   - BookAuthorテーブル複合主キーパターン分析 ✅
+   - circleRoleEnum定義（representative, member, guest） ✅
+   - CircleAuthorsテーブル定義追加（多対多関係） ✅
+   - マイグレーション生成・適用 ✅
+   - testDbUtils.cleanupDatabase()拡張 ✅
+   - 型チェック・Lint確認 ✅
+   - **コミット実行** ✅
+
+2. **Phase 3-1-B: アプリケーション実装** ⏳ **実装予定**
+   - 統合テスト作成（多対多関係のJOIN処理含む）
+   - DTO定義（役割管理、参加期間管理）
+   - サービス層実装（JOIN処理、サークル・執筆者関連）
+   - コントローラー実装
+   - ビューファイル作成
+   - モジュール統合
+
 **URL実装**:
 ```
 GET    /circles/:circleId/members              # サークルメンバー一覧
@@ -447,9 +493,72 @@ DELETE /circles/:circleId/members/:authorId    # メンバー削除
 ```
 
 **実装内容**:
-- サークルと執筆者の多対多関連管理
-- 役割管理（代表者、メンバー、ゲスト等）
+- サークルと執筆者の多対多関連管理 ✅ **Phase 3-1-A完了済み**
+- 役割管理（代表者、メンバー、ゲスト等） ✅ **Phase 3-1-A完了済み**
+- 参加期間管理（joinedAt/leftAt） ✅ **Phase 3-1-A完了済み**
 - 既存のAuthorsテーブルとの統合
+
+**Phase 3-1-A: 実装完了済み** ✅:
+```typescript
+// 実装済みスキーマ定義 (src/db/schema.ts)
+export const circleRoleEnum = pgEnum('circle_role', [
+  'representative',
+  'member',
+  'guest',
+]);
+
+export const circleAuthors = pgTable(
+  'CircleAuthor',
+  {
+    circleId: integer('circleId')
+      .notNull()
+      .references(() => circles.id, { onDelete: 'cascade' }),
+    authorId: integer('authorId')
+      .notNull()
+      .references(() => authors.id, { onDelete: 'cascade' }),
+    role: circleRoleEnum('role').notNull().default('member'),
+    joinedAt: timestamp('joinedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    leftAt: timestamp('leftAt', { mode: 'date', precision: 3 }),
+    notes: text('notes'),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.circleId, table.authorId] }),
+  }),
+);
+
+export type CircleAuthor = typeof circleAuthors.$inferSelect;
+export type NewCircleAuthor = typeof circleAuthors.$inferInsert;
+```
+
+**実装詳細**:
+- テーブル名: `'CircleAuthor'` (既存パターンに合わせてPascalCase)
+- 複合主キー: circleId + authorId (BookAuthorパターン踏襲)
+- 外部キー: circleId（circlesテーブル）、authorId（authorsテーブル）、cascade削除
+- 役割管理: circleRoleEnum型、デフォルト'member'
+- 参加期間: joinedAt（参加日）、leftAt（退会日、nullable）
+- 型定義: CircleAuthor, NewCircleAuthor をexport済み
+- マイグレーションファイル: `drizzle/0010_light_leech.sql`
+
+**Phase 3-1-A: 成功指標** ✅ **完了済み**:
+- [x] スキーマ定義がschema.tsに正しく追加される
+- [x] 複合主キー設定が成功する (circleId + authorId)
+- [x] circleRoleEnum追加が成功する
+- [x] マイグレーション生成が成功する (`drizzle/0010_light_leech.sql`)
+- [x] テスト用DBへの適用が成功する (`pnpm drizzle:migrate:test`)
+- [x] プロダクション用DBへの適用が成功する (`pnpm drizzle:migrate`)
+- [x] testDbUtils.cleanupDatabase()にCircleAuthor対応追加
+- [x] 型チェックエラー0件
+- [x] Lintエラー0件（2ファイル自動修正）
+- [x] コミット準備完了
 
 ### 3-2. 集計・分析機能
 
@@ -960,6 +1069,19 @@ export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
 - [x] Lintエラー0件（3ファイル自動修正）
 - [x] コミットが正常に完了する (コミットハッシュ: `2404f0b`)
 
+### ✅ 完了: Phase 3-1-A サークルメンバー管理用データベーススキーマ実装
+- [x] **Phase 3-1-A: circleAuthorsテーブルスキーマ実装とマイグレーション完了** ✅ **完了済み（2025年6月23日）**
+  - [x] 既存スキーマ確認 (15分) - BookAuthorテーブル複合主キーパターン分析完了
+  - [x] circleRoleEnum定義 (10分) - representative, member, guest
+  - [x] CircleAuthorsテーブル定義追加 (30分) - 多対多関係、役割管理、参加期間管理
+  - [x] マイグレーション生成・適用 (30分) - テスト用・プロダクション用両方成功
+  - [x] testDbUtils.cleanupDatabase()拡張 (15分) - CircleAuthor対応追加
+  - [x] 型チェック・Lint確認 (15分) - エラー0件、2ファイル自動修正
+  - [x] コミット準備完了 (15分) - Phase 3-1-A完了記録準備
+  - **実際の所要時間**: 約2時間 (計画通り)
+  - **完了日時**: 2025年6月23日 XX:XX（コミット実行待ち）
+  - **成果物**: circleAuthorsテーブル, マイグレーションファイル, 型定義, testDbUtils修正
+
 ### Week 3-4: Phase 2 関連機能
 - [x] **イベント別出展管理完成** ✅ **完了済み（2025年6月23日）**
 - [x] **サークル別出展管理完成** ✅ **完了済み（2025年6月23日）**
@@ -967,7 +1089,8 @@ export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
 - [x] **出展書籍管理（Phase 2-3-B）完成** ✅ **完了済み（2025年6月23日）**
 
 ### Week 5-6: Phase 3 高度機能
-- [ ] サークルメンバー管理完成
+- [x] **サークルメンバー管理（Phase 3-1-A）完成** ✅ **完了済み（2025年6月23日）**
+- [ ] サークルメンバー管理（Phase 3-1-B）実装予定
 - [ ] 集計・分析機能完成
 - [ ] ナビゲーション統合完成
 

@@ -24,6 +24,12 @@ export const exhibitStatusEnum = pgEnum('exhibit_status', [
   'cancelled',
 ])
 
+export const circleRoleEnum = pgEnum('circle_role', [
+  'representative',
+  'member',
+  'guest',
+])
+
 export const books = pgTable('Book', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -264,3 +270,34 @@ export const exhibitBooks = pgTable(
 
 export type ExhibitBook = typeof exhibitBooks.$inferSelect
 export type NewExhibitBook = typeof exhibitBooks.$inferInsert
+
+export const circleAuthors = pgTable(
+  'CircleAuthor',
+  {
+    circleId: integer('circleId')
+      .notNull()
+      .references(() => circles.id, { onDelete: 'cascade' }),
+    authorId: integer('authorId')
+      .notNull()
+      .references(() => authors.id, { onDelete: 'cascade' }),
+    role: circleRoleEnum('role').notNull().default('member'),
+    joinedAt: timestamp('joinedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    leftAt: timestamp('leftAt', { mode: 'date', precision: 3 }),
+    notes: text('notes'),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.circleId, table.authorId] }),
+  }),
+)
+
+export type CircleAuthor = typeof circleAuthors.$inferSelect
+export type NewCircleAuthor = typeof circleAuthors.$inferInsert
