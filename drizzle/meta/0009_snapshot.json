@@ -1,0 +1,793 @@
+{
+  "id": "c1398093-bb44-47d7-8f30-c7135e99a5a8",
+  "prevId": "480ecda4-f246-4ea4-b31b-cae0ccb921b2",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.Author": {
+      "name": "Author",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bio": {
+          "name": "bio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Author_email_unique": {
+          "name": "Author_email_unique",
+          "nullsNotDistinct": false,
+          "columns": ["email"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.BookAuthor": {
+      "name": "BookAuthor",
+      "schema": "",
+      "columns": {
+        "bookId": {
+          "name": "bookId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "authorId": {
+          "name": "authorId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "BookAuthor_bookId_Book_id_fk": {
+          "name": "BookAuthor_bookId_Book_id_fk",
+          "tableFrom": "BookAuthor",
+          "tableTo": "Book",
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "BookAuthor_authorId_Author_id_fk": {
+          "name": "BookAuthor_authorId_Author_id_fk",
+          "tableFrom": "BookAuthor",
+          "tableTo": "Author",
+          "columnsFrom": ["authorId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "BookAuthor_bookId_authorId_pk": {
+          "name": "BookAuthor_bookId_authorId_pk",
+          "columns": ["bookId", "authorId"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Book": {
+      "name": "Book",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subtitle": {
+          "name": "subtitle",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pageCount": {
+          "name": "pageCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "writing_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'planning'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Circle": {
+      "name": "Circle",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "representativeName": {
+          "name": "representativeName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Deadline": {
+      "name": "Deadline",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bookId": {
+          "name": "bookId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dueDate": {
+          "name": "dueDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Deadline_bookId_Book_id_fk": {
+          "name": "Deadline_bookId_Book_id_fk",
+          "tableFrom": "Deadline",
+          "tableTo": "Book",
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Event": {
+      "name": "Event",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eventDate": {
+          "name": "eventDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "venue": {
+          "name": "venue",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "applicationStartDate": {
+          "name": "applicationStartDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "applicationEndDate": {
+          "name": "applicationEndDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ExhibitBook": {
+      "name": "ExhibitBook",
+      "schema": "",
+      "columns": {
+        "exhibitId": {
+          "name": "exhibitId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bookId": {
+          "name": "bookId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plannedQuantity": {
+          "name": "plannedQuantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "displayOrder": {
+          "name": "displayOrder",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ExhibitBook_exhibitId_Exhibit_id_fk": {
+          "name": "ExhibitBook_exhibitId_Exhibit_id_fk",
+          "tableFrom": "ExhibitBook",
+          "tableTo": "Exhibit",
+          "columnsFrom": ["exhibitId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ExhibitBook_bookId_Book_id_fk": {
+          "name": "ExhibitBook_bookId_Book_id_fk",
+          "tableFrom": "ExhibitBook",
+          "tableTo": "Book",
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "ExhibitBook_exhibitId_bookId_pk": {
+          "name": "ExhibitBook_exhibitId_bookId_pk",
+          "columns": ["exhibitId", "bookId"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Exhibit": {
+      "name": "Exhibit",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "eventId": {
+          "name": "eventId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "circleId": {
+          "name": "circleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "exhibit_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'applied'"
+        },
+        "applicationDate": {
+          "name": "applicationDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resultDate": {
+          "name": "resultDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spaceNumber": {
+          "name": "spaceNumber",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spaceType": {
+          "name": "spaceType",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "applicationNotes": {
+          "name": "applicationNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resultNotes": {
+          "name": "resultNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Exhibit_eventId_Event_id_fk": {
+          "name": "Exhibit_eventId_Event_id_fk",
+          "tableFrom": "Exhibit",
+          "tableTo": "Event",
+          "columnsFrom": ["eventId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "Exhibit_circleId_Circle_id_fk": {
+          "name": "Exhibit_circleId_Circle_id_fk",
+          "tableFrom": "Exhibit",
+          "tableTo": "Circle",
+          "columnsFrom": ["circleId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.PrintingCompany": {
+      "name": "PrintingCompany",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "websiteUrl": {
+          "name": "websiteUrl",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Submission": {
+      "name": "Submission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bookId": {
+          "name": "bookId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "printingCompanyId": {
+          "name": "printingCompanyId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "submissionDate": {
+          "name": "submissionDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expectedDeliveryDate": {
+          "name": "expectedDeliveryDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actualDeliveryDate": {
+          "name": "actualDeliveryDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "specificationNotes": {
+          "name": "specificationNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "printingCost": {
+          "name": "printingCost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shippingCost": {
+          "name": "shippingCost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "otherCost": {
+          "name": "otherCost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalCost": {
+          "name": "totalCost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discountType": {
+          "name": "discountType",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deliveryDestination": {
+          "name": "deliveryDestination",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deliveryNotes": {
+          "name": "deliveryNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submissionFileNotes": {
+          "name": "submissionFileNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "generalNotes": {
+          "name": "generalNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Submission_bookId_Book_id_fk": {
+          "name": "Submission_bookId_Book_id_fk",
+          "tableFrom": "Submission",
+          "tableTo": "Book",
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "Submission_printingCompanyId_PrintingCompany_id_fk": {
+          "name": "Submission_printingCompanyId_PrintingCompany_id_fk",
+          "tableFrom": "Submission",
+          "tableTo": "PrintingCompany",
+          "columnsFrom": ["printingCompanyId"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.exhibit_status": {
+      "name": "exhibit_status",
+      "schema": "public",
+      "values": ["applied", "accepted", "rejected", "cancelled"]
+    },
+    "public.writing_status": {
+      "name": "writing_status",
+      "schema": "public",
+      "values": ["planning", "writing", "editing", "completed"]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

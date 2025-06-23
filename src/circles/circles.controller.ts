@@ -15,9 +15,9 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 import type { Response } from 'express'
+import { EventsService } from '../events/events.service'
 import { CreateExhibitDto } from '../exhibits/dto/create-exhibit.dto'
 import { ExhibitsService } from '../exhibits/exhibits.service'
-import { EventsService } from '../events/events.service'
 import { CirclesService } from './circles.service'
 import { CreateCircleDto } from './dto/create-circle.dto'
 import { UpdateCircleDto } from './dto/update-circle.dto'

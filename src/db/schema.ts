@@ -236,3 +236,31 @@ export const exhibits = pgTable('Exhibit', {
 
 export type Exhibit = typeof exhibits.$inferSelect
 export type NewExhibit = typeof exhibits.$inferInsert
+
+export const exhibitBooks = pgTable(
+  'ExhibitBook',
+  {
+    exhibitId: integer('exhibitId')
+      .notNull()
+      .references(() => exhibits.id, { onDelete: 'cascade' }),
+    bookId: integer('bookId')
+      .notNull()
+      .references(() => books.id, { onDelete: 'cascade' }),
+    plannedQuantity: integer('plannedQuantity').notNull().default(0),
+    price: integer('price').notNull().default(0),
+    displayOrder: integer('displayOrder').notNull().default(0),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.exhibitId, table.bookId] }),
+  }),
+)
+
+export type ExhibitBook = typeof exhibitBooks.$inferSelect
+export type NewExhibitBook = typeof exhibitBooks.$inferInsert
