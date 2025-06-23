@@ -39,6 +39,33 @@ export class ExhibitsService {
       .orderBy(desc(schema.exhibits.applicationDate))
   }
 
+  // サークル別出展履歴取得
+  async findByCircleId(circleId: number) {
+    return await this.drizzleService.db
+      .select({
+        id: schema.exhibits.id,
+        status: schema.exhibits.status,
+        applicationDate: schema.exhibits.applicationDate,
+        resultDate: schema.exhibits.resultDate,
+        spaceNumber: schema.exhibits.spaceNumber,
+        spaceType: schema.exhibits.spaceType,
+        applicationNotes: schema.exhibits.applicationNotes,
+        resultNotes: schema.exhibits.resultNotes,
+        createdAt: schema.exhibits.createdAt,
+        updatedAt: schema.exhibits.updatedAt,
+        event: {
+          id: schema.events.id,
+          name: schema.events.name,
+          eventDate: schema.events.eventDate,
+          venue: schema.events.venue,
+        },
+      })
+      .from(schema.exhibits)
+      .innerJoin(schema.events, eq(schema.exhibits.eventId, schema.events.id))
+      .where(eq(schema.exhibits.circleId, circleId))
+      .orderBy(desc(schema.exhibits.applicationDate))
+  }
+
   async findAll() {
     return await this.drizzleService.db
       .select({

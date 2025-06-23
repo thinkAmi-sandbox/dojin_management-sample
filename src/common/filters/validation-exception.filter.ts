@@ -215,6 +215,13 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'events/exhibits/new'
           title = 'イベントへの出展申込'
         }
+      } else if (path.match(/\/circles\/\d+\/exhibits/)) {
+        // サークル別出展申込関連パス
+        if (path.match(/\/circles\/\d+\/exhibits$/)) {
+          // POST /circles/:circleId/exhibits (新規出展申込)
+          templatePath = 'circles/exhibits/new'
+          title = 'サークルからの出展申込'
+        }
       } else if (path.includes('/events')) {
         if (path.includes('/edit')) {
           templatePath = 'events/edit'
@@ -549,6 +556,29 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           },
           circles: [
             { id: 1, name: 'ダミーサークル', representativeName: '代表者' },
+          ], // エラー表示のためのダミーデータ
+        }
+      }
+    } else if (path.match(/\/circles\/\d+\/exhibits/)) {
+      // サークル別出展申込関連パス
+      const circleIdMatch = path.match(/\/circles\/(\d+)\/exhibits/)
+      if (circleIdMatch) {
+        const circleId = parseInt(circleIdMatch[1], 10)
+        return {
+          circle: {
+            id: circleId,
+            name: `サークル #${circleId}`, // 実際のサークル名は取得困難
+            representativeName: '代表者名', // ダミー値
+            email: 'example@example.com', // ダミー値
+          },
+          events: [
+            {
+              id: 1,
+              name: 'ダミーイベント',
+              formattedEventDate: '2024/01/01',
+              venue: '会場名',
+              formattedApplicationEndDate: '2024/01/01',
+            },
           ], // エラー表示のためのダミーデータ
         }
       }

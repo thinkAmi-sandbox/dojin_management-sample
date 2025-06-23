@@ -15,13 +15,20 @@ import {
   ValidationPipe,
 } from '@nestjs/common'
 import type { Response } from 'express'
+import { CreateExhibitDto } from '../exhibits/dto/create-exhibit.dto'
+import { ExhibitsService } from '../exhibits/exhibits.service'
+import { EventsService } from '../events/events.service'
 import { CirclesService } from './circles.service'
 import { CreateCircleDto } from './dto/create-circle.dto'
 import { UpdateCircleDto } from './dto/update-circle.dto'
 
 @Controller('circles')
 export class CirclesController {
-  constructor(private readonly circlesService: CirclesService) {}
+  constructor(
+    private readonly circlesService: CirclesService,
+    private readonly exhibitsService: ExhibitsService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   @Get()
   @Render('circles/index')
@@ -159,5 +166,118 @@ export class CirclesController {
       }
       throw error
     }
+  }
+
+  // サークル別出展履歴一覧
+  @Get(':circleId/exhibits')
+  @Render('circles/exhibits/index')
+  async findCircleExhibits(@Param('circleId', ParseIntPipe) circleId: number) {
+    const circle = await this.circlesService.findOne(circleId)
+    const exhibits = await this.exhibitsService.findByCircleId(circleId)
+
+    // ステータス日本語変換
+    const statusMap = {
+      applied: '申込中',
+      accepted: '当選',
+      rejected: '落選',
+      cancelled: 'キャンセル',
+    }
+
+    return {
+      title: `${circle.name} - 出展履歴`,
+      circle: {
+        id: circle.id,
+        name: circle.name,
+        representativeName: circle.representativeName,
+        email: circle.email,
+      },
+      exhibits: exhibits.map((exhibit) => ({
+        id: exhibit.id,
+        status: exhibit.status,
+        statusLabel: statusMap[exhibit.status],
+        spaceNumber: exhibit.spaceNumber || '-',
+        spaceType: exhibit.spaceType || '-',
+        applicationNotes: exhibit.applicationNotes || '-',
+        resultNotes: exhibit.resultNotes || '-',
+        formattedApplicationDate:
+          exhibit.applicationDate.toLocaleDateString('ja-JP'),
+        formattedResultDate: exhibit.resultDate
+          ? exhibit.resultDate.toLocaleDateString('ja-JP')
+          : '-',
+        event: {
+          id: exhibit.event.id,
+          name: exhibit.event.name,
+          formattedEventDate: new Date(
+            exhibit.event.eventDate,
+          ).toLocaleDateString('ja-JP'),
+          venue: exhibit.event.venue,
+        },
+      })),
+      // 出展実績集計
+      stats: {
+        total: exhibits.length,
+        applied: exhibits.filter((e) => e.status === 'applied').length,
+        accepted: exhibits.filter((e) => e.status === 'accepted').length,
+        rejected: exhibits.filter((e) => e.status === 'rejected').length,
+        cancelled: exhibits.filter((e) => e.status === 'cancelled').length,
+      },
+    }
+  }
+
+  // サークルからの新規出展申込フォーム
+  @Get(':circleId/exhibits/new')
+  @Render('circles/exhibits/new')
+  async renderCircleExhibitForm(
+    @Param('circleId', ParseIntPipe) circleId: number,
+  ) {
+    const circle = await this.circlesService.findOne(circleId)
+    const events = await this.eventsService.findAll()
+
+    return {
+      title: `${circle.name} - 新規出展申込`,
+      circle: {
+        id: circle.id,
+        name: circle.name,
+        representativeName: circle.representativeName,
+        email: circle.email,
+      },
+      events: events.map((event) => ({
+        id: event.id,
+        name: event.name,
+        formattedEventDate: new Date(event.eventDate).toLocaleDateString(
+          'ja-JP',
+        ),
+        venue: event.venue,
+        formattedApplicationEndDate: new Date(
+          event.applicationEndDate,
+        ).toLocaleDateString('ja-JP'),
+      })),
+    }
+  }
+
+  // サークルからの新規出展申込処理
+  @Post(':circleId/exhibits')
+  @Redirect()
+  async createCircleExhibit(
+    @Param('circleId', ParseIntPipe) circleId: number,
+    @Body() body: Record<string, unknown>,
+  ) {
+    // circleIdをbodyに追加してからバリデーション
+    body.circleId = circleId
+
+    // デフォルトステータスを設定
+    if (!body.status) {
+      body.status = 'applied'
+    }
+
+    // 手動でValidationPipeを適用
+    const validationPipe = new ValidationPipe({ transform: true })
+    const createExhibitDto = await validationPipe.transform(body, {
+      type: 'body',
+      metatype: CreateExhibitDto,
+    })
+
+    await this.exhibitsService.create(createExhibitDto)
+    return { url: `/circles/${circleId}/exhibits` }
   }
 }
