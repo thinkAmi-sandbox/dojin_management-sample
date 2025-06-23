@@ -286,19 +286,33 @@ POST   /events/:eventId/exhibits      # イベントへの申込作成
 - **バリデーション修正**: eventId設定後のValidationPipe適用で400エラー解決
 - **依存関係統合**: EventsModuleにExhibits/Circlesモジュール追加
 
-### 2-2. サークル別出展管理
+### 2-2. サークル別出展管理 ✅ **完了済み（2025年6月23日）**
 
-**URL実装**:
+**URL実装** ✅ **完了済み**:
 ```
 GET    /circles/:circleId/exhibits     # サークル別出展履歴
 GET    /circles/:circleId/exhibits/new # サークルからの新規申込
 POST   /circles/:circleId/exhibits     # サークルからの申込作成
 ```
 
-**実装内容**:
-- サークル詳細画面からの出展履歴管理
-- 過去の出展実績表示
-- 申込可能なイベント一覧表示
+**実装内容** ✅ **完了済み**:
+- サークル詳細画面からの出展履歴管理 ✅
+- 過去の出展実績表示 ✅
+- 申込可能なイベント一覧表示 ✅
+
+**実装成果**:
+- **ExhibitsService拡張**: findByCircleIdメソッド追加（JOIN処理でサークル→イベント関連取得）
+- **CirclesController拡張**: 3つの新規エンドポイント追加（一覧・フォーム・作成処理）
+- **レスポンシブビューファイル**: 2ファイル（index.ejs, new.ejs）、モバイル対応
+- **循環依存解決**: forwardRef()でCirclesModule⇔EventsModuleの循環依存解決
+- **ValidationExceptionFilter拡張**: サークル別出展パス対応追加
+- **統合テスト3件**: TDD段階的実装で品質保証
+
+**技術的実装詳細**:
+- **JOIN処理**: ExhibitsとEvents、Circlesテーブルの効率的な関連データ取得
+- **出展実績集計**: applied/accepted/rejected/cancelledの4段階集計表示
+- **循環依存解決**: forwardRef()による適切なモジュール依存関係管理
+- **ValidationPipe手動適用**: circleId設定後のValidationPipe適用パターン
 
 ### 2-3. 出展書籍管理（ExhibitBooks）
 
@@ -744,9 +758,45 @@ export type NewExhibit = typeof exhibits.$inferInsert;
   - **完了日時**: 2025年6月23日 17:15
   - **成果物**: イベント別出展管理の完全機能、統合テスト、エラーハンドリング強化
 
+### ✅ 完了: Phase 2-2 サークル別出展管理機能実装
+- [x] **Phase 2-2: サークル別出展管理機能実装完成** ✅ **完了済み（2025年6月23日）**
+  - [x] 統合テスト作成 (30分) - TDD段階的実装で基本テスト3件作成完了
+    - `test/integration/circles/circle-exhibits.integration.spec.ts` 作成
+    - `GET /circles/:circleId/exhibits` テスト実装
+    - `GET /circles/:circleId/exhibits/new` テスト実装  
+    - `POST /circles/:circleId/exhibits` テスト実装
+  - [x] ExhibitsService拡張 (30分) - findByCircleIdメソッド追加（JOIN処理）
+    - `findByCircleId()` メソッド実装
+    - Events・Circlesテーブルとのinner join処理
+    - サークル→イベント関連データの効率的取得
+  - [x] CirclesController拡張 (60分) - サークル別出展管理エンドポイント3件追加
+    - `findCircleExhibits()` - サークル別出展履歴一覧表示
+    - `renderCircleExhibitForm()` - 新規出展申込フォーム表示
+    - `createCircleExhibit()` - 出展申込作成処理（ValidationPipe手動適用）
+  - [x] ビューファイル作成 (60分) - 2ファイル（レスポンシブ対応、エラー表示機能）
+    - `src/views/circles/exhibits/index.ejs` - 出展履歴一覧画面（統計情報表示）
+    - `src/views/circles/exhibits/new.ejs` - 出展申込フォーム（イベント選択）
+    - レスポンシブ対応、モバイル・タブレット最適化
+    - エラー表示、フォーム復元機能実装
+  - [x] モジュール統合 (30分) - forwardRef()による循環依存解決
+    - CirclesModule⇔EventsModuleの循環依存をforwardRef()で解決
+    - ExhibitsModule、EventsModuleの依存関係追加
+  - [x] ValidationExceptionFilter拡張 (30分) - サークル別出展パス対応
+    - `/circles/:circleId/exhibits` パス対応追加
+    - エラー時のフォームデータ復元機能実装
+    - prepareFormData()メソッド拡張
+  - [x] ビルド・テスト・Lint確認 (20分) - 品質確認・問題解決
+    - `pnpm build` でビューファイルdist/にコピー確認
+    - 型チェックエラー0件確認
+    - 統合テスト261/262テスト通過（サークル機能3/3テスト成功）
+    - 循環依存解決確認
+  - **実際の所要時間**: 約4.5時間 (計画通り、循環依存解決含む)
+  - **完了日時**: 2025年6月23日 21:00
+  - **成果物**: サークル別出展管理の完全機能、循環依存解決、統合テスト、レスポンシブビュー
+
 ### Week 3-4: Phase 2 関連機能
 - [x] **イベント別出展管理完成** ✅ **完了済み（2025年6月23日）**
-- [ ] サークル別出展管理完成
+- [x] **サークル別出展管理完成** ✅ **完了済み（2025年6月23日）**
 - [ ] 出展書籍管理完成
 
 ### Week 5-6: Phase 3 高度機能
