@@ -1,0 +1,260 @@
+<%- contentFor('body') %>
+<div class="header">
+    <h1><%= title %></h1>
+    
+    <!-- ブレッドクラム -->
+    <nav class="breadcrumb">
+        <% breadcrumbs.forEach((crumb, index) => { %>
+            <% if (crumb.url) { %>
+                <a href="<%= crumb.url %>"><%= crumb.name %></a>
+            <% } else { %>
+                <span><%= crumb.name %></span>
+            <% } %>
+            <% if (index < breadcrumbs.length - 1) { %>
+                <span class="separator">></span>
+            <% } %>
+        <% }); %>
+    </nav>
+</div>
+
+<div class="actions">
+    <a href="/circles/<%= circle.id %>/members" class="btn btn-secondary">🔙 メンバー一覧に戻る</a>
+</div>
+
+<!-- サークル情報セクション -->
+<div class="detail-section">
+    <div class="section-title">サークル情報</div>
+    <div class="detail-item">
+        <span class="detail-label">サークル名:</span>
+        <span class="detail-value"><%= circle.name %></span>
+    </div>
+</div>
+
+<!-- メンバー追加フォームセクション -->
+<div class="detail-section">
+    <div class="section-title">メンバー追加</div>
+    
+    <% if ((typeof authors === 'undefined' || !authors || authors.length === 0) && (!errors || Object.keys(errors).length === 0)) { %>
+        <div class="no-data">
+            <p>追加可能な執筆者がいません。</p>
+            <p>新しい執筆者を<a href="/authors/new">執筆者登録</a>で作成するか、既存のメンバーが全て所属済みです。</p>
+        </div>
+    <% } else { %>
+        <form method="POST" action="/circles/<%= circle.id %>/members" class="member-form">
+            <!-- エラー表示 -->
+            <!-- DEBUG: errors = <%= JSON.stringify(errors || {}) %> -->
+            <% if (typeof errors !== 'undefined' && errors && Object.keys(errors).length > 0) { %>
+                <div class="error-section">
+                    <% Object.values(errors).forEach(errorList => { %>
+                        <% if (Array.isArray(errorList)) { %>
+                            <% errorList.forEach(error => { %>
+                                <div class="error-message"><%= error %></div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="error-message"><%= errorList %></div>
+                        <% } %>
+                    <% }); %>
+                </div>
+            <% } %>
+            
+            <!-- 執筆者選択 -->
+            <div class="form-group">
+                <label for="authorId" class="form-label">執筆者 <span class="required">*</span></label>
+                <select name="authorId" id="authorId" class="form-control" required>
+                    <option value="">執筆者を選択してください</option>
+                    <% if (typeof authors !== 'undefined' && authors && authors.length > 0) { %>
+                        <% authors.forEach(author => { %>
+                            <option value="<%= author.id %>" 
+                                    <%= (typeof formData !== 'undefined' && formData && formData.authorId == author.id) ? 'selected' : '' %>>
+                                <%= author.name %>
+                                <% if (author.email) { %>
+                                    (<%= author.email %>)
+                                <% } %>
+                            </option>
+                        <% }); %>
+                    <% } %>
+                </select>
+                <small class="form-help">サークルに追加する執筆者を選択してください</small>
+            </div>
+            
+            <!-- 役割選択 -->
+            <div class="form-group">
+                <label for="role" class="form-label">役割 <span class="required">*</span></label>
+                <select name="role" id="role" class="form-control" required>
+                    <option value="">役割を選択してください</option>
+                    <% if (typeof roles !== 'undefined' && roles && roles.length > 0) { %>
+                        <% roles.forEach(role => { %>
+                            <option value="<%= role.value %>" 
+                                    <%= (typeof formData !== 'undefined' && formData && formData.role === role.value) ? 'selected' : '' %>>
+                                <%= role.label %>
+                            </option>
+                        <% }); %>
+                    <% } else { %>
+                        <!-- ValidationExceptionFilter使用時の代替選択肢 -->
+                        <option value="representative">代表者</option>
+                        <option value="member">メンバー</option>
+                        <option value="guest">ゲスト</option>
+                    <% } %>
+                </select>
+                <small class="form-help">
+                    代表者: サークルの代表 / メンバー: 通常のメンバー / ゲスト: 一時的な参加者
+                </small>
+            </div>
+            
+            <!-- 備考 -->
+            <div class="form-group">
+                <label for="notes" class="form-label">備考</label>
+                <textarea name="notes" id="notes" class="form-control" rows="3" 
+                          placeholder="担当分野や特記事項があれば記入してください"><%= (typeof formData !== 'undefined' && formData && formData.notes) || '' %></textarea>
+                <small class="form-help">任意: メンバーの担当分野や役割について</small>
+            </div>
+            
+            <!-- 執筆者詳細プレビュー -->
+            <div id="authorPreview" class="author-preview" style="display: none;">
+                <div class="section-title">選択された執筆者の詳細</div>
+                <div id="authorDetails"></div>
+            </div>
+            
+            <!-- フォームアクション -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">📝 メンバーを追加</button>
+                <a href="/circles/<%= circle.id %>/members" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </form>
+    <% } %>
+</div>
+
+<style>
+    /* 共通スタイル */
+    body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+    .header { margin-bottom: 20px; }
+    .breadcrumb { font-size: 0.9em; color: #666; margin-top: 10px; }
+    .breadcrumb a { color: #007bff; text-decoration: none; }
+    .breadcrumb .separator { margin: 0 8px; }
+    .actions { margin-bottom: 20px; }
+    .btn { 
+        background: #007bff; color: white; padding: 8px 16px; 
+        text-decoration: none; border-radius: 4px; margin-right: 8px;
+        border: none; cursor: pointer; display: inline-block;
+    }
+    .btn-secondary { background: #6c757d; }
+    .btn-primary { background: #007bff; }
+    .btn:hover { opacity: 0.9; }
+    
+    /* セクション構造 */
+    .detail-section { 
+        margin-bottom: 30px; background: #f8f9fa; 
+        padding: 20px; border-radius: 8px; 
+    }
+    .section-title { 
+        font-size: 1.2em; font-weight: bold; 
+        margin-bottom: 15px; border-bottom: 2px solid #007bff; 
+        padding-bottom: 5px;
+    }
+    .detail-item { display: flex; margin-bottom: 10px; }
+    .detail-label { font-weight: bold; min-width: 120px; }
+    .detail-value { flex: 1; }
+    .no-data { 
+        padding: 20px; text-align: center; 
+        color: #666; 
+    }
+    .no-data a { color: #007bff; text-decoration: none; }
+    
+    /* フォームスタイル */
+    .member-form { max-width: 600px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { 
+        display: block; font-weight: bold; 
+        margin-bottom: 5px; 
+    }
+    .required { color: #dc3545; }
+    .form-control { 
+        width: 100%; padding: 8px 12px; 
+        border: 1px solid #ddd; border-radius: 4px; 
+        font-size: 14px;
+    }
+    .form-control:focus { 
+        border-color: #007bff; outline: none; 
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    .form-help { 
+        display: block; font-size: 0.85em; 
+        color: #666; margin-top: 4px; 
+    }
+    
+    /* エラー表示 */
+    .error-section { 
+        background: #f8d7da; border: 1px solid #f5c6cb; 
+        border-radius: 4px; padding: 10px; margin-bottom: 20px; 
+    }
+    .error-message { 
+        color: #721c24; font-size: 0.9em; 
+        margin-bottom: 5px; 
+    }
+    .error-message:last-child { margin-bottom: 0; }
+    
+    /* 執筆者プレビュー */
+    .author-preview { 
+        margin-top: 20px; padding: 15px; 
+        background: #e9ecef; border-radius: 4px; 
+    }
+    .author-preview .section-title { 
+        font-size: 1em; margin-bottom: 10px; 
+        border-bottom: 1px solid #adb5bd; 
+    }
+    
+    /* フォームアクション */
+    .form-actions { 
+        margin-top: 30px; padding-top: 20px; 
+        border-top: 1px solid #ddd; 
+    }
+    
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+        body { margin: 10px; }
+        .member-form { max-width: none; }
+        .detail-item { flex-direction: column; }
+        .detail-label { min-width: auto; margin-bottom: 2px; }
+        .form-actions { text-align: center; }
+        .btn { margin-bottom: 8px; }
+    }
+</style>
+
+<script>
+    // 執筆者選択時のプレビュー表示
+    document.getElementById('authorId').addEventListener('change', function() {
+        const selectedValue = this.value;
+        const authorPreview = document.getElementById('authorPreview');
+        const authorDetails = document.getElementById('authorDetails');
+        
+        if (selectedValue) {
+            // 選択された執筆者の情報を取得
+            const selectedOption = this.options[this.selectedIndex];
+            const authorName = selectedOption.text;
+            
+            // 執筆者リストから詳細情報を取得
+            const authors = <% if (typeof authors !== 'undefined') { %><%- JSON.stringify(authors) %><% } else { %>[]<% } %>;
+            const selectedAuthor = authors.find(a => a.id == selectedValue);
+            
+            if (selectedAuthor) {
+                authorDetails.innerHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">名前:</span>
+                        <span class="detail-value">${selectedAuthor.name}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">メール:</span>
+                        <span class="detail-value">${selectedAuthor.email || '-'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">プロフィール:</span>
+                        <span class="detail-value">${selectedAuthor.bio || '-'}</span>
+                    </div>
+                `;
+                authorPreview.style.display = 'block';
+            }
+        } else {
+            authorPreview.style.display = 'none';
+        }
+    });
+</script>

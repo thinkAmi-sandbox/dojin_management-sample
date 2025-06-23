@@ -32,7 +32,10 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       // エラーメッセージをフィールド名ベースのオブジェクトに変換
       const errors: Record<string, string> = {}
 
+      console.log('🔍 ValidationExceptionFilter - エラーメッセージ:', validationErrors)
+
       for (const error of validationErrors) {
+        console.log('🔍 処理中のエラー:', error)
         // 日本語エラーメッセージから推測
         if (error.includes('印刷所名') || error.includes('name')) {
           errors.name = error
@@ -82,6 +85,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         } else if (error.includes('ステータス')) {
           errors.status = error
         } else if (error.includes('執筆者') || error.includes('authorId')) {
+          console.log('🔍 執筆者エラーをマッピング:', error)
           errors.authorId = error
         } else if (error.includes('イベント') || error.includes('eventId')) {
           errors.eventId = error
@@ -106,6 +110,10 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.price = error
         } else if (error.includes('表示順序')) {
           errors.displayOrder = error
+        } else if (error.includes('役割')) {
+          errors.role = error
+        } else if (error.includes('退会日')) {
+          errors.leftAt = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -249,6 +257,25 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'circles/exhibits/new'
           title = 'サークルからの出展申込'
         }
+      } else if (path.match(/\/circles\/\d+\/members/)) {
+        // サークルメンバー管理関連パス
+        if (path.match(/\/circles\/\d+\/members\/\d+\/edit/)) {
+          // GET /circles/:circleId/members/:authorId/edit
+          templatePath = 'circles/members/edit'
+          title = 'メンバー情報編集'
+        } else if (path.match(/\/circles\/\d+\/members\/\d+$/)) {
+          // POST /circles/:circleId/members/:authorId (PUT via _method)
+          templatePath = 'circles/members/edit'
+          title = 'メンバー情報編集'
+        } else if (path.match(/\/circles\/\d+\/members\/add/)) {
+          // GET /circles/:circleId/members/add
+          templatePath = 'circles/members/add'
+          title = 'メンバー追加'
+        } else if (path.match(/\/circles\/\d+\/members$/)) {
+          // POST /circles/:circleId/members (新規メンバー追加)
+          templatePath = 'circles/members/add'
+          title = 'メンバー追加'
+        }
       } else if (path.includes('/events')) {
         if (path.includes('/edit')) {
           templatePath = 'events/edit'
@@ -261,7 +288,28 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'events/edit'
           title = 'イベント編集'
         }
+      } else if (path.match(/\/circles\/\d+\/members/)) {
+        // サークルメンバー管理関連パス（より具体的なパターンを先に判定）
+        console.log('🔍 テンプレートパス決定: サークルメンバー管理')
+        if (path.match(/\/circles\/\d+\/members\/\d+\/edit/)) {
+          // GET /circles/:circleId/members/:authorId/edit
+          templatePath = 'circles/members/edit'
+          title = 'メンバー情報編集'
+        } else if (path.match(/\/circles\/\d+\/members\/\d+$/)) {
+          // POST /circles/:circleId/members/:authorId (PUT via _method)
+          templatePath = 'circles/members/edit'
+          title = 'メンバー情報編集'
+        } else if (path.match(/\/circles\/\d+\/members\/add/)) {
+          // GET /circles/:circleId/members/add
+          templatePath = 'circles/members/add'
+          title = 'メンバー追加'
+        } else if (path.match(/\/circles\/\d+\/members$/)) {
+          // POST /circles/:circleId/members (新規メンバー追加)
+          templatePath = 'circles/members/add'
+          title = 'メンバー追加'
+        }
       } else if (path.includes('/circles')) {
+        console.log('🔍 通常のサークル分岐に入りました')
         if (path.includes('/edit')) {
           templatePath = 'circles/edit'
           title = 'サークル編集'
@@ -288,13 +336,17 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       }
 
       if (templatePath) {
+        const preparedData = this.prepareFormData(formData, path)
+        console.log('🔍 prepareFormData の戻り値:', preparedData)
+        
         const templateData = {
           title,
           errors,
           // フォームデータを戻す（テンプレートによって変数名が異なるため汎用的に）
-          ...this.prepareFormData(formData, path),
+          ...preparedData,
         }
 
+        console.log('🔍 最終的なテンプレートデータ:', { title, errors, templatePath, templateData })
         return response.status(200).render(templatePath, templateData)
       }
     }
@@ -310,6 +362,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     formData: Record<string, unknown>,
     path: string,
   ): Record<string, unknown> {
+    console.log('🔍 prepareFormData パス:', path)
     // より具体的なパターンを先に判定
     if (path.match(/\/exhibits\/\d+\/books/)) {
       // 出展書籍関連パス
@@ -798,6 +851,75 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               { name: '編集', url: null },
             ]
           : [],
+      }
+    } else if (path.match(/\/circles\/\d+\/members/)) {
+      // サークルメンバー管理関連パス
+      console.log('🔍 サークルメンバー管理分岐に入りました')
+      const circleIdMatch = path.match(/\/circles\/(\d+)\/members/)
+      if (circleIdMatch) {
+        const circleId = parseInt(circleIdMatch[1], 10)
+
+        if (
+          path.includes('/edit') ||
+          path.match(/\/circles\/\d+\/members\/\d+$/)
+        ) {
+          // メンバー編集フォーム用データ
+          const authorIdMatch = path.match(/\/circles\/\d+\/members\/(\d+)/)
+          const authorId = authorIdMatch ? parseInt(authorIdMatch[1], 10) : 1
+
+          return {
+            formData,
+            circle: {
+              id: circleId,
+              name: `サークル #${circleId}`,
+            },
+            member: {
+              id: authorId,
+              name: `執筆者 #${authorId}`,
+              email: '',
+              bio: '',
+              role: formData.role || 'member',
+              joinedAt: formData.joinedAt || '',
+              leftAt: formData.leftAt || '',
+              notes: formData.notes || '',
+            },
+            roles: [
+              { value: 'representative', label: '代表者' },
+              { value: 'member', label: 'メンバー' },
+              { value: 'guest', label: 'ゲスト' },
+            ],
+            breadcrumbs: [
+              { name: 'サークル一覧', url: '/circles' },
+              { name: `サークル #${circleId}`, url: `/circles/${circleId}` },
+              { name: 'メンバー一覧', url: `/circles/${circleId}/members` },
+              { name: 'メンバー編集', url: null },
+            ],
+          }
+        } else {
+          // メンバー追加フォーム用データ
+          return {
+            circle: {
+              id: circleId,
+              name: `サークル #${circleId}`,
+            },
+            authors: [
+              { id: 1, name: '佐藤花子', email: 'sato@example.com', bio: 'バックエンド開発者' },
+              { id: 2, name: '鈴木次郎', email: 'suzuki@example.com', bio: 'インフラエンジニア' }
+            ], // エラー表示のためのダミーデータ
+            roles: [
+              { value: 'representative', label: '代表者' },
+              { value: 'member', label: 'メンバー' },
+              { value: 'guest', label: 'ゲスト' },
+            ],
+            formData, // フォームデータを個別に返す
+            breadcrumbs: [
+              { name: 'サークル一覧', url: '/circles' },
+              { name: `サークル #${circleId}`, url: `/circles/${circleId}` },
+              { name: 'メンバー一覧', url: `/circles/${circleId}/members` },
+              { name: 'メンバー追加', url: null },
+            ],
+          }
+        }
       }
     }
 

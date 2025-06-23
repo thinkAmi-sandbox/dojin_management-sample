@@ -19,7 +19,9 @@ import { EventsService } from '../events/events.service'
 import { CreateExhibitDto } from '../exhibits/dto/create-exhibit.dto'
 import { ExhibitsService } from '../exhibits/exhibits.service'
 import { CirclesService } from './circles.service'
+import { AddMemberToCircleDto } from './dto/add-member-to-circle.dto'
 import { CreateCircleDto } from './dto/create-circle.dto'
+import { UpdateCircleMemberDto } from './dto/update-circle-member.dto'
 import { UpdateCircleDto } from './dto/update-circle.dto'
 
 @Controller('circles')
@@ -279,5 +281,205 @@ export class CirclesController {
 
     await this.exhibitsService.create(createExhibitDto)
     return { url: `/circles/${circleId}/exhibits` }
+  }
+
+  // メンバー管理機能
+  @Get(':circleId/members')
+  @Render('circles/members/index')
+  async findMembers(@Param('circleId', ParseIntPipe) circleId: number) {
+    const circle = await this.circlesService.findOne(circleId)
+    const members = await this.circlesService.findCircleMembers(circleId)
+
+    // 役割の日本語マッピング
+    const roleMap = {
+      representative: '代表者',
+      member: 'メンバー',
+      guest: 'ゲスト',
+    } as const
+
+    return {
+      title: 'メンバー一覧',
+      circle: {
+        id: circle.id,
+        name: circle.name,
+        representativeName: circle.representativeName,
+      },
+      members: members.map((member) => ({
+        id: member.id,
+        name: member.name,
+        email: member.email || '',
+        bio: member.bio || '',
+        role: member.role,
+        roleDisplay: roleMap[member.role as keyof typeof roleMap],
+        joinedAt: member.joinedAt.toLocaleDateString('ja-JP'),
+        leftAt: member.leftAt
+          ? member.leftAt.toLocaleDateString('ja-JP')
+          : null,
+        notes: member.notes || '',
+        isActive: !member.leftAt,
+      })),
+      breadcrumbs: [
+        { name: 'サークル一覧', url: '/circles' },
+        { name: circle.name, url: `/circles/${circle.id}` },
+        { name: 'メンバー一覧', url: null },
+      ],
+    }
+  }
+
+  @Get(':circleId/members/add')
+  @Render('circles/members/add')
+  async renderAddMemberForm(@Param('circleId', ParseIntPipe) circleId: number) {
+    const circle = await this.circlesService.findOne(circleId)
+    const availableAuthors =
+      await this.circlesService.findAvailableAuthors(circleId)
+
+    return {
+      title: 'メンバー追加',
+      circle: {
+        id: circle.id,
+        name: circle.name,
+      },
+      authors: availableAuthors.map((author) => ({
+        id: author.id,
+        name: author.name,
+        email: author.email || '',
+        bio: author.bio || '',
+      })),
+      roles: [
+        { value: 'representative', label: '代表者' },
+        { value: 'member', label: 'メンバー' },
+        { value: 'guest', label: 'ゲスト' },
+      ],
+      errors: {},
+      formData: {},
+      breadcrumbs: [
+        { name: 'サークル一覧', url: '/circles' },
+        { name: circle.name, url: `/circles/${circle.id}` },
+        { name: 'メンバー一覧', url: `/circles/${circle.id}/members` },
+        { name: 'メンバー追加', url: null },
+      ],
+    }
+  }
+
+  @Post(':circleId/members')
+  @UsePipes(ValidationPipe)
+  @Redirect()
+  async addMember(
+    @Param('circleId', ParseIntPipe) circleId: number,
+    @Body() addMemberDto: AddMemberToCircleDto,
+  ) {
+    await this.circlesService.addMember(circleId, addMemberDto)
+    return { url: `/circles/${circleId}/members` }
+  }
+
+  @Get(':circleId/members/:authorId/edit')
+  @Render('circles/members/edit')
+  async renderEditMemberForm(
+    @Param('circleId', ParseIntPipe) circleId: number,
+    @Param('authorId', ParseIntPipe) authorId: number,
+  ) {
+    const circle = await this.circlesService.findOne(circleId)
+    const author = await this.circlesService.findAuthor(authorId)
+    const members = await this.circlesService.findCircleMembers(circleId)
+    const member = members.find((m) => m.id === authorId)
+
+    if (!member) {
+      throw new HttpException('メンバー関係が見つかりません', 404)
+    }
+
+    return {
+      title: 'メンバー情報編集',
+      circle: {
+        id: circle.id,
+        name: circle.name,
+      },
+      member: {
+        id: author.id,
+        name: author.name,
+        email: author.email || '',
+        bio: author.bio || '',
+        role: member.role,
+        joinedAt: member.joinedAt.toISOString().split('T')[0],
+        leftAt: member.leftAt ? member.leftAt.toISOString().split('T')[0] : '',
+        notes: member.notes || '',
+      },
+      roles: [
+        { value: 'representative', label: '代表者' },
+        { value: 'member', label: 'メンバー' },
+        { value: 'guest', label: 'ゲスト' },
+      ],
+      errors: {},
+      breadcrumbs: [
+        { name: 'サークル一覧', url: '/circles' },
+        { name: circle.name, url: `/circles/${circle.id}` },
+        { name: 'メンバー一覧', url: `/circles/${circle.id}/members` },
+        { name: 'メンバー編集', url: null },
+      ],
+    }
+  }
+
+  @Post(':circleId/members/:authorId')
+  async updateMemberViaPost(
+    @Param('circleId', ParseIntPipe) circleId: number,
+    @Param('authorId', ParseIntPipe) authorId: number,
+    @Body() body: Record<string, unknown>,
+    @Res() res: Response,
+  ) {
+    if (body._method === 'PUT') {
+      // 手動でValidationPipeを適用
+      const validationPipe = new ValidationPipe({ transform: true })
+      const updateMemberDto = await validationPipe.transform(body, {
+        type: 'body',
+        metatype: UpdateCircleMemberDto,
+      })
+
+      await this.circlesService.updateMember(
+        circleId,
+        authorId,
+        updateMemberDto,
+      )
+      res.redirect(`/circles/${circleId}/members`)
+    } else if (body._method === 'DELETE') {
+      await this.circlesService.removeMember(circleId, authorId)
+      res.redirect(`/circles/${circleId}/members`)
+    }
+  }
+
+  @Put(':circleId/members/:authorId')
+  @Redirect()
+  async updateMember(
+    @Param('circleId', ParseIntPipe) circleId: number,
+    @Param('authorId', ParseIntPipe) authorId: number,
+    @Body() updateMemberDto: UpdateCircleMemberDto,
+  ) {
+    await this.circlesService.updateMember(circleId, authorId, updateMemberDto)
+    return { url: `/circles/${circleId}/members` }
+  }
+
+  @Delete(':circleId/members/:authorId')
+  async removeMember(
+    @Param('circleId', ParseIntPipe) circleId: number,
+    @Param('authorId', ParseIntPipe) authorId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      // ID形式の妥当性チェック
+      if (
+        circleId <= 0 ||
+        isNaN(circleId) ||
+        authorId <= 0 ||
+        isNaN(authorId)
+      ) {
+        return res.status(400).send('無効なIDです')
+      }
+
+      await this.circlesService.removeMember(circleId, authorId)
+      res.redirect(`/circles/${circleId}/members`)
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 404) {
+        return res.status(404).send('メンバー関係が見つかりませんでした')
+      }
+      throw error
+    }
   }
 }
