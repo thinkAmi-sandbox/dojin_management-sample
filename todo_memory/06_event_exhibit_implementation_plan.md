@@ -95,8 +95,33 @@ export const exhibits = pgTable('Exhibit', {
     .$onUpdate(() => new Date()),
 });
 
-// Phase 2以降: 残りのテーブル（段階的追加予定）
-// export const exhibitBooks = pgTable('ExhibitBook', { /* 出展書籍（exhibitId, bookId） */ });
+// ✅ Phase 2-3-A: 完了済み (exhibitBooksテーブル実装済み)
+export const exhibitBooks = pgTable(
+  'ExhibitBook',
+  {
+    exhibitId: integer('exhibitId')
+      .notNull()
+      .references(() => exhibits.id, { onDelete: 'cascade' }),
+    bookId: integer('bookId')
+      .notNull()
+      .references(() => books.id, { onDelete: 'cascade' }),
+    plannedQuantity: integer('plannedQuantity').notNull().default(0),
+    price: integer('price').notNull().default(0),
+    displayOrder: integer('displayOrder').notNull().default(0),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.exhibitId, table.bookId] }),
+  }),
+);
+
+// Phase 3以降: 残りのテーブル（段階的追加予定）
 // export const circleAuthors = pgTable('CircleAuthor', { /* サークルメンバー（circleId, authorId） */ });
 ```
 
@@ -104,7 +129,7 @@ export const exhibits = pgTable('Exhibit', {
 - ✅ **eventsテーブル**: 完了 (マイグレーション適用済み、アプリケーション実装完了)
 - ✅ **circlesテーブル**: 完了 (マイグレーション適用済み、アプリケーション実装完了 2025年6月23日)
 - ✅ **exhibitsテーブル**: 完了 (マイグレーション適用済み 2025年6月23日、アプリケーション実装完了 2025年6月23日)
-- ⏳ **exhibitBooksテーブル**: Phase 2で実装予定
+- ✅ **exhibitBooksテーブル**: 完了 (マイグレーション適用済み 2025年6月23日、Phase 2-3-A完了 2025年6月23日)
 - ⏳ **circleAuthorsテーブル**: Phase 3で実装予定
 
 **データベース変更優先の理由**:
@@ -316,19 +341,90 @@ POST   /circles/:circleId/exhibits     # サークルからの申込作成
 
 ### 2-3. 出展書籍管理（ExhibitBooks）
 
+**実装順序**: イベント・サークル・出展申込管理と同様のパターン
+
+1. **Phase 2-3-A: データベーススキーマ実装** ✅ **完了済み（2025年6月23日）**
+   - 既存スキーマ確認 (`src/db/schema.ts`) ✅
+   - BookAuthorテーブル複合主キーパターン参考 ✅
+   - ExhibitBooksテーブル定義追加（多対多関係） ✅
+   - マイグレーション生成・適用 ✅
+   - testDbUtils.cleanupDatabase()拡張 ✅
+   - 型チェック・Lint確認 ✅
+   - **コミット実行** ✅
+
+2. **Phase 2-3-B: アプリケーション実装** ⏳ **実装予定**
+   - 統合テスト作成（多対多関係のJOIN処理含む）
+   - DTO定義（頒布予定数、価格、表示順序）
+   - サービス層実装（JOIN処理、出展申込・書籍関連）
+   - コントローラー実装
+   - ビューファイル作成
+   - モジュール統合
+
 **URL実装**:
 ```
 GET    /exhibits/:exhibitId/books               # 出展の頒布書籍一覧
-GET    /exhibits/:exhibitId/books/add           # 頒布書籍追加
+GET    /exhibits/:exhibitId/books/add           # 頒布書籍追加フォーム
 POST   /exhibits/:exhibitId/books               # 頒布書籍追加処理
-PUT    /exhibits/:exhibitId/books/:bookId       # 頒布情報更新
-DELETE /exhibits/:exhibitId/books/:bookId       # 頒布書籍削除
+GET    /exhibits/:exhibitId/books/:bookId/edit  # 頒布情報編集フォーム
+PUT    /exhibits/:exhibitId/books/:bookId       # 頒布情報更新処理
+DELETE /exhibits/:exhibitId/books/:bookId       # 頒布書籍削除処理
 ```
 
-**実装内容**:
-- 出展申込と書籍の多対多関連管理
-- 頒布予定数、価格設定
-- 表示順序管理
+**実装内容** ✅ **Phase 2-3-A完了済み**:
+- 出展申込と書籍の多対多関連管理 ✅
+- 頒布予定数、価格設定 ✅
+- 表示順序管理 ✅
+
+**Phase 2-3-A: 実装完了済み** ✅:
+```typescript
+// 実装済みスキーマ定義 (src/db/schema.ts)
+export const exhibitBooks = pgTable(
+  'ExhibitBook',
+  {
+    exhibitId: integer('exhibitId')
+      .notNull()
+      .references(() => exhibits.id, { onDelete: 'cascade' }),
+    bookId: integer('bookId')
+      .notNull()
+      .references(() => books.id, { onDelete: 'cascade' }),
+    plannedQuantity: integer('plannedQuantity').notNull().default(0),
+    price: integer('price').notNull().default(0),
+    displayOrder: integer('displayOrder').notNull().default(0),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.exhibitId, table.bookId] }),
+  }),
+);
+
+export type ExhibitBook = typeof exhibitBooks.$inferSelect;
+export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
+```
+
+**実装詳細**:
+- テーブル名: `'ExhibitBook'` (既存パターンに合わせてPascalCase)
+- 複合主キー: exhibitId + bookId (BookAuthorパターン踏襲)
+- 外部キー: exhibitId（exhibitsテーブル）、bookId（booksテーブル）、cascade削除
+- 頒布情報: plannedQuantity（予定数）、price（価格）、displayOrder（表示順序）
+- 型定義: ExhibitBook, NewExhibitBook をexport済み
+- マイグレーションファイル: `drizzle/0009_moaning_mojo.sql`
+
+**Phase 2-3-A: 成功指標** ✅ **完了済み**:
+- [x] スキーマ定義がschema.tsに正しく追加される
+- [x] 複合主キー設定が成功する (exhibitId + bookId)
+- [x] マイグレーション生成が成功する (`drizzle/0009_moaning_mojo.sql`)
+- [x] テスト用DBへの適用が成功する (`pnpm drizzle:migrate:test`)
+- [x] プロダクション用DBへの適用が成功する (`pnpm drizzle:migrate`)
+- [x] testDbUtils.cleanupDatabase()にExhibitBook対応追加
+- [x] 型チェックエラー0件
+- [x] Lintエラー0件（3ファイル自動修正）
+- [x] コミットが正常に完了する (コミットハッシュ: `2404f0b`)
 
 ## Phase 3: 高度機能実装（2-3週間）
 
@@ -794,10 +890,74 @@ export type NewExhibit = typeof exhibits.$inferInsert;
   - **完了日時**: 2025年6月23日 21:00
   - **成果物**: サークル別出展管理の完全機能、循環依存解決、統合テスト、レスポンシブビュー
 
+### ✅ 完了: Phase 2-3-A 出展書籍管理用データベーススキーマ実装
+- [x] **Phase 2-3-A: exhibitBooksテーブルスキーマ実装とマイグレーション完了** ✅ **完了済み（2025年6月23日）**
+  - [x] 既存スキーマ確認 (15分) - BookAuthorテーブル複合主キーパターン分析完了
+  - [x] ExhibitBooksテーブル定義追加 (30分) - 多対多関係、頒布情報フィールド
+  - [x] マイグレーション生成・適用 (30分) - テスト用・プロダクション用両方成功
+  - [x] testDbUtils.cleanupDatabase()拡張 (15分) - ExhibitBook対応追加
+  - [x] 型チェック・Lint確認 (15分) - エラー0件、3ファイル自動修正
+  - [x] コミット実行 (15分) - コミットハッシュ: `2404f0b`
+  - **実際の所要時間**: 約2時間 (計画通り)
+  - **完了日時**: 2025年6月23日 23:30
+  - **成果物**: exhibitBooksテーブル, マイグレーションファイル, 型定義, testDbUtils修正
+
+**Phase 2-3-A: 実装完了済み** ✅:
+```typescript
+// 実装済みスキーマ定義 (src/db/schema.ts)
+export const exhibitBooks = pgTable(
+  'ExhibitBook',
+  {
+    exhibitId: integer('exhibitId')
+      .notNull()
+      .references(() => exhibits.id, { onDelete: 'cascade' }),
+    bookId: integer('bookId')
+      .notNull()
+      .references(() => books.id, { onDelete: 'cascade' }),
+    plannedQuantity: integer('plannedQuantity').notNull().default(0),
+    price: integer('price').notNull().default(0),
+    displayOrder: integer('displayOrder').notNull().default(0),
+    createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.exhibitId, table.bookId] }),
+  }),
+);
+
+export type ExhibitBook = typeof exhibitBooks.$inferSelect;
+export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
+```
+
+**実装詳細**:
+- テーブル名: `'ExhibitBook'` (既存パターンに合わせてPascalCase)
+- 複合主キー: exhibitId + bookId (BookAuthorパターン踏襲)
+- 外部キー: exhibitId（exhibitsテーブル）、bookId（booksテーブル）、cascade削除
+- 頒布情報: plannedQuantity（予定数）、price（価格）、displayOrder（表示順序）
+- 型定義: ExhibitBook, NewExhibitBook をexport済み
+- マイグレーションファイル: `drizzle/0009_moaning_mojo.sql`
+
+**Phase 2-3-A: 成功指標** ✅ **完了済み**:
+- [x] スキーマ定義がschema.tsに正しく追加される
+- [x] 複合主キー設定が成功する (exhibitId + bookId)
+- [x] マイグレーション生成が成功する (`drizzle/0009_moaning_mojo.sql`)
+- [x] テスト用DBへの適用が成功する (`pnpm drizzle:migrate:test`)
+- [x] プロダクション用DBへの適用が成功する (`pnpm drizzle:migrate`)
+- [x] testDbUtils.cleanupDatabase()にExhibitBook対応追加
+- [x] 型チェックエラー0件
+- [x] Lintエラー0件（3ファイル自動修正）
+- [x] コミットが正常に完了する (コミットハッシュ: `2404f0b`)
+
 ### Week 3-4: Phase 2 関連機能
 - [x] **イベント別出展管理完成** ✅ **完了済み（2025年6月23日）**
 - [x] **サークル別出展管理完成** ✅ **完了済み（2025年6月23日）**
-- [ ] 出展書籍管理完成
+- [x] **出展書籍管理（Phase 2-3-A）完成** ✅ **完了済み（2025年6月23日）**
+- [ ] 出展書籍管理（Phase 2-3-B）アプリケーション実装
 
 ### Week 5-6: Phase 3 高度機能
 - [ ] サークルメンバー管理完成

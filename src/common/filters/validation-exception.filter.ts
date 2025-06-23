@@ -98,6 +98,14 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.applicationNotes = error
         } else if (error.includes('結果備考')) {
           errors.resultNotes = error
+        } else if (error.includes('書籍') || error.includes('bookId')) {
+          errors.bookId = error
+        } else if (error.includes('頒布予定数')) {
+          errors.plannedQuantity = error
+        } else if (error.includes('価格')) {
+          errors.price = error
+        } else if (error.includes('表示順序')) {
+          errors.displayOrder = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -164,6 +172,25 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         } else {
           templatePath = 'deadlines/edit'
           title = '締切編集'
+        }
+      } else if (path.match(/\/exhibits\/\d+\/books/)) {
+        // 出展書籍関連パス（優先度: 具体的なパターンから先に判定）
+        if (path.match(/\/exhibits\/\d+\/books\/\d+\/edit/)) {
+          // GET /exhibits/:exhibitId/books/:bookId/edit
+          templatePath = 'exhibit-books/edit'
+          title = '頒布情報編集'
+        } else if (path.match(/\/exhibits\/\d+\/books\/\d+$/)) {
+          // POST /exhibits/:exhibitId/books/:bookId (PUT via _method)
+          templatePath = 'exhibit-books/edit'
+          title = '頒布情報編集'
+        } else if (path.match(/\/exhibits\/\d+\/books\/add/)) {
+          // GET /exhibits/:exhibitId/books/add
+          templatePath = 'exhibit-books/add'
+          title = '頒布書籍追加'
+        } else if (path.match(/\/exhibits\/\d+\/books$/)) {
+          // POST /exhibits/:exhibitId/books (新規作成)
+          templatePath = 'exhibit-books/add'
+          title = '頒布書籍追加'
         }
       } else if (path.includes('/books')) {
         if (path.includes('/status/edit')) {
@@ -284,7 +311,81 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     path: string,
   ): Record<string, unknown> {
     // より具体的なパターンを先に判定
-    if (path.match(/\/books\/\d+\/deadlines/)) {
+    if (path.match(/\/exhibits\/\d+\/books/)) {
+      // 出展書籍関連パス
+      const exhibitIdMatch = path.match(/\/exhibits\/(\d+)\/books/)
+      if (exhibitIdMatch) {
+        const exhibitId = parseInt(exhibitIdMatch[1], 10)
+
+        if (
+          path.includes('/edit') ||
+          path.match(/\/exhibits\/\d+\/books\/\d+$/)
+        ) {
+          // 編集フォーム用データ
+          const bookIdMatch = path.match(/\/exhibits\/\d+\/books\/(\d+)/)
+          const bookId = bookIdMatch ? parseInt(bookIdMatch[1], 10) : 1
+
+          return {
+            exhibit: {
+              id: exhibitId,
+              status: 'applied',
+              spaceNumber: '-',
+              spaceType: '-',
+            },
+            book: {
+              id: bookId,
+              title: `書籍 #${bookId}`,
+              subtitle: '',
+              formattedPageCount: '-',
+            },
+            formData: {
+              plannedQuantity: formData.plannedQuantity || '',
+              price: formData.price || '',
+              displayOrder: formData.displayOrder || '',
+            },
+            updateUrl: `/exhibits/${exhibitId}/books/${bookId}`,
+            backUrl: `/exhibits/${exhibitId}/books`,
+            breadcrumbs: [
+              { name: '出展申込一覧', url: '/exhibits' },
+              { name: '出展申込詳細', url: `/exhibits/${exhibitId}` },
+              { name: '頒布書籍一覧', url: `/exhibits/${exhibitId}/books` },
+              { name: '頒布情報編集', url: null },
+            ],
+          }
+        } else {
+          // 追加フォーム用データ
+          return {
+            exhibit: {
+              id: exhibitId,
+              status: 'applied',
+              spaceNumber: '-',
+              spaceType: '-',
+            },
+            books: [
+              {
+                id: 1,
+                title: 'ダミー書籍',
+                subtitle: '',
+                formattedPageCount: '-',
+              },
+            ],
+            formData: {
+              bookId: formData.bookId || '',
+              plannedQuantity: formData.plannedQuantity || '',
+              price: formData.price || '',
+              displayOrder: formData.displayOrder || '',
+            },
+            backUrl: `/exhibits/${exhibitId}/books`,
+            breadcrumbs: [
+              { name: '出展申込一覧', url: '/exhibits' },
+              { name: '出展申込詳細', url: `/exhibits/${exhibitId}` },
+              { name: '頒布書籍一覧', url: `/exhibits/${exhibitId}/books` },
+              { name: '頒布書籍追加', url: null },
+            ],
+          }
+        }
+      }
+    } else if (path.match(/\/books\/\d+\/deadlines/)) {
       // 書籍の締切関連パス
       const bookIdMatch = path.match(/\/books\/(\d+)\/deadlines/)
       if (bookIdMatch) {

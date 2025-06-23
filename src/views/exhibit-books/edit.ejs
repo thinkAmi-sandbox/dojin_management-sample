@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .page-header { margin-bottom: 20px; }
+        .page-header h1 { margin: 0 0 10px 0; color: #333; }
+        .breadcrumbs { margin: 10px 0; font-size: 14px; }
+        .breadcrumbs a { color: #007bff; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs span { margin: 0 8px; color: #666; }
+        
+        .form-container { max-width: 800px; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        .exhibit-info { margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; }
+        .exhibit-info h2 { margin: 0; font-size: 18px; color: #333; }
+        .exhibit-meta { margin-top: 8px; font-size: 14px; color: #666; }
+        
+        .book-info { margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 4px; }
+        .book-info h3 { margin: 0 0 8px 0; font-size: 18px; color: #333; }
+        .book-subtitle { margin: 0 0 8px 0; font-size: 14px; color: #666; }
+        .book-meta { font-size: 14px; color: #666; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .form-control:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); }
+        .form-text { font-size: 14px; color: #666; margin-top: 5px; }
+        
+        .error-message { color: #dc3545; font-size: 14px; margin-top: 5px; }
+        .error .form-control { border-color: #dc3545; }
+        
+        .btn { display: inline-block; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; text-decoration: none; cursor: pointer; text-align: center; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-secondary:hover { background-color: #545b62; }
+        
+        .form-actions { margin-top: 30px; display: flex; gap: 15px; }
+        
+        .revenue-preview { margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: 14px; color: #666; }
+        .revenue-preview strong { color: #333; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            body { margin: 10px; }
+            .card { padding: 20px; }
+            .form-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1><%= title %></h1>
+        <div class="breadcrumbs">
+            <% breadcrumbs.forEach(function(crumb, index) { %>
+                <% if (index > 0) { %><span>›</span><% } %>
+                <% if (crumb.url) { %>
+                    <a href="<%= crumb.url %>"><%= crumb.name %></a>
+                <% } else { %>
+                    <span><%= crumb.name %></span>
+                <% } %>
+            <% }) %>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <div class="card">
+            <div class="exhibit-info">
+                <h2>出展申込情報</h2>
+                <div class="exhibit-meta">
+                    ステータス: <%= exhibit.status %> | 
+                    スペース番号: <%= exhibit.spaceNumber %> | 
+                    スペース種別: <%= exhibit.spaceType %>
+                </div>
+            </div>
+
+            <div class="book-info">
+                <h3><%= book.title %></h3>
+                <% if (book.subtitle) { %>
+                    <p class="book-subtitle"><%= book.subtitle %></p>
+                <% } %>
+                <div class="book-meta">
+                    ページ数: <%= book.formattedPageCount %>
+                </div>
+            </div>
+
+            <form method="POST" action="<%= updateUrl %>">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <div class="form-group <%= errors.plannedQuantity ? 'error' : '' %>">
+                    <label for="plannedQuantity" class="form-label">頒布予定数 *</label>
+                    <input 
+                        type="number" 
+                        id="plannedQuantity" 
+                        name="plannedQuantity" 
+                        class="form-control" 
+                        value="<%= formData.plannedQuantity %>"
+                        min="0"
+                        step="1"
+                        required
+                        onchange="updateRevenuePreview()"
+                    >
+                    <% if (errors.plannedQuantity) { %>
+                        <div class="error-message"><%= errors.plannedQuantity %></div>
+                    <% } %>
+                    <div class="form-text">何冊頒布する予定ですか？</div>
+                </div>
+
+                <div class="form-group <%= errors.price ? 'error' : '' %>">
+                    <label for="price" class="form-label">価格 *</label>
+                    <input 
+                        type="number" 
+                        id="price" 
+                        name="price" 
+                        class="form-control" 
+                        value="<%= formData.price %>"
+                        min="0"
+                        step="1"
+                        required
+                        onchange="updateRevenuePreview()"
+                    >
+                    <% if (errors.price) { %>
+                        <div class="error-message"><%= errors.price %></div>
+                    <% } %>
+                    <div class="form-text">円（税込み価格）</div>
+                </div>
+
+                <div class="form-group <%= errors.displayOrder ? 'error' : '' %>">
+                    <label for="displayOrder" class="form-label">表示順序</label>
+                    <input 
+                        type="number" 
+                        id="displayOrder" 
+                        name="displayOrder" 
+                        class="form-control" 
+                        value="<%= formData.displayOrder %>"
+                        min="0"
+                        step="1"
+                    >
+                    <% if (errors.displayOrder) { %>
+                        <div class="error-message"><%= errors.displayOrder %></div>
+                    <% } %>
+                    <div class="form-text">書籍の表示順序を指定します</div>
+                </div>
+
+                <div id="revenuePreview" class="revenue-preview">
+                    <strong>予想売上: </strong><span id="revenueAmount">¥0</span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">更新する</button>
+                    <a href="<%= backUrl %>" class="btn btn-secondary">キャンセル</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function updateRevenuePreview() {
+            const quantity = parseInt(document.getElementById('plannedQuantity').value) || 0;
+            const price = parseInt(document.getElementById('price').value) || 0;
+            const revenue = quantity * price;
+            
+            const revenueAmount = document.getElementById('revenueAmount');
+            revenueAmount.textContent = `¥${revenue.toLocaleString('ja-JP')}`;
+        }
+
+        // 初期表示時に実行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRevenuePreview();
+        });
+    </script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import { CirclesModule } from './circles/circles.module'
 import { DeadlinesModule } from './deadlines/deadlines.module'
 import { DrizzleModule } from './drizzle/drizzle.module'
 import { EventsModule } from './events/events.module'
+import { ExhibitBooksModule } from './exhibit-books/exhibit-books.module'
 import { ExhibitsModule } from './exhibits/exhibits.module'
 import { PrintingCompaniesModule } from './printing-companies/printing-companies.module'
 import { SubmissionsModule } from './submissions/submissions.module'
@@ -21,6 +22,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
     BookAuthorsModule,
     CirclesModule,
     EventsModule,
+    ExhibitBooksModule,
     ExhibitsModule,
     PrintingCompaniesModule,
     SubmissionsModule,
