@@ -91,9 +91,7 @@ describe('Circle Members Integration Tests', () => {
     })
 
     it('存在しないサークルの場合404エラーが返される', async () => {
-      await request(app.getHttpServer())
-        .get('/circles/999/members')
-        .expect(404)
+      await request(app.getHttpServer()).get('/circles/999/members').expect(404)
     })
   })
 

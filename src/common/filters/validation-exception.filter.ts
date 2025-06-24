@@ -32,10 +32,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       // エラーメッセージをフィールド名ベースのオブジェクトに変換
       const errors: Record<string, string> = {}
 
-      console.log('🔍 ValidationExceptionFilter - エラーメッセージ:', validationErrors)
-
       for (const error of validationErrors) {
-        console.log('🔍 処理中のエラー:', error)
         // 日本語エラーメッセージから推測
         if (error.includes('印刷所名') || error.includes('name')) {
           errors.name = error
@@ -85,7 +82,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         } else if (error.includes('ステータス')) {
           errors.status = error
         } else if (error.includes('執筆者') || error.includes('authorId')) {
-          console.log('🔍 執筆者エラーをマッピング:', error)
           errors.authorId = error
         } else if (error.includes('イベント') || error.includes('eventId')) {
           errors.eventId = error
@@ -290,7 +286,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         }
       } else if (path.match(/\/circles\/\d+\/members/)) {
         // サークルメンバー管理関連パス（より具体的なパターンを先に判定）
-        console.log('🔍 テンプレートパス決定: サークルメンバー管理')
         if (path.match(/\/circles\/\d+\/members\/\d+\/edit/)) {
           // GET /circles/:circleId/members/:authorId/edit
           templatePath = 'circles/members/edit'
@@ -337,8 +332,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
 
       if (templatePath) {
         const preparedData = this.prepareFormData(formData, path)
-        console.log('🔍 prepareFormData の戻り値:', preparedData)
-        
+
         const templateData = {
           title,
           errors,
@@ -346,7 +340,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           ...preparedData,
         }
 
-        console.log('🔍 最終的なテンプレートデータ:', { title, errors, templatePath, templateData })
         return response.status(200).render(templatePath, templateData)
       }
     }
@@ -362,7 +355,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     formData: Record<string, unknown>,
     path: string,
   ): Record<string, unknown> {
-    console.log('🔍 prepareFormData パス:', path)
     // より具体的なパターンを先に判定
     if (path.match(/\/exhibits\/\d+\/books/)) {
       // 出展書籍関連パス
@@ -713,6 +705,83 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           ], // エラー表示のためのダミーデータ
         }
       }
+    } else if (path.match(/\/circles\/\d+\/members/)) {
+      // サークルメンバー管理関連パス
+      const circleIdMatch = path.match(/\/circles\/(\d+)\/members/)
+      if (circleIdMatch) {
+        const circleId = parseInt(circleIdMatch[1], 10)
+
+        // メンバー編集の場合
+        if (path.match(/\/circles\/\d+\/members\/\d+/)) {
+          const authorIdMatch = path.match(/\/circles\/\d+\/members\/(\d+)/)
+          const authorId = authorIdMatch ? parseInt(authorIdMatch[1], 10) : null
+
+          return {
+            circle: {
+              id: circleId,
+              name: `サークル #${circleId}`,
+            },
+            member: {
+              id: authorId,
+              name: `執筆者 #${authorId}`,
+              email: 'example@example.com',
+              bio: '',
+              role: formData.role || 'member',
+              joinedAt: formData.joinedAt || '2024-01-01',
+              leftAt: formData.leftAt || '',
+              notes: formData.notes || '',
+            },
+            roles: [
+              { value: 'representative', label: '代表者' },
+              { value: 'member', label: 'メンバー' },
+              { value: 'guest', label: 'ゲスト' },
+            ],
+            formData: {
+              role: formData.role || '',
+              leftAt: formData.leftAt || '',
+              notes: formData.notes || '',
+            },
+            breadcrumbs: [
+              { name: 'サークル一覧', url: '/circles' },
+              { name: `サークル #${circleId}`, url: `/circles/${circleId}` },
+              { name: 'メンバー一覧', url: `/circles/${circleId}/members` },
+              { name: 'メンバー編集', url: null },
+            ],
+          }
+        } else {
+          // メンバー追加の場合
+          return {
+            circle: {
+              id: circleId,
+              name: `サークル #${circleId}`,
+            },
+            authors: [
+              {
+                id: 1,
+                name: 'ダミー執筆者',
+                email: 'example@example.com',
+                bio: '',
+              },
+            ], // エラー表示のためのダミーデータ
+            roles: [
+              { value: 'representative', label: '代表者' },
+              { value: 'member', label: 'メンバー' },
+              { value: 'guest', label: 'ゲスト' },
+            ],
+            formData: {
+              authorId: formData.authorId || '',
+              role: formData.role || '',
+              notes: formData.notes || '',
+            },
+            breadcrumbs: [
+              { name: 'サークル一覧', url: '/circles' },
+              { name: `サークル #${circleId}`, url: `/circles/${circleId}` },
+              { name: 'メンバー一覧', url: `/circles/${circleId}/members` },
+              { name: 'メンバー追加', url: null },
+            ],
+          }
+        }
+      }
     } else if (path.match(/\/circles\/\d+\/exhibits/)) {
       // サークル別出展申込関連パス
       const circleIdMatch = path.match(/\/circles\/(\d+)\/exhibits/)
@@ -903,8 +972,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               name: `サークル #${circleId}`,
             },
             authors: [
-              { id: 1, name: '佐藤花子', email: 'sato@example.com', bio: 'バックエンド開発者' },
-              { id: 2, name: '鈴木次郎', email: 'suzuki@example.com', bio: 'インフラエンジニア' }
+              {
+                id: 1,
+                name: '佐藤花子',
+                email: 'sato@example.com',
+                bio: 'バックエンド開発者',
+              },
+              {
+                id: 2,
+                name: '鈴木次郎',
+                email: 'suzuki@example.com',
+                bio: 'インフラエンジニア',
+              },
             ], // エラー表示のためのダミーデータ
             roles: [
               { value: 'representative', label: '代表者' },
