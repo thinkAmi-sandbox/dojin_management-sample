@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { AnalyticsModule } from './analytics/analytics.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthorsModule } from './authors/authors.module'
@@ -16,6 +17,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
 @Module({
   imports: [
     DrizzleModule,
+    AnalyticsModule,
     BooksModule,
     DeadlinesModule,
     AuthorsModule,
