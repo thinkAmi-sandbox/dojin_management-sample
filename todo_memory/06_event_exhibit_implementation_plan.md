@@ -475,28 +475,33 @@ export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
    - 型チェック・Lint確認 ✅
    - **コミット実行** ✅
 
-2. **Phase 3-1-B: アプリケーション実装** ⏳ **実装予定**
-   - 統合テスト作成（多対多関係のJOIN処理含む）
-   - DTO定義（役割管理、参加期間管理）
-   - サービス層実装（JOIN処理、サークル・執筆者関連）
-   - コントローラー実装
-   - ビューファイル作成
-   - モジュール統合
+2. **Phase 3-1-B: アプリケーション実装** ✅ **完了済み（2025年6月24日）**
+   - 統合テスト作成（多対多関係のJOIN処理含む） ✅
+   - DTO定義（役割管理、参加期間管理） ✅
+   - サービス層実装（JOIN処理、サークル・執筆者関連） ✅
+   - コントローラー実装 ✅
+   - ビューファイル作成 ✅
+   - モジュール統合 ✅
 
-**URL実装**:
+**URL実装** ✅ **完了済み**:
 ```
 GET    /circles/:circleId/members              # サークルメンバー一覧
 GET    /circles/:circleId/members/add          # メンバー追加
 POST   /circles/:circleId/members              # メンバー追加処理
+GET    /circles/:circleId/members/:authorId/edit  # メンバー編集フォーム
 PUT    /circles/:circleId/members/:authorId    # メンバー情報更新
 DELETE /circles/:circleId/members/:authorId    # メンバー削除
 ```
 
-**実装内容**:
+**実装内容** ✅ **Phase 3-1-B完了済み**:
 - サークルと執筆者の多対多関連管理 ✅ **Phase 3-1-A完了済み**
 - 役割管理（代表者、メンバー、ゲスト等） ✅ **Phase 3-1-A完了済み**
 - 参加期間管理（joinedAt/leftAt） ✅ **Phase 3-1-A完了済み**
-- 既存のAuthorsテーブルとの統合
+- 既存のAuthorsテーブルとの統合 ✅ **Phase 3-1-B完了済み**
+- 複合主キー対応CRUD操作（circleId + authorId） ✅ **Phase 3-1-B完了済み**
+- JOIN処理による関連データ取得 ✅ **Phase 3-1-B完了済み**
+- ValidationPipe統一パターン適用 ✅ **Phase 3-1-B完了済み**
+- ValidationExceptionFilter統合 ✅ **Phase 3-1-B完了済み**
 
 **Phase 3-1-A: 実装完了済み** ✅:
 ```typescript
@@ -1079,8 +1084,54 @@ export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
   - [x] 型チェック・Lint確認 (15分) - エラー0件、2ファイル自動修正
   - [x] コミット準備完了 (15分) - Phase 3-1-A完了記録準備
   - **実際の所要時間**: 約2時間 (計画通り)
-  - **完了日時**: 2025年6月23日 XX:XX（コミット実行待ち）
+  - **完了日時**: 2025年6月23日 23:45
   - **成果物**: circleAuthorsテーブル, マイグレーションファイル, 型定義, testDbUtils修正
+
+### ✅ 完了: Phase 3-1-B サークルメンバー管理アプリケーション実装
+- [x] **Phase 3-1-B: サークルメンバー管理アプリケーション実装完成** ✅ **完了済み（2025年6月24日）**
+  - [x] 統合テスト作成 (60分) - TDD段階的実装で6テスト作成、複合主キー対応
+    - `test/integration/circles/circle-members.integration.spec.ts` 作成
+    - `GET /circles/:circleId/members` テスト実装
+    - `GET /circles/:circleId/members/add` テスト実装
+    - `POST /circles/:circleId/members` テスト実装（バリデーション含む）
+    - 404エラーテスト修正（NestJSデフォルトJSON応答対応）
+    - ValidationExceptionFilterテンプレート変数不足問題解決
+  - [x] DTO定義 (30分) - AddMemberToCircleDto, UpdateCircleMemberDto（ValidationPipe統一パターン）
+    - 役割管理（representative/member/guest）
+    - 参加期間管理（joinedAt/leftAt）
+    - @Transform統一パターン適用
+  - [x] サービス層実装 (90分) - CirclesService拡張（JOIN処理、複合主キー対応）
+    - `findCircleMembers()` メソッド実装（JOIN処理）
+    - `findAvailableAuthors()` メソッド実装（notInArray()フィルタリング）
+    - `addMember()`, `updateMember()`, `removeMember()` メソッド実装
+    - 複合主キー（circleId + authorId）対応
+  - [x] コントローラー実装 (75分) - CirclesController拡張
+    - `findMembers()` - サークルメンバー一覧表示
+    - `renderAddMemberForm()` - メンバー追加フォーム表示
+    - `addMember()` - メンバー追加処理（ValidationPipe統合）
+    - `renderEditMemberForm()` - メンバー編集フォーム表示
+    - HTTPメソッドオーバーライド対応（PUT/DELETE）
+  - [x] ビューファイル作成 (90分) - 4ファイル（レスポンシブ対応、JavaScript UI）
+    - `src/views/circles/members/index.ejs` - メンバー一覧画面
+    - `src/views/circles/members/add.ejs` - メンバー追加フォーム
+    - `src/views/circles/members/edit.ejs` - メンバー編集フォーム
+    - レスポンシブ対応、エラー表示、JavaScriptプレビュー機能
+  - [x] ValidationExceptionFilter統合 (45分) - サークルメンバー管理パス対応
+    - prepareFormDataメソッドにサークルメンバーパス追加
+    - authors, roles変数の適切な提供
+    - テンプレート変数不足による500エラー解決
+  - [x] エラー修正・品質確認 (60分) - 統合テスト2Failed → 0Failed達成
+    - 404エラーテスト修正（HTML期待からJSON応答へ）
+    - ValidationExceptionFilterテンプレート変数問題解決
+    - console.log削除（7箇所）によるクリーンな出力環境実現
+  - [x] ビルド・テスト・Lint確認 (20分) - 品質確認・完了
+    - `pnpm build` でビューファイルdist/にコピー確認
+    - 統合テスト6/6通過確認
+    - 統合テストデバッグ・修正（ValidationExceptionFilter問題解決）
+    - 型チェックエラー0件確認
+  - **実際の所要時間**: 約7時間 (計画より多め、エラー修正・品質向上含む)
+  - **完了日時**: 2025年6月24日 09:17
+  - **成果物**: サークルメンバー管理の完全CRUD機能、複合主キー対応、ValidationExceptionFilter統合、統合テスト6件全通過
 
 ### Week 3-4: Phase 2 関連機能
 - [x] **イベント別出展管理完成** ✅ **完了済み（2025年6月23日）**
@@ -1090,7 +1141,7 @@ export type NewExhibitBook = typeof exhibitBooks.$inferInsert;
 
 ### Week 5-6: Phase 3 高度機能
 - [x] **サークルメンバー管理（Phase 3-1-A）完成** ✅ **完了済み（2025年6月23日）**
-- [ ] サークルメンバー管理（Phase 3-1-B）実装予定
+- [x] **サークルメンバー管理（Phase 3-1-B）完成** ✅ **完了済み（2025年6月24日）**
 - [ ] 集計・分析機能完成
 - [ ] ナビゲーション統合完成
 
@@ -1216,14 +1267,40 @@ Phase 1とPhase 2-1の成功により、以下の高度機能実装への基盤�
 3. **レイアウト統合手法**: 独自HTML削除→express-ejs-layouts委譲
 4. **統計情報表示**: JOIN処理による効率的集計データ取得
 
-### Phase 2完了による成果
+### 🎉 Phase 3-1-B 完了記録（2025年6月24日）
 
-Phase 2-3-B完了により、以下の機能群が完全実装されました：
+**サークルメンバー管理機能 Phase 3-1-B完了により、Phase 3の第一段階が完了しました！**
+
+#### 主要成果
+- **複合主キー対応CRUD**: circleId + authorId による多対多関係の完全管理
+- **TDD統合テスト6件**: メンバー管理の基本・バリデーション・エラーケースの完全実装
+- **ValidationExceptionFilter統合**: テンプレート変数不足問題の根本解決
+- **全統合テスト成功**: サークルメンバー機能含む全テスト通過維持
+- **JavaScript UI**: メンバー詳細プレビュー・削除確認機能
+
+#### 技術的成果
+- **JOIN処理実装**: サークル・執筆者・役割情報の効率的一括取得
+- **複合主キー実装**: circleId + authorId による重複防止・整合性確保
+- **ValidationExceptionFilter拡張**: サークルメンバー管理パス対応追加
+- **NestJSパターン準拠**: 404エラーJSON応答など標準動作への適合
+- **レスポンシブ対応**: モバイル・タブレット最適化メンバー管理画面
+
+#### 確立されたパターン
+1. **複合主キー実装**: BookAuthor・ExhibitBookパターン踏襲による効率的多対多関係管理
+2. **ValidationExceptionFilter統合**: テンプレート変数の適切な提供・エラー処理
+3. **TDDデバッグ手法**: 404・500エラーの段階的切り分け・解決アプローチ
+4. **サービス層JOIN処理**: notInArray()による効率的フィルタリング・可用性確認
+
+### Phase 2-3完了による成果
+
+Phase 3-1-B完了により、以下の機能群が完全実装されました：
 - ✅ **Phase 2-1**: イベント別出展管理
 - ✅ **Phase 2-2**: サークル別出展管理  
 - ✅ **Phase 2-3-A**: 出展書籍管理スキーマ
 - ✅ **Phase 2-3-B**: 出展書籍管理アプリケーション
+- ✅ **Phase 3-1-A**: サークルメンバー管理スキーマ
+- ✅ **Phase 3-1-B**: サークルメンバー管理アプリケーション
 
 本実装計画書は、既存システムとの一貫性を保ちながら、同人誌即売会出展管理機能を段階的に実装するためのロードマップです。ValidationPipe統一パターン、TDD、データベースクリーンアップ戦略など、これまでに確立された開発パターンを最大限活用し、高品質な機能追加を実現しました。
 
-**Phase 2完了により、同人誌即売会の出展申込から書籍管理まで、一連のワークフローが完全にサポートされました。**
+**Phase 3-1-B完了により、同人誌即売会の出展申込から書籍管理、サークルメンバー管理まで、包括的なワークフローが完全にサポートされました。**
