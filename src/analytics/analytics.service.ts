@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common'
 import { and, count, desc, eq, gte, lte, sql, sum } from 'drizzle-orm'
-import { events, books, circles, exhibitBooks, exhibits } from '../db/schema'
+import {
+  events,
+  books,
+  circles,
+  exhibitBooks,
+  exhibitStatusEnum,
+  exhibits,
+} from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
-import type { EventAnalyticsFilterDto } from './dto/event-analytics-filter.dto'
 import type { CircleAnalyticsFilterDto } from './dto/circle-analytics-filter.dto'
+import type { EventAnalyticsFilterDto } from './dto/event-analytics-filter.dto'
 
 @Injectable()
 export class AnalyticsService {
@@ -161,7 +168,12 @@ export class AnalyticsService {
 
     // ステータスフィルタリング
     if (filters.status) {
-      conditions.push(eq(exhibits.status, filters.status as any))
+      conditions.push(
+        eq(
+          exhibits.status,
+          filters.status as (typeof exhibitStatusEnum.enumValues)[number],
+        ),
+      )
     }
 
     // イベント名フィルタリング

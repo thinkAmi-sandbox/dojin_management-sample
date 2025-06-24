@@ -1,7 +1,7 @@
 import { Controller, Get, Query, Render } from '@nestjs/common'
 import { AnalyticsService } from './analytics.service'
-import type { EventAnalyticsFilterDto } from './dto/event-analytics-filter.dto'
 import type { CircleAnalyticsFilterDto } from './dto/circle-analytics-filter.dto'
+import type { EventAnalyticsFilterDto } from './dto/event-analytics-filter.dto'
 
 @Controller('analytics')
 export class AnalyticsController {
