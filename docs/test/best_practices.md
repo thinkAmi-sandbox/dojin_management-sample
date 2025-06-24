@@ -244,3 +244,91 @@ console.log('Books after cleanup:', bookCount.length);
 5. **順次実行で安定性確保** - 並列実行による競合を防ぐ
 
 これらのベストプラクティスに従うことで、安定した信頼性の高い統合テストを実現できます。
+
+## 8. テストファイル作成時の型設定とimport文の管理
+
+### 必須のimport文パターン
+
+新規テストファイル作成時は、必ず以下のimport文を記述してください：
+
+```typescript
+import type { INestApplication } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppModule } from '../../../src/app.module'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
+import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
+```
+
+### 重要：Vitestテスト関数の明示的import
+
+**❌ 禁止パターン**:
+```typescript
+// import文なしでdescribe, it, expectを使用
+describe('Test', () => {
+  it('should work', () => {
+    expect(true).toBe(true)  // ← 型エラーが発生する場合がある
+  })
+})
+```
+
+**✅ 必須パターン**:
+```typescript
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
+describe('Test', () => {
+  it('should work', () => {
+    expect(true).toBe(true)  // ← 確実に型解決される
+  })
+})
+```
+
+### 型解決問題の背景
+
+#### 問題の原因
+- `tsconfig.test.json` の `"types": ["vitest/globals"]` 設定が原因
+- TypeScriptの `types` 配列は `@types/パッケージ名` 形式を期待する
+- `vitest/globals` は直接パッケージパス指定のため型解決できない
+
+#### 解決方法
+1. **tsconfig.test.json修正済み**: `"vitest/globals"` を削除
+2. **明示的import必須**: 全テストファイルでVitest関数をimport
+
+#### エラー例
+```
+Error:(16, 1) TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+```
+
+### 型エラー発生時の調査手順
+
+#### 1. IDEでエラー表示された場合
+```bash
+# TypeScript型チェックを実行
+tsc --noEmit --project tsconfig.test.json
+```
+
+#### 2. 既存ファイルとの比較確認
+- 他の統合テストファイルのimport文を参考にする
+- 特に `test/integration/` 内の他ファイルを確認
+
+#### 3. 修正方法
+```typescript
+// 対象ファイルの先頭に追加
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+```
+
+### 予防策
+
+#### 新規ファイル作成時のチェックリスト
+- [ ] Vitestテスト関数の明示的import実装
+- [ ] 型チェック実行（`tsc --noEmit --project tsconfig.test.json`）
+- [ ] 既存テストファイルのimportパターンとの整合性確認
+
+#### エディタ設定の推奨
+- TypeScriptのstrictモード有効化
+- リアルタイム型チェック有効化
+- import文の自動補完機能活用
+
+これらのガイドラインに従うことで、テストファイル作成時の型関連問題を防ぎ、開発効率を向上させることができます。

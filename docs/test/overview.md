@@ -131,7 +131,7 @@ describe('BooksService', () => {
 ### 統合テストの例
 ```typescript
 // create-book.integration.spec.ts
-import { type INestApplication } from '@nestjs/common'
+import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
@@ -477,6 +477,38 @@ console.log(`NODE_ENV=${process.env.NODE_ENV}, DATABASE_URL=${databaseUrl}`);
      await testDbUtils.cleanupDatabase();
    });
    ```
+
+#### 6. テストファイルで型エラーが発生する
+**症状**: 
+- IDEで `Cannot find name 'describe'` エラー表示
+- `tsc --noEmit --project tsconfig.test.json` でコンパイルエラー
+- テスト関数（describe, it, expect等）が未定義エラー
+
+**原因**:
+- Vitestテスト関数のimport文が不足
+- `tsconfig.test.json` の `"types": ["vitest/globals"]` 設定が型解決できない
+- TypeScriptが `@types/パッケージ名` 形式を期待するが、`vitest/globals` は直接パス指定
+
+**解決策**:
+1. **必須のimport文を追加**:
+   ```typescript
+   import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+   ```
+2. **既存ファイルとの整合性確認**:
+   ```bash
+   # 他の統合テストファイルのimport文を参考にする
+   grep -r "import.*vitest" test/integration/
+   ```
+3. **型チェックでの確認**:
+   ```bash
+   # TypeScript型チェックを実行
+   tsc --noEmit --project tsconfig.test.json
+   ```
+
+**予防策**:
+- 新規テストファイル作成時は必ずVitestテスト関数を明示的にimport
+- テンプレートファイルを活用して統一されたimport文を使用
+- リアルタイム型チェックを有効にして早期発見
 
 ## 注意事項
 

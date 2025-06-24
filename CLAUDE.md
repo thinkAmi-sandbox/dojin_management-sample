@@ -623,6 +623,15 @@ beforeEach(async () => {
 #### **YOU MUST**: 新規テストファイル作成時のテンプレート（統一パターン）
 
 ```typescript
+import type { INestApplication } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppModule } from '../../../src/app.module'
+import { DrizzleService } from '../../../src/drizzle/drizzle.service'
+import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
+
 describe('Feature Test', () => {
   let app: INestApplication
   let drizzleService: DrizzleService
@@ -652,6 +661,17 @@ describe('Feature Test', () => {
   })
 })
 ```
+
+#### **YOU MUST**: Vitestテスト関数の明示的import（重要）
+
+**必須ルール**: 新規テストファイル作成時は必ず以下のimport文を記述すること
+```typescript
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+```
+
+**理由**: `tsconfig.test.json` の `"types": ["vitest/globals"]` 設定では型解決できないため
+
+**禁止事項**: globals設定に依存したimport省略は行わない（型エラーの原因となる）
 
 #### デバッグ時の確認事項（解決済み問題の参考）
 
