@@ -1,0 +1,453 @@
+<style>
+        body { 
+            font-family: sans-serif; 
+            margin: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header { 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            color: #28a745;
+            margin: 0;
+            font-size: 2em;
+        }
+        
+        /* フィルター */
+        .filters { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 30px; 
+        }
+        .filter-row { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+            align-items: end;
+        }
+        .filter-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .filter-group label { 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            color: #333;
+        }
+        .filter-group input, .filter-group select { 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 14px;
+        }
+        .btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { 
+            background: #1e7e34; 
+        }
+        .btn-secondary { 
+            background: #6c757d; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        .btn-info { 
+            background: #007bff; 
+        }
+        .btn-info:hover { 
+            background: #0056b3; 
+        }
+        
+        /* 統計カード */
+        .stats-cards { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        .stat-card { 
+            background: linear-gradient(135deg, #28a745, #1e7e34); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center;
+        }
+        .stat-card h3 { 
+            margin: 0 0 10px 0; 
+            font-size: 1.1em; 
+            opacity: 0.9;
+        }
+        .stat-card .value { 
+            font-size: 2em; 
+            font-weight: bold; 
+            margin: 0;
+        }
+        
+        /* セクション */
+        .section { 
+            margin-bottom: 40px; 
+            background: #f8f9fa; 
+            padding: 25px; 
+            border-radius: 8px; 
+        }
+        .section-title { 
+            font-size: 1.4em; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+        }
+        
+        /* テーブル */
+        .table-container { 
+            overflow-x: auto; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td { 
+            padding: 12px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
+        }
+        th { 
+            background: #28a745; 
+            color: white; 
+            font-weight: bold;
+        }
+        tr:hover { 
+            background: #f8f9fa; 
+        }
+        .text-center { 
+            text-align: center; 
+        }
+        .text-right { 
+            text-align: right; 
+        }
+        
+        /* ステータス表示 */
+        .status-accepted { 
+            color: #28a745; 
+            font-weight: bold; 
+        }
+        .status-rejected { 
+            color: #dc3545; 
+            font-weight: bold; 
+        }
+        .status-applied { 
+            color: #ffc107; 
+            font-weight: bold; 
+        }
+        .status-cancelled { 
+            color: #6c757d; 
+            font-weight: bold; 
+        }
+        
+        /* 成功率バー */
+        .success-rate-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .success-rate-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .success-rate-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 詳細カード */
+        .circle-detail {
+            background: white;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .circle-detail h4 {
+            margin: 0 0 10px 0;
+            color: #28a745;
+        }
+        .circle-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .circle-info div {
+            display: flex;
+            justify-content: space-between;
+        }
+        .circle-info .label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container { 
+                margin: 10px; 
+                padding: 15px; 
+            }
+            .filter-row { 
+                flex-direction: column; 
+            }
+            .stats-cards { 
+                grid-template-columns: 1fr; 
+            }
+            .section { 
+                padding: 15px; 
+            }
+            th, td { 
+                padding: 8px; 
+                font-size: 14px; 
+            }
+            .circle-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+<div class="container">
+        <div class="header">
+            <h1><%= title %></h1>
+            <p>サークル毎の出展実績・成功率・収益分析を可視化</p>
+        </div>
+
+        <!-- フィルター -->
+        <div class="filters">
+            <form action="/analytics/circles" method="GET">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="startDate">開始日</label>
+                        <input type="date" id="startDate" name="startDate" value="<%= filters.startDate %>">
+                    </div>
+                    <div class="filter-group">
+                        <label for="endDate">終了日</label>
+                        <input type="date" id="endDate" name="endDate" value="<%= filters.endDate %>">
+                    </div>
+                    <div class="filter-group">
+                        <label for="year">年度</label>
+                        <select id="year" name="year">
+                            <option value="">全年度</option>
+                            <option value="2024" <%= filters.year === '2024' ? 'selected' : '' %>>2024年</option>
+                            <option value="2023" <%= filters.year === '2023' ? 'selected' : '' %>>2023年</option>
+                            <option value="2022" <%= filters.year === '2022' ? 'selected' : '' %>>2022年</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="status">ステータス</label>
+                        <select id="status" name="status">
+                            <option value="">全ステータス</option>
+                            <option value="accepted" <%= filters.status === 'accepted' ? 'selected' : '' %>>当選</option>
+                            <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>落選</option>
+                            <option value="applied" <%= filters.status === 'applied' ? 'selected' : '' %>>申込中</option>
+                            <option value="cancelled" <%= filters.status === 'cancelled' ? 'selected' : '' %>>キャンセル</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="eventName">イベント名</label>
+                        <input type="text" id="eventName" name="eventName" value="<%= filters.eventName %>" placeholder="イベント名で検索">
+                    </div>
+                    <div class="filter-group">
+                        <button type="submit" class="btn">フィルター適用</button>
+                        <a href="/analytics/circles" class="btn btn-secondary">リセット</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 統計カード -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <h3>総サークル数</h3>
+                <p class="value"><%= totalStats.totalCircles %></p>
+            </div>
+            <div class="stat-card">
+                <h3>総申込数</h3>
+                <p class="value"><%= totalStats.totalApplications %></p>
+            </div>
+            <div class="stat-card">
+                <h3>当選数</h3>
+                <p class="value"><%= totalStats.totalAccepted %></p>
+            </div>
+            <div class="stat-card">
+                <h3>全体成功率</h3>
+                <p class="value"><%= totalStats.overallSuccessRate %>%</p>
+            </div>
+            <div class="stat-card">
+                <h3>総予想売上</h3>
+                <p class="value"><%= totalStats.totalExpectedRevenue %>円</p>
+            </div>
+        </div>
+
+        <!-- サークル別詳細実績 -->
+        <div class="section">
+            <h2 class="section-title">🎨 サークル別出展実績</h2>
+            <% if (circleStats.length === 0) { %>
+                <p class="text-center">条件に該当するサークルデータがありません</p>
+            <% } else { %>
+                <% circleStats.forEach(circle => { %>
+                    <div class="circle-detail">
+                        <h4>
+                            <a href="<%= circle.detailUrl %>" style="color: #28a745; text-decoration: none;">
+                                <%= circle.circleName %>
+                            </a>
+                        </h4>
+                        <div class="circle-info">
+                            <div>
+                                <span class="label">代表者:</span>
+                                <span><%= circle.representativeName %></span>
+                            </div>
+                            <div>
+                                <span class="label">メール:</span>
+                                <span><%= circle.email %></span>
+                            </div>
+                            <div>
+                                <span class="label">申込数:</span>
+                                <span><%= circle.totalApplications %></span>
+                            </div>
+                            <div>
+                                <span class="label">当選数:</span>
+                                <span class="status-accepted"><%= circle.acceptedCount %></span>
+                            </div>
+                            <div>
+                                <span class="label">落選数:</span>
+                                <span class="status-rejected"><%= circle.rejectedCount %></span>
+                            </div>
+                            <div>
+                                <span class="label">申込中:</span>
+                                <span class="status-applied"><%= circle.appliedCount %></span>
+                            </div>
+                            <div>
+                                <span class="label">書籍数:</span>
+                                <span><%= circle.totalBooks %></span>
+                            </div>
+                            <div>
+                                <span class="label">頒布予定数:</span>
+                                <span><%= circle.totalPlannedQuantity %></span>
+                            </div>
+                            <div>
+                                <span class="label">予想売上:</span>
+                                <span><%= circle.expectedRevenue %>円</span>
+                            </div>
+                            <div>
+                                <span class="label">平均単価:</span>
+                                <span><%= circle.averageBookPrice %>円</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <span class="label">成功率: <%= circle.successRate %>%</span>
+                            <div class="success-rate-bar" style="margin-top: 5px;">
+                                <div class="success-rate-fill" style="width: <%= circle.successRate %>%"></div>
+                                <div class="success-rate-text"><%= circle.successRate %>%</div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+
+        <!-- イベント参加履歴 -->
+        <div class="section">
+            <h2 class="section-title">📅 イベント参加履歴</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>サークル名</th>
+                            <th>イベント名</th>
+                            <th>開催日</th>
+                            <th class="text-center">ステータス</th>
+                            <th class="text-center">スペース番号</th>
+                            <th class="text-center">スペース種別</th>
+                            <th class="text-center">書籍数</th>
+                            <th class="text-center">頒布予定数</th>
+                            <th class="text-right">イベント売上</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (eventHistory.length === 0) { %>
+                            <tr>
+                                <td colspan="9" class="text-center">参加履歴データがありません</td>
+                            </tr>
+                        <% } else { %>
+                            <% eventHistory.forEach(history => { %>
+                                <tr>
+                                    <td>
+                                        <a href="/circles/<%= history.circleId %>" style="color: #28a745; text-decoration: none;">
+                                            <%= circleStats.find(c => c.circleId === history.circleId)?.circleName || '不明' %>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="/events/<%= history.eventId %>" style="color: #007bff; text-decoration: none;">
+                                            <%= history.eventName %>
+                                        </a>
+                                    </td>
+                                    <td><%= history.eventDate %></td>
+                                    <td class="text-center">
+                                        <span class="status-<%= history.status %>">
+                                            <%= history.status === 'accepted' ? '当選' : 
+                                                history.status === 'rejected' ? '落選' : 
+                                                history.status === 'applied' ? '申込中' : 
+                                                history.status === 'cancelled' ? 'キャンセル' : history.status %>
+                                        </span>
+                                    </td>
+                                    <td class="text-center"><%= history.spaceNumber %></td>
+                                    <td class="text-center"><%= history.spaceType %></td>
+                                    <td class="text-center"><%= history.bookCount %></td>
+                                    <td class="text-center"><%= history.totalPlannedQuantity %></td>
+                                    <td class="text-right"><%= history.eventRevenue %>円</td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ナビゲーション -->
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="/" class="btn btn-secondary">ホームに戻る</a>
+            <a href="/analytics/events" class="btn btn-info">イベント別分析</a>
+            <a href="/analytics/books" class="btn btn-info">書籍別分析</a>
+            <a href="/analytics/revenue" class="btn btn-info">収支分析</a>
+        </div>
+</div>
