@@ -365,19 +365,160 @@ export const pricingRules = pgTable('PricingRule', {
 
 ## 実装優先順位
 
-### Phase 1: 版管理基盤（1-2週間）
-1. **データベース**
-   - Editionsテーブルの作成とマイグレーション
-   - 既存Booksテーブルのpagecount削除、新フィールド追加
+### Phase 1: 版管理基盤（2-3日）- 詳細実装計画
 
-2. **版管理モジュール**
-   - 基本的なCRUD機能
-   - 書籍から版を作成する機能
-   - 現行版の切り替え機能
+#### 📊 Phase 1 進捗状況
+- **✅ Phase 1-1**: Editionsテーブルスキーマ設計・実装 （完了）
+- **⏳ Phase 1-2**: Booksテーブル修正（pageCount削除、新フィールド追加）
+- **⏳ Phase 1-3**: マイグレーション実行・型定義追加
+- **⏳ Phase 1-4**: 版管理モジュール基盤実装（TDD）
+- **⏳ Phase 1-5**: 書籍詳細からの版管理アクセス機能
 
-3. **統合テスト**
-   - 版の作成・更新・削除テスト
-   - 書籍と版の関連テスト
+#### 📋 実装の全体戦略
+
+**CLAUDE.mdのTDD実装パターン（統合テスト駆動開発）**を適用して、版管理システムの基盤を段階的に構築します。
+
+#### 🗂️ Phase 1-1: Editionsテーブルスキーマ設計・実装 ✅ **完了**
+
+**✅ 実装完了済み（2025年6月25日）**
+
+**データベーススキーマ実装**
+- **✅ Editionsテーブル作成**: 版情報を管理する新テーブル（15フィールド）
+  - 版名（初版、第2版、新装版等）、版番号、ISBN
+  - ページ数、基本価格、印刷原価、発行日
+  - 版の詳細情報（改訂内容、表紙画像等）
+  - ステータス管理（現行版、完売フラグ）
+- **✅ 外部キー設定**: booksテーブルとの1対多関係（CASCADE DELETE）
+- **✅ 型定義**: Edition, NewEdition型をexport
+
+**✅ 技術的検証完了**
+- **型チェック**: エラー0件 ✅
+- **コードフォーマット**: 163ファイル処理完了 ✅
+- **マイグレーション生成**: `0011_condemned_otto_octavius.sql` 生成 ✅
+- **DB適用**: テスト用・プロダクション用両方成功 ✅
+- **統合テスト**: 281/281テスト通過 ✅
+
+**✅ 実装されたEditionsテーブル仕様**
+```sql
+CREATE TABLE "Edition" (
+  "id" serial PRIMARY KEY NOT NULL,
+  "bookId" integer NOT NULL,
+  "versionName" varchar(100) NOT NULL,
+  "versionNumber" integer DEFAULT 1 NOT NULL,
+  "isbn" varchar(13),
+  "pageCount" integer,
+  "basePrice" integer NOT NULL,
+  "printingCost" integer,
+  "publishDate" date,
+  "editionNotes" text,
+  "coverImageUrl" varchar(500),
+  "isActive" boolean DEFAULT true NOT NULL,
+  "isSoldOut" boolean DEFAULT false NOT NULL,
+  "createdAt" timestamp (3) DEFAULT now() NOT NULL,
+  "updatedAt" timestamp (3) DEFAULT now() NOT NULL,
+  CONSTRAINT "Edition_isbn_unique" UNIQUE("isbn")
+);
+```
+
+#### 🗂️ Phase 1-2: Booksテーブル修正（pageCount削除、新フィールド追加）
+
+**既存テーブル修正**
+- **pageCount削除**: Editionsテーブルに移行（版ごとに管理）
+- **新フィールド追加**:
+  - `genre`: ジャンル（全版共通）
+  - `seriesName`: シリーズ名
+  - `seriesNumber`: シリーズ内番号
+- **マイグレーション戦略**: 段階的移行でデータ整合性を保持
+
+#### 🗂️ Phase 1-3: マイグレーション実行・型定義追加
+
+**マイグレーション実行**
+```bash
+pnpm drizzle:generate    # マイグレーションファイル生成
+pnpm drizzle:migrate     # プロダクション用DB
+pnpm drizzle:migrate:test # テスト用DB
+```
+
+**型定義更新**
+- Edition, NewEdition型のexport
+- 関連するimport文の更新
+- testDbUtils.cleanupDatabase()へのEditions対応追加
+
+#### 🗂️ Phase 1-4: 版管理モジュール基盤実装（TDD）
+
+**TDD段階的実装**
+
+*Step 1: 統合テスト作成（2-3テスト）*
+- `test/integration/editions/editions.integration.spec.ts` 作成
+- 基本的なCRUD操作のテスト（書籍から版作成、版一覧、版詳細）
+
+*Step 2: プロダクションコード実装*
+- EditionsModule, EditionsService, EditionsController作成
+- DTO作成: CreateEditionDto, UpdateEditionDto
+- ValidationPipe統一パターン適用
+
+*Step 3: ビューファイル実装*
+- EJSテンプレート4ファイル作成（一覧、詳細、作成、編集）
+- レスポンシブ対応とグローバルナビゲーション統合
+
+**URLエンドポイント設計**
+- `GET /books/:bookId/editions` - 書籍の版一覧
+- `GET /books/:bookId/editions/new` - 新版作成フォーム
+- `POST /books/:bookId/editions` - 新版作成
+- `GET /editions/:id` - 版詳細
+- `GET /editions/:id/edit` - 版編集フォーム
+- `PUT /editions/:id` - 版更新
+- `DELETE /editions/:id` - 版削除
+
+#### 🗂️ Phase 1-5: 書籍詳細からの版管理アクセス機能
+
+**既存機能拡張**
+- 書籍詳細画面（`books/show.ejs`）に版管理ボタン追加
+- 「📖 版管理」ボタン → `/books/:id/editions`
+- 「➕ 新版作成」ボタン → `/books/:id/editions/new`
+
+**ナビゲーション改善**
+- グローバルナビゲーションへの版管理メニュー追加（必要に応じて）
+- 既存ナビゲーションパターンとの統合
+
+#### 🔧 技術的実装ポイント
+
+**CLAUDE.md準拠の開発パターン**
+1. **実装前チェックリスト**: スキーマ確認→既存パターン分析→依存関係確認
+2. **TDD段階的実装**: ミニマムテスト→失敗確認→実装→成功確認
+3. **ValidationPipe統一**: @Transform + class-validator統一パターン
+4. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
+
+**既存パターン踏襲**
+- **参考実装**: 印刷所機能（完全CRUD）、書籍機能（関連管理）
+- **ValidationExceptionFilter**: 版管理パス対応追加
+- **beforeEachクリーンアップ**: 統一されたテストパターン適用
+
+**データ整合性保証**
+- **トランザクション処理**: 版作成時の書籍関連データ整合性
+- **外部キー制約**: ON DELETE CASCADE設定による一貫性保持
+- **現行版管理**: 同一書籍内での現行版フラグ管理
+
+#### 📊 検証・完了条件
+
+**技術的検証**
+- **統合テスト**: 版管理の全機能テスト通過
+- **型チェック**: TypeScriptコンパイルエラー0件
+- **Lint**: コード品質チェック通過
+- **ビルド**: dist/views/editions/ のビューファイルコピー確認
+
+**機能検証**
+- 書籍から版を作成・管理できる
+- 版の詳細情報を編集・更新できる
+- 書籍詳細画面から版管理にアクセスできる
+- 現行版の切り替えができる
+
+#### 🚀 次のステップ準備
+
+Phase 1完了後は、Phase 2（在庫管理の版対応）に移行する準備として：
+- 版IDを使った在庫管理の基盤が整う
+- ExhibitBooksテーブルの版対応準備が整う
+- 既存機能の版対応準備が整う
 
 ### Phase 2: 在庫管理の版対応（1-2週間）
 1. **データベース**

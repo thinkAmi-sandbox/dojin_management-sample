@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   integer,
   pgEnum,
@@ -301,3 +302,38 @@ export const circleAuthors = pgTable(
 
 export type CircleAuthor = typeof circleAuthors.$inferSelect
 export type NewCircleAuthor = typeof circleAuthors.$inferInsert
+
+export const editions = pgTable('Edition', {
+  id: serial('id').primaryKey(),
+  bookId: integer('bookId')
+    .notNull()
+    .references(() => books.id, { onDelete: 'cascade' }),
+  versionName: varchar('versionName', { length: 100 }).notNull(), // "初版", "第2版", "新装版"等
+  versionNumber: integer('versionNumber').notNull().default(1), // 版番号（ソート用）
+  isbn: varchar('isbn', { length: 13 }).unique(), // ISBN（版ごとに異なる）
+
+  // 版ごとに変わる可能性のある情報
+  pageCount: integer('pageCount'),
+  basePrice: integer('basePrice').notNull(), // 基本価格（定価）
+  printingCost: integer('printingCost'), // 印刷原価
+  publishDate: date('publishDate'), // 発行日
+
+  // 版の詳細情報
+  editionNotes: text('editionNotes'), // 改訂内容、追加内容等
+  coverImageUrl: varchar('coverImageUrl', { length: 500 }), // 表紙画像（版で異なる場合）
+
+  // ステータス
+  isActive: boolean('isActive').notNull().default(true), // 現行版かどうか
+  isSoldOut: boolean('isSoldOut').notNull().default(false), // 完売フラグ
+
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Edition = typeof editions.$inferSelect
+export type NewEdition = typeof editions.$inferInsert

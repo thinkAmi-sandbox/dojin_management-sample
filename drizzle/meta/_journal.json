@@ -78,6 +78,13 @@
       "when": 1750717167138,
       "tag": "0010_light_leech",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1750848927543,
+      "tag": "0011_condemned_otto_octavius",
+      "breakpoints": true
     }
   ]
 }
