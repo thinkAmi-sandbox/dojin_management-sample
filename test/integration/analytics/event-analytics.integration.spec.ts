@@ -88,14 +88,12 @@ describe('Event Analytics Integration Tests', () => {
           title: 'テスト書籍1',
           subtitle: 'サブタイトル1',
           description: '説明1',
-          pageCount: 100,
           status: 'completed',
         },
         {
           title: 'テスト書籍2',
           subtitle: 'サブタイトル2',
           description: '説明2',
-          pageCount: 200,
           status: 'completed',
         },
       ])

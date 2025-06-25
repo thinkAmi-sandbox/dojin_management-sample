@@ -42,7 +42,6 @@ describe('Books Delete (Integration)', () => {
           title: '削除テスト書籍',
           subtitle: 'テストサブタイトル',
           description: '削除される予定の書籍です',
-          pageCount: 100,
         })
         .returning()
 

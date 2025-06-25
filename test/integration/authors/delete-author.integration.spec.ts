@@ -71,7 +71,6 @@ describe('DELETE /authors/:id', () => {
           title: 'テスト書籍',
           subtitle: 'テスト副題',
           description: 'テスト説明',
-          pageCount: 100,
         })
         .returning()
 

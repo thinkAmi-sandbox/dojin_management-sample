@@ -43,7 +43,6 @@ describe('Books Update (Integration)', () => {
           title: 'テスト書籍',
           subtitle: 'テストサブタイトル',
           description: 'テスト説明',
-          pageCount: 100,
         })
         .returning()
 
@@ -55,7 +54,6 @@ describe('Books Update (Integration)', () => {
       expect(response.text).toContain(testBook.title)
       expect(response.text).toContain(testBook.subtitle)
       expect(response.text).toContain(testBook.description)
-      expect(response.text).toContain(`value="${testBook.pageCount}"`)
       expect(response.text).toContain('name="_method" value="PUT"')
     })
 
@@ -73,7 +71,6 @@ describe('Books Update (Integration)', () => {
           title: '更新前タイトル',
           subtitle: '更新前サブタイトル',
           description: '更新前説明',
-          pageCount: 50,
         })
         .returning()
 
@@ -81,7 +78,6 @@ describe('Books Update (Integration)', () => {
         title: '更新後タイトル',
         subtitle: '更新後サブタイトル',
         description: '更新後説明',
-        pageCount: '150',
         _method: 'PUT',
       }
 
@@ -100,7 +96,6 @@ describe('Books Update (Integration)', () => {
       expect(updatedBook.title).toBe('更新後タイトル')
       expect(updatedBook.subtitle).toBe('更新後サブタイトル')
       expect(updatedBook.description).toBe('更新後説明')
-      expect(updatedBook.pageCount).toBe(150)
     })
 
     it('必須フィールドが空の場合はバリデーションエラーとなること', async () => {

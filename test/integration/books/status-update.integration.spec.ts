@@ -43,7 +43,6 @@ describe('Books Status Update (Integration)', () => {
           title: 'テスト書籍',
           subtitle: 'テストサブタイトル',
           description: 'テスト説明',
-          pageCount: 100,
           status: 'writing',
         })
         .returning()

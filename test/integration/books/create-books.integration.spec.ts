@@ -63,7 +63,6 @@ describe('Books Creation', () => {
       expect(response.text).toMatch(/name="title"/)
       expect(response.text).toMatch(/name="subtitle"/)
       expect(response.text).toMatch(/name="description"/)
-      expect(response.text).toMatch(/name="pageCount"/)
 
       // 送信ボタンの存在を確認
       expect(response.text).toMatch(/type="submit"/)
@@ -77,7 +76,6 @@ describe('Books Creation', () => {
         title: 'TypeScript完全ガイド',
         subtitle: '実践編',
         description: 'TypeScriptの実践的な使い方を学ぶ',
-        pageCount: 250,
       }
 
       // Act: POST /booksにリクエスト
@@ -95,7 +93,6 @@ describe('Books Creation', () => {
       expect(savedBooks[0].title).toBe(bookData.title)
       expect(savedBooks[0].subtitle).toBe(bookData.subtitle)
       expect(savedBooks[0].description).toBe(bookData.description)
-      expect(savedBooks[0].pageCount).toBe(bookData.pageCount)
     })
 
     it('タイトルのみで書籍が作成される（他のフィールドはオプショナル）', async () => {
@@ -116,7 +113,6 @@ describe('Books Creation', () => {
       expect(savedBooks[0].title).toBe(bookData.title)
       expect(savedBooks[0].subtitle).toBeNull()
       expect(savedBooks[0].description).toBeNull()
-      expect(savedBooks[0].pageCount).toBeNull()
     })
 
     it('タイトルが未入力の場合、適切なエラーが表示される', async () => {
@@ -124,7 +120,6 @@ describe('Books Creation', () => {
       const bookData = {
         subtitle: 'サブタイトルのみ',
         description: '説明のみ',
-        pageCount: 100,
       }
 
       // Act: POST /booksにリクエスト
@@ -149,7 +144,6 @@ describe('Books Creation', () => {
         title: longTitle,
         subtitle: '正常なサブタイトル',
         description: '正常な説明',
-        pageCount: 100,
       }
 
       // Act: POST /booksにリクエスト
@@ -167,74 +161,7 @@ describe('Books Creation', () => {
       expect(savedBooks).toHaveLength(0)
     })
 
-    it('ページ数が負の数の場合、適切なバリデーションエラーが発生する', async () => {
-      // Arrange: 負のページ数のデータを準備
-      const bookData = {
-        title: '正常なタイトル',
-        pageCount: -10,
-      }
 
-      // Act: POST /booksにリクエスト
-      const response = await request(app.getHttpServer())
-        .post('/books')
-        .send(bookData)
-        .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
-      // Assert: バリデーションエラーメッセージを確認
-      expect(response.text).toMatch(/ページ数は正の数で入力してください/)
-      expect(response.text).toContain('新規書籍作成')
-
-      // データベースに保存されていないことを確認
-      const savedBooks = await drizzleService.db.select().from(schema.books)
-      expect(savedBooks).toHaveLength(0)
-    })
-
-    it('ページ数40で書籍が正常に作成される（JSON送信）', async () => {
-      // Arrange: ページ数40のデータを準備
-      const bookData = {
-        title: 'ページ数40の書籍',
-        subtitle: 'テストサブタイトル',
-        description: 'テスト説明',
-        pageCount: 40,
-      }
-
-      // Act: POST /booksにリクエスト
-      const response = await request(app.getHttpServer())
-        .post('/books')
-        .send(bookData)
-        .expect(302)
-
-      // Assert: リダイレクト先を確認
-      expect(response.headers.location).toBe('/books')
-
-      // データベースに保存されていることを確認
-      const savedBooks = await drizzleService.db.select().from(schema.books)
-      expect(savedBooks).toHaveLength(1)
-      expect(savedBooks[0].title).toBe(bookData.title)
-      expect(savedBooks[0].pageCount).toBe(bookData.pageCount)
-    })
-
-    it('ページ数40で書籍が正常に作成される（フォームデータ送信）', async () => {
-      // Act: HTMLフォームと同じようにform-dataで送信
-      const response = await request(app.getHttpServer())
-        .post('/books')
-        .type('form')
-        .send({
-          title: 'ページ数40の書籍（フォーム）',
-          subtitle: 'テストサブタイトル',
-          description: 'テスト説明',
-          pageCount: '40', // 文字列として送信
-        })
-
-      // Assert: 成功することを確認
-      expect(response.status).toBe(302)
-      expect(response.headers.location).toBe('/books')
-
-      // データベースに保存されていることを確認
-      const savedBooks = await drizzleService.db.select().from(schema.books)
-      expect(savedBooks).toHaveLength(1)
-      expect(savedBooks[0].title).toBe('ページ数40の書籍（フォーム）')
-      expect(savedBooks[0].pageCount).toBe(40)
-    })
   })
 })

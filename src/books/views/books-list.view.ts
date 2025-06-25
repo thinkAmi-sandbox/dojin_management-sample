@@ -26,7 +26,6 @@ export class BooksListView {
       title: book.title,
       subtitle: book.subtitle || '',
       description: this.viewService.truncateText(book.description || '', 100),
-      pageCount: book.pageCount,
       formattedCreatedAt: this.viewService.formatDate(book.createdAt),
       detailUrl: `/books/${book.id}`,
       editUrl: `/books/${book.id}/edit`,

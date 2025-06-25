@@ -52,10 +52,6 @@ export class ExhibitBooksController {
           id: eb.book.id,
           title: eb.book.title,
           subtitle: eb.book.subtitle || '',
-          pageCount: eb.book.pageCount,
-          formattedPageCount: eb.book.pageCount
-            ? `${eb.book.pageCount}ページ`
-            : '-',
         },
         editUrl: `/exhibits/${exhibitId}/books/${eb.bookId}/edit`,
         deleteUrl: `/exhibits/${exhibitId}/books/${eb.bookId}`,
@@ -102,8 +98,6 @@ export class ExhibitBooksController {
         id: book.id,
         title: book.title,
         subtitle: book.subtitle || '',
-        pageCount: book.pageCount,
-        formattedPageCount: book.pageCount ? `${book.pageCount}ページ` : '-',
       })),
       formData: {
         bookId: '',
@@ -161,8 +155,6 @@ export class ExhibitBooksController {
         id: book.id,
         title: book.title,
         subtitle: book.subtitle || '',
-        pageCount: book.pageCount,
-        formattedPageCount: book.pageCount ? `${book.pageCount}ページ` : '-',
       },
       formData: {
         plannedQuantity: exhibitBook.plannedQuantity.toString(),

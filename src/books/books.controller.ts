@@ -50,7 +50,6 @@ export class BooksController {
         title: '',
         subtitle: '',
         description: '',
-        pageCount: '',
       },
       errors: {},
     }
@@ -68,7 +67,6 @@ export class BooksController {
         title: book.title,
         subtitle: book.subtitle || '',
         description: book.description || '',
-        pageCount: book.pageCount || '',
       },
       errors: {},
       breadcrumbs: [
@@ -101,9 +99,6 @@ export class BooksController {
         title: book.title,
         subtitle: book.subtitle || '',
         description: book.description || '説明なし',
-        pageCount: book.pageCount
-          ? `${book.pageCount}ページ`
-          : 'ページ数未設定',
         status: book.status,
         statusLabel: getStatusLabel(book.status),
         formattedCreatedAt: book.createdAt.toLocaleDateString('ja-JP'),

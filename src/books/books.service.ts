@@ -32,7 +32,6 @@ export class BooksService {
       title: createBookDto.title,
       subtitle: createBookDto.subtitle || null,
       description: createBookDto.description || null,
-      pageCount: createBookDto.pageCount || null,
     }
 
     const result = await this.drizzleService.db
@@ -53,9 +52,6 @@ export class BooksService {
       }),
       ...(updateBookDto.description !== undefined && {
         description: updateBookDto.description || null,
-      }),
-      ...(updateBookDto.pageCount !== undefined && {
-        pageCount: updateBookDto.pageCount || null,
       }),
     }
 

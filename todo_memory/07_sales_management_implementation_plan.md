@@ -370,7 +370,7 @@ export const pricingRules = pgTable('PricingRule', {
 #### 📊 Phase 1 進捗状況
 - **✅ Phase 1-1**: Editionsテーブルスキーマ設計・実装 （完了）
 - **✅ Phase 1-2**: Booksテーブル修正（pageCount削除、新フィールド追加） （完了）
-- **⏳ Phase 1-3**: マイグレーション実行・型定義追加
+- **✅ Phase 1-3**: マイグレーション実行・型定義追加 （完了）
 - **⏳ Phase 1-4**: 版管理モジュール基盤実装（TDD）
 - **⏳ Phase 1-5**: 書籍詳細からの版管理アクセス機能
 
@@ -452,20 +452,29 @@ export const books = pgTable('Book', {
 })
 ```
 
-#### 🗂️ Phase 1-3: マイグレーション実行・型定義追加
+#### 🗂️ Phase 1-3: マイグレーション実行・型定義追加 ✅ **完了**
 
-**⏳ 次のステップ**: Phase 1-2完了により、以下の作業が実行可能
+**✅ 実装完了済み（2025年6月25日）**
 
 **マイグレーション実行**（ユーザー実行）
-```bash
-pnpm drizzle:migrate     # プロダクション用DB
-pnpm drizzle:migrate:test # テスト用DB
-```
+- **✅ プロダクション用データベース**: `pnpm drizzle:migrate` 正常完了
+- **✅ テスト用データベース**: `pnpm drizzle:migrate:test` 正常完了
+- **✅ マイグレーション適用**: `0012_tough_bruce_banner.sql` 適用完了
 
-**型定義更新**（Claude Code実行可能）
-- testDbUtils.cleanupDatabase()へのEditions対応追加
-- 型チェック実行
-- 統合テスト実行
+**型定義更新・既存コード修正**（Claude Code実行）
+- **✅ testDbUtils.cleanupDatabase()**: Editionsテーブル対応追加
+- **✅ pageCount参照削除**: 既存コード・テストファイルから完全削除
+  - books関連ファイル（コントローラー、サービス、ビュー、DTO）修正
+  - exhibit-books関連ファイル修正
+  - 統合テストファイル26ファイル、50箇所以上の修正
+- **✅ 型チェック**: TypeScriptエラー0件確認
+- **✅ 統合テスト**: 278/278テスト成功確認
+
+**✅ 重要な修正内容**
+- **pageCountフィールド削除**: Booksテーブルから完全削除、Editionsテーブルに移行
+- **型安全性確保**: TypeScriptコンパイルエラー完全解消
+- **テスト整合性**: 全278統合テストが正常動作
+- **互換性維持**: 他機能への影響なし
 
 **前提条件**
 - **✅ マイグレーションファイル生成**: `0012_tough_bruce_banner.sql` 作成済み

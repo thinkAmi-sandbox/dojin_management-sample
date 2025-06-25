@@ -9,7 +9,6 @@ export interface BookEditViewModel {
     title: string
     subtitle: string
     description: string
-    pageCount: string
   }
   errors: Record<string, string>
   breadcrumbs: Array<{
@@ -35,7 +34,6 @@ export class BookEditView {
         title: book.title,
         subtitle: book.subtitle || '',
         description: book.description || '',
-        pageCount: book.pageCount?.toString() || '',
       },
       errors: errorMap,
       breadcrumbs: [
@@ -64,7 +62,6 @@ export class BookEditView {
         title: book.title || '',
         subtitle: book.subtitle || '',
         description: book.description || '',
-        pageCount: book.pageCount?.toString() || '',
       },
       errors: errorMap,
       breadcrumbs: [{ label: '書籍一覧', url: '/books' }, { label: '編集' }],

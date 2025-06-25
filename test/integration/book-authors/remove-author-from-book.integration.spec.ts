@@ -45,7 +45,6 @@ describe('Remove Author from Book', () => {
         title: `テスト書籍_${timestamp}`,
         subtitle: 'テスト用サブタイトル',
         description: 'テスト用の説明',
-        pageCount: 100,
       })
       .returning()
     testBookId = bookResult[0].id

@@ -61,7 +61,6 @@ export class ExhibitBooksService {
           title: schema.books.title,
           subtitle: schema.books.subtitle,
           description: schema.books.description,
-          pageCount: schema.books.pageCount,
           status: schema.books.status,
         },
       })

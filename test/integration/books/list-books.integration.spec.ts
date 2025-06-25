@@ -40,19 +40,16 @@ describe('GET /books', () => {
         title: 'NestJS入門',
         subtitle: '基礎編',
         description: 'NestJSの基本を学ぶ',
-        pageCount: 100,
       },
       {
         title: 'TypeScript実践',
         subtitle: null,
         description: '型安全な開発手法',
-        pageCount: 200,
       },
       {
         title: 'Vitest完全ガイド',
         subtitle: 'テスト駆動開発',
         description: null,
-        pageCount: 150,
       },
     ])
 

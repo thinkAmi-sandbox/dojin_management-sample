@@ -83,7 +83,6 @@ describe('Exhibit Books Integration Tests', () => {
         title: `テスト書籍1_${timestamp}`,
         subtitle: 'テスト用サブタイトル1',
         description: 'テスト用の説明1',
-        pageCount: 100,
       })
       .returning()
 
@@ -93,7 +92,6 @@ describe('Exhibit Books Integration Tests', () => {
         title: `テスト書籍2_${timestamp}`,
         subtitle: 'テスト用サブタイトル2',
         description: 'テスト用の説明2',
-        pageCount: 200,
       })
       .returning()
 

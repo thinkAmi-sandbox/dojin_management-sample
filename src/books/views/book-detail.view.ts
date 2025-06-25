@@ -8,7 +8,6 @@ export interface BookDetailViewModel {
     title: string
     subtitle: string | null
     description: string | null
-    pageCount: number | null
     createdAt: string
     updatedAt: string
   }
@@ -28,7 +27,6 @@ export class BookDetailView {
         title: book.title,
         subtitle: book.subtitle,
         description: book.description,
-        pageCount: book.pageCount,
         createdAt: this.formatDate(book.createdAt),
         updatedAt: this.formatDate(book.updatedAt),
       },

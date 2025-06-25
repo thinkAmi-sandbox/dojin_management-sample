@@ -44,7 +44,6 @@ describe('Add Author to Book', () => {
         title: `テスト書籍_${timestamp}`,
         subtitle: `テスト用サブタイトル_${timestamp}`,
         description: `テスト用の説明_${timestamp}`,
-        pageCount: 100,
       })
       .returning()
     testBookId = bookResult[0].id

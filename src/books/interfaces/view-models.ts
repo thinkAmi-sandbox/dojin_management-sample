@@ -20,7 +20,6 @@ export interface FormattedBook {
   title: string
   subtitle: string
   description: string
-  pageCount: number | null
   formattedCreatedAt: string
   detailUrl: string
   editUrl: string

@@ -40,7 +40,6 @@ describe('Submissions Costs (Integration)', () => {
         .insert(schema.books)
         .values({
           title: 'テスト書籍1',
-          pageCount: 100,
           status: 'completed',
         })
         .returning()
@@ -49,7 +48,6 @@ describe('Submissions Costs (Integration)', () => {
         .insert(schema.books)
         .values({
           title: 'テスト書籍2',
-          pageCount: 200,
           status: 'completed',
         })
         .returning()
@@ -147,7 +145,6 @@ describe('Submissions Costs (Integration)', () => {
         .insert(schema.books)
         .values({
           title: 'テスト書籍',
-          pageCount: 100,
           status: 'completed',
         })
         .returning()
@@ -205,7 +202,6 @@ describe('Submissions Costs (Integration)', () => {
         .insert(schema.books)
         .values({
           title: 'テスト書籍',
-          pageCount: 100,
           status: 'completed',
         })
         .returning()
@@ -260,7 +256,6 @@ describe('Submissions Costs (Integration)', () => {
         .insert(schema.books)
         .values({
           title: 'テスト書籍',
-          pageCount: 100,
           status: 'completed',
         })
         .returning()

@@ -93,7 +93,6 @@ describe('フル ナビゲーション E2E テスト', () => {
           title: 'E2Eテスト書籍',
           subtitle: 'ナビゲーションテスト',
           description: '全体ナビゲーションのテスト用書籍',
-          pageCount: 200,
         })
         .returning()
 
@@ -180,7 +179,6 @@ describe('フル ナビゲーション E2E テスト', () => {
           title: 'フルナビゲーションテスト',
           subtitle: 'E2E',
           description: '完全なナビゲーションテスト',
-          pageCount: 300,
         })
         .returning()
 

@@ -50,7 +50,6 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
           title: 'テスト書籍',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
         })
         .returning()
 
@@ -75,7 +74,6 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
           title: 'テスト書籍',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
         })
         .returning()
 
@@ -100,7 +98,6 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
           title: 'テスト書籍',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
         })
         .returning()
 
@@ -130,7 +127,6 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
           title: 'テスト書籍',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
         })
         .returning()
 
@@ -170,7 +166,6 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
           title: 'テスト書籍',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
         })
         .returning()
 
@@ -205,7 +200,6 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
           title: 'テスト書籍',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
         })
         .returning()
 

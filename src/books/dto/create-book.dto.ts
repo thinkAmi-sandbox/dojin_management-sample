@@ -2,7 +2,6 @@ import { Transform } from 'class-transformer'
 import {
   IsNotEmpty,
   IsOptional,
-  IsPositive,
   IsString,
   MaxLength,
 } from 'class-validator'
@@ -29,12 +28,4 @@ export class CreateBookDto {
   @IsString({ message: '説明は文字列で入力してください' })
   description?: string
 
-  @Transform(({ value }) => {
-    if (value === '' || value === undefined || value === null) return undefined
-    const num = Number(value)
-    return isNaN(num) ? value : num
-  })
-  @IsOptional()
-  @IsPositive({ message: 'ページ数は正の数で入力してください' })
-  pageCount?: number
 }

@@ -58,7 +58,6 @@ describe('Submissions - Create (Integration)', () => {
           title: 'テスト本',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
           status: 'planning',
         })
         .returning()
@@ -104,7 +103,6 @@ describe('Submissions - Create (Integration)', () => {
           title: 'テスト本',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
           status: 'planning',
         })
         .returning()
@@ -158,7 +156,6 @@ describe('Submissions - Create (Integration)', () => {
           title: 'テスト本',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
           status: 'planning',
         })
         .returning()
@@ -201,7 +198,6 @@ describe('Submissions - Create (Integration)', () => {
           title: 'テスト本',
           subtitle: 'サブタイトル',
           description: '説明文',
-          pageCount: 100,
           status: 'planning',
         })
         .returning()
