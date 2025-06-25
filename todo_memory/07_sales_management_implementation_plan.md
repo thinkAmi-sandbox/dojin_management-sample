@@ -1,0 +1,531 @@
+# 同人誌販売管理システム実装計画
+
+## 概要
+
+このドキュメントは、既存の同人誌管理システムに販売管理機能を追加するための実装計画です。版管理と在庫管理を中心に、販売取引、委託販売の管理機能を実装します。
+
+## 基本設計方針
+
+### データモデルの階層構造
+1. **書籍（Books）** - 作品の基本情報（版を跨ぐ共通情報）
+2. **版（Editions）** - 版ごとの詳細情報
+3. **在庫（Stocks）** - 版ごとの在庫管理
+
+### 既存リソースの活用
+- **Books**: 既存の書籍管理を拡張
+- **Events**: 既存のイベント管理を販売イベントとして活用
+- **ExhibitBooks**: 版ベースに変更して活用
+
+## データベース設計
+
+### 1. 版（Editions）テーブル - 新規作成
+```typescript
+export const editions = pgTable('Edition', {
+  id: serial('id').primaryKey(),
+  bookId: integer('bookId').notNull().references(() => books.id, { onDelete: 'cascade' }),
+  versionName: varchar('versionName', { length: 100 }).notNull(), // "初版", "第2版", "新装版"等
+  versionNumber: integer('versionNumber').notNull().default(1), // 版番号（ソート用）
+  isbn: varchar('isbn', { length: 13 }).unique(), // ISBN（版ごとに異なる）
+  
+  // 版ごとに変わる可能性のある情報
+  pageCount: integer('pageCount'),
+  basePrice: integer('basePrice').notNull(), // 基本価格（定価）
+  printingCost: integer('printingCost'), // 印刷原価
+  publishDate: date('publishDate'), // 発行日
+  
+  // 版の詳細情報
+  editionNotes: text('editionNotes'), // 改訂内容、追加内容等
+  coverImageUrl: varchar('coverImageUrl', { length: 500 }), // 表紙画像（版で異なる場合）
+  
+  // ステータス
+  isActive: boolean('isActive').notNull().default(true), // 現行版かどうか
+  isSoldOut: boolean('isSoldOut').notNull().default(false), // 完売フラグ
+  
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+### 2. 保管場所（StorageLocations）テーブル
+```typescript
+export const storageLocationTypeEnum = pgEnum('storage_location_type', [
+  'home',
+  'warehouse',
+  'consignment',
+  'event',
+])
+
+export const storageLocations = pgTable('StorageLocation', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  type: storageLocationTypeEnum('type').notNull(),
+  isConsignment: boolean('isConsignment').notNull().default(false),
+  address: text('address'),
+  contactInfo: text('contactInfo'),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+### 3. 在庫（Stocks）テーブル - 版ごとに管理
+```typescript
+export const stocks = pgTable('Stock', {
+  id: serial('id').primaryKey(),
+  editionId: integer('editionId').notNull().references(() => editions.id, { onDelete: 'cascade' }),
+  locationId: integer('locationId').notNull().references(() => storageLocations.id),
+  quantity: integer('quantity').notNull().default(0),
+  reservedQuantity: integer('reservedQuantity').notNull().default(0), // 予約済み数量
+  availableQuantity: integer('availableQuantity').notNull().default(0), // 販売可能数量
+  lastCheckedAt: timestamp('lastCheckedAt'),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+### 4. 在庫移動（StockMovements）テーブル
+```typescript
+export const stockMovementTypeEnum = pgEnum('stock_movement_type', [
+  'inbound',      // 入庫（印刷所から納品）
+  'outbound',     // 出庫（イベント/委託先へ）
+  'transfer',     // 移動（場所間移動）
+  'sale',         // 販売による減少
+  'return',       // 返品による増加
+  'adjustment',   // 棚卸調整
+  'disposal',     // 廃棄
+])
+
+export const stockMovements = pgTable('StockMovement', {
+  id: serial('id').primaryKey(),
+  editionId: integer('editionId').notNull().references(() => editions.id),
+  fromLocationId: integer('fromLocationId').references(() => storageLocations.id),
+  toLocationId: integer('toLocationId').references(() => storageLocations.id),
+  quantity: integer('quantity').notNull(),
+  movementType: stockMovementTypeEnum('movementType').notNull(),
+  referenceType: varchar('referenceType', { length: 50 }), // 'sale', 'exhibit', 'consignment'
+  referenceId: integer('referenceId'), // 関連するレコードのID
+  reason: text('reason'),
+  movedAt: timestamp('movedAt').notNull().defaultNow(),
+  createdBy: varchar('createdBy', { length: 255 }),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+```
+
+### 5. 販売取引（SalesTransactions）テーブル
+```typescript
+export const salesTransactionTypeEnum = pgEnum('sales_transaction_type', [
+  'event',        // イベント直販
+  'consignment',  // 委託販売
+  'online',       // オンライン販売
+  'direct',       // 個人間直接販売
+])
+
+export const salesTransactions = pgTable('SalesTransaction', {
+  id: serial('id').primaryKey(),
+  transactionType: salesTransactionTypeEnum('transactionType').notNull(),
+  eventId: integer('eventId').references(() => events.id),
+  exhibitId: integer('exhibitId').references(() => exhibits.id),
+  locationId: integer('locationId').references(() => storageLocations.id),
+  customerName: varchar('customerName', { length: 255 }),
+  customerEmail: varchar('customerEmail', { length: 255 }),
+  totalAmount: integer('totalAmount').notNull(),
+  discountAmount: integer('discountAmount').default(0),
+  finalAmount: integer('finalAmount').notNull(),
+  paymentMethod: varchar('paymentMethod', { length: 50 }), // cash, credit, qr, etc
+  transactionDate: timestamp('transactionDate').notNull().defaultNow(),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+### 6. 販売明細（SalesDetails）テーブル
+```typescript
+export const salesDetails = pgTable('SalesDetail', {
+  id: serial('id').primaryKey(),
+  transactionId: integer('transactionId').notNull().references(() => salesTransactions.id, { onDelete: 'cascade' }),
+  editionId: integer('editionId').notNull().references(() => editions.id), // 版を参照
+  quantity: integer('quantity').notNull(),
+  unitPrice: integer('unitPrice').notNull(),
+  discountAmount: integer('discountAmount').default(0),
+  subtotal: integer('subtotal').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+```
+
+### 7. 委託契約（Consignments）テーブル
+```typescript
+export const consignments = pgTable('Consignment', {
+  id: serial('id').primaryKey(),
+  locationId: integer('locationId').notNull().references(() => storageLocations.id),
+  storeName: varchar('storeName', { length: 255 }).notNull(),
+  commissionRate: integer('commissionRate').notNull(), // パーセンテージ（例: 30 = 30%）
+  settlementCycle: varchar('settlementCycle', { length: 50 }), // monthly, quarterly
+  contractStartDate: date('contractStartDate').notNull(),
+  contractEndDate: date('contractEndDate'),
+  contactPerson: varchar('contactPerson', { length: 255 }),
+  paymentInfo: text('paymentInfo'), // 振込先情報など
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+### 8. 委託販売報告（ConsignmentSales）テーブル
+```typescript
+export const consignmentSalesStatusEnum = pgEnum('consignment_sales_status', [
+  'reported',     // 報告済み
+  'confirmed',    // 確認済み
+  'adjusted',     // 調整済み
+  'settled',      // 精算済み
+])
+
+export const consignmentSales = pgTable('ConsignmentSales', {
+  id: serial('id').primaryKey(),
+  consignmentId: integer('consignmentId').notNull().references(() => consignments.id),
+  reportPeriodStart: date('reportPeriodStart').notNull(),
+  reportPeriodEnd: date('reportPeriodEnd').notNull(),
+  totalSalesAmount: integer('totalSalesAmount').notNull(),
+  commissionAmount: integer('commissionAmount').notNull(),
+  netAmount: integer('netAmount').notNull(),
+  status: consignmentSalesStatusEnum('status').notNull().default('reported'),
+  reportedAt: timestamp('reportedAt').notNull().defaultNow(),
+  confirmedAt: timestamp('confirmedAt'),
+  settledAt: timestamp('settledAt'),
+  settlementMethod: varchar('settlementMethod', { length: 50 }), // bank_transfer, cash, etc
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+### 9. 委託販売明細（ConsignmentSalesDetails）テーブル
+```typescript
+export const consignmentSalesDetails = pgTable('ConsignmentSalesDetail', {
+  id: serial('id').primaryKey(),
+  consignmentSalesId: integer('consignmentSalesId').notNull()
+    .references(() => consignmentSales.id, { onDelete: 'cascade' }),
+  editionId: integer('editionId').notNull().references(() => editions.id),
+  quantity: integer('quantity').notNull(),
+  unitPrice: integer('unitPrice').notNull(),
+  subtotal: integer('subtotal').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+```
+
+### 10. 価格設定（PricingRules）テーブル
+```typescript
+export const pricingRuleTypeEnum = pgEnum('pricing_rule_type', [
+  'event_discount',    // イベント割引
+  'bulk_discount',     // まとめ買い割引
+  'early_bird',        // 早期割引
+  'consignment',       // 委託販売価格
+])
+
+export const pricingRules = pgTable('PricingRule', {
+  id: serial('id').primaryKey(),
+  editionId: integer('editionId').notNull().references(() => editions.id),
+  ruleType: pricingRuleTypeEnum('ruleType').notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  price: integer('price'), // 固定価格の場合
+  discountRate: integer('discountRate'), // 割引率（%）の場合
+  minQuantity: integer('minQuantity'), // 最小購入数（まとめ買い用）
+  eventId: integer('eventId').references(() => events.id), // イベント限定価格
+  validFrom: date('validFrom'),
+  validUntil: date('validUntil'),
+  priority: integer('priority').notNull().default(0), // 優先順位
+  isActive: boolean('isActive').notNull().default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+})
+```
+
+## 既存テーブルの修正
+
+### 1. 書籍（Books）テーブルの調整
+- `pageCount`フィールドを削除（版テーブルへ移動）
+- 以下のフィールドを追加：
+  - `genre`: ジャンル（全版共通）
+  - `seriesName`: シリーズ名
+  - `seriesNumber`: シリーズ内番号
+
+### 2. 出展書籍（ExhibitBooks）テーブルの調整
+- `bookId`を`editionId`に変更
+- 以下のフィールドを追加：
+  - `actualQuantity`: 実際の持ち込み数
+  - `soldQuantity`: 売上数
+  - `remainingQuantity`: 残数
+
+## モジュール構成
+
+### 新規モジュール
+
+#### 1. 版管理モジュール (`editions/`)
+- `editions.module.ts`
+- `editions.controller.ts`
+- `editions.service.ts`
+- `dto/create-edition.dto.ts`
+- `dto/update-edition.dto.ts`
+
+#### 2. 在庫管理モジュール (`stocks/`)
+- `stocks.module.ts`
+- `stocks.controller.ts`
+- `stocks.service.ts`
+- `dto/create-stock-movement.dto.ts`
+- `dto/update-stock.dto.ts`
+- `dto/stock-check.dto.ts`
+
+#### 3. 販売管理モジュール (`sales/`)
+- `sales.module.ts`
+- `sales.controller.ts`
+- `sales.service.ts`
+- `dto/create-sales-transaction.dto.ts`
+- `dto/add-sales-detail.dto.ts`
+
+#### 4. 委託管理モジュール (`consignments/`)
+- `consignments.module.ts`
+- `consignments.controller.ts`
+- `consignments.service.ts`
+- `dto/create-consignment.dto.ts`
+- `dto/report-consignment-sales.dto.ts`
+- `dto/settle-consignment.dto.ts`
+
+#### 5. 保管場所管理モジュール (`storage-locations/`)
+- `storage-locations.module.ts`
+- `storage-locations.controller.ts`
+- `storage-locations.service.ts`
+- `dto/create-storage-location.dto.ts`
+- `dto/update-storage-location.dto.ts`
+
+#### 6. 価格管理モジュール (`pricing/`)
+- `pricing.module.ts`
+- `pricing.controller.ts`
+- `pricing.service.ts`
+- `dto/create-pricing-rule.dto.ts`
+- `dto/update-pricing-rule.dto.ts`
+
+## URL設計
+
+### 版管理関連
+- `GET /books/:bookId/editions` - 書籍の版一覧
+- `GET /books/:bookId/editions/new` - 新版作成フォーム
+- `POST /books/:bookId/editions` - 新版作成
+- `GET /editions/:id` - 版詳細
+- `GET /editions/:id/edit` - 版編集フォーム
+- `PUT /editions/:id` - 版更新
+- `DELETE /editions/:id` - 版削除
+- `GET /editions/:id/stock` - 版の在庫状況
+
+### 在庫管理関連
+- `GET /stocks` - 在庫一覧（版別）
+- `GET /stocks/movements` - 在庫移動履歴
+- `GET /stocks/check` - 棚卸画面
+- `POST /stocks/check` - 棚卸実行
+- `GET /editions/:id/stock-movements` - 特定版の在庫移動履歴
+- `POST /stock-movements` - 在庫移動記録
+
+### 販売管理関連
+- `GET /sales` - 販売取引一覧
+- `GET /sales/new` - 新規販売登録フォーム
+- `POST /sales` - 販売登録
+- `GET /sales/:id` - 販売詳細
+- `GET /sales/reports` - 売上レポート
+- `GET /events/:eventId/sales` - イベント別売上
+
+### 委託管理関連
+- `GET /consignments` - 委託契約一覧
+- `GET /consignments/new` - 新規委託契約フォーム
+- `POST /consignments` - 委託契約作成
+- `GET /consignments/:id` - 委託契約詳細
+- `GET /consignments/:id/edit` - 委託契約編集フォーム
+- `PUT /consignments/:id` - 委託契約更新
+- `GET /consignments/:id/reports` - 委託販売報告一覧
+- `GET /consignments/:id/reports/new` - 販売報告登録フォーム
+- `POST /consignments/:id/reports` - 販売報告登録
+- `POST /consignment-sales/:id/settle` - 精算処理
+
+### 保管場所管理関連
+- `GET /storage-locations` - 保管場所一覧
+- `GET /storage-locations/new` - 新規保管場所フォーム
+- `POST /storage-locations` - 保管場所作成
+- `GET /storage-locations/:id` - 保管場所詳細
+- `GET /storage-locations/:id/edit` - 保管場所編集フォーム
+- `PUT /storage-locations/:id` - 保管場所更新
+- `DELETE /storage-locations/:id` - 保管場所削除
+
+### 価格管理関連
+- `GET /editions/:id/pricing-rules` - 版の価格ルール一覧
+- `GET /pricing-rules/new` - 価格ルール作成フォーム
+- `POST /pricing-rules` - 価格ルール作成
+- `GET /pricing-rules/:id/edit` - 価格ルール編集フォーム
+- `PUT /pricing-rules/:id` - 価格ルール更新
+- `DELETE /pricing-rules/:id` - 価格ルール削除
+
+## 実装優先順位
+
+### Phase 1: 版管理基盤（1-2週間）
+1. **データベース**
+   - Editionsテーブルの作成とマイグレーション
+   - 既存Booksテーブルのpagecount削除、新フィールド追加
+
+2. **版管理モジュール**
+   - 基本的なCRUD機能
+   - 書籍から版を作成する機能
+   - 現行版の切り替え機能
+
+3. **統合テスト**
+   - 版の作成・更新・削除テスト
+   - 書籍と版の関連テスト
+
+### Phase 2: 在庫管理の版対応（1-2週間）
+1. **データベース**
+   - StorageLocationsテーブルの作成
+   - Stocksテーブルの作成（版ベース）
+   - StockMovementsテーブルの作成
+
+2. **在庫管理モジュール**
+   - 在庫照会機能
+   - 在庫移動記録機能
+   - 棚卸機能
+
+3. **統合テスト**
+   - 在庫の増減テスト
+   - 在庫移動履歴テスト
+
+### Phase 3: 既存機能の版対応（2週間）
+1. **データマイグレーション**
+   - 既存Booksデータから初版Editionを自動生成
+   - ExhibitBooksのbookIdをeditionIdに変換
+
+2. **既存モジュールの修正**
+   - ExhibitBooksモジュールの版対応
+   - 関連画面の修正
+
+3. **統合テスト**
+   - 既存機能の動作確認
+   - データ整合性テスト
+
+### Phase 4: 販売・価格管理（2-3週間）
+1. **データベース**
+   - SalesTransactionsテーブルの作成
+   - SalesDetailsテーブルの作成
+   - PricingRulesテーブルの作成
+
+2. **販売管理モジュール**
+   - 販売登録機能
+   - 売上レポート機能
+   - 価格計算サービス
+
+3. **統合テスト**
+   - 販売フローテスト
+   - 価格計算テスト
+
+### Phase 5: 委託販売管理（2-3週間）
+1. **データベース**
+   - Consignmentsテーブルの作成
+   - ConsignmentSalesテーブルの作成
+   - ConsignmentSalesDetailsテーブルの作成
+
+2. **委託管理モジュール**
+   - 委託契約管理
+   - 販売報告機能
+   - 精算機能
+
+3. **統合テスト**
+   - 委託販売フローテスト
+   - 精算計算テスト
+
+## マイグレーション戦略
+
+### 1. 既存データの移行手順
+1. **バックアップ**: 本番データの完全バックアップ
+2. **初版作成**: 既存のBooksレコードごとに初版Editionを作成
+3. **データ移動**: pageCountをEditionsテーブルに移動
+4. **ID変換**: ExhibitBooksのbookIdをeditionIdに変換
+5. **検証**: データ整合性の確認
+
+### 2. マイグレーションスクリプト例
+```sql
+-- 1. 初版Editionの作成
+INSERT INTO "Edition" (
+  "bookId", 
+  "versionName", 
+  "versionNumber", 
+  "pageCount", 
+  "basePrice",
+  "isActive",
+  "createdAt",
+  "updatedAt"
+)
+SELECT 
+  id,
+  '初版',
+  1,
+  "pageCount",
+  COALESCE("price", 0), -- priceフィールドがあれば使用
+  true,
+  "createdAt",
+  "updatedAt"
+FROM "Book";
+
+-- 2. ExhibitBooksの更新（一時的に両方のIDを保持）
+ALTER TABLE "ExhibitBook" ADD COLUMN "editionId" INTEGER;
+
+UPDATE "ExhibitBook" eb
+SET "editionId" = e.id
+FROM "Edition" e
+WHERE eb."bookId" = e."bookId" AND e."versionNumber" = 1;
+
+-- 3. 外部キー制約の更新（後で実施）
+```
+
+### 3. 段階的移行計画
+- **Stage 1**: 新テーブル作成、既存機能は維持
+- **Stage 2**: 新機能を版ベースで実装
+- **Stage 3**: 既存機能を版対応に段階的移行
+- **Stage 4**: 旧フィールドの削除、クリーンアップ
+
+## 技術的考慮事項
+
+### 1. トランザクション処理
+- 販売記録と在庫減少を同一トランザクションで処理
+- 在庫移動の整合性保証
+- エラー時のロールバック処理
+
+### 2. パフォーマンス最適化
+- 在庫照会用のインデックス設計
+- 売上集計のマテリアライズドビュー検討
+- 頻繁にアクセスされるデータのキャッシュ戦略
+
+### 3. バリデーション
+- 在庫数のマイナス防止
+- 価格の妥当性チェック
+- 日付の論理チェック（開始日 < 終了日）
+
+### 4. セキュリティ
+- 売上データへのアクセス制御
+- 個人情報（顧客情報）の適切な管理
+- 監査ログの実装
+
+## 開発ガイドライン
+
+### 1. 命名規則
+- テーブル名: PascalCase（例: `Edition`, `StockMovement`）
+- カラム名: camelCase（例: `versionName`, `basePrice`）
+- URLパス: kebab-case（例: `/storage-locations`）
+
+### 2. テスト方針
+- TDD（統合テスト駆動開発）で実装
+- 各フェーズごとに統合テストを作成
+- トランザクション処理は特に重点的にテスト
+
+### 3. エラーハンドリング
+- 在庫不足: `BadRequestException`
+- リソース不在: `NotFoundException`
+- 権限エラー: `ForbiddenException`
+
+## まとめ
+
+この実装計画により、同人誌の版管理から在庫管理、販売管理、委託販売管理まで、包括的な販売管理システムを構築します。既存のシステムとの整合性を保ちながら、段階的に機能を追加していくことで、リスクを最小限に抑えた実装が可能です。
