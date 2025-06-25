@@ -369,7 +369,7 @@ export const pricingRules = pgTable('PricingRule', {
 
 #### 📊 Phase 1 進捗状況
 - **✅ Phase 1-1**: Editionsテーブルスキーマ設計・実装 （完了）
-- **⏳ Phase 1-2**: Booksテーブル修正（pageCount削除、新フィールド追加）
+- **✅ Phase 1-2**: Booksテーブル修正（pageCount削除、新フィールド追加） （完了）
 - **⏳ Phase 1-3**: マイグレーション実行・型定義追加
 - **⏳ Phase 1-4**: 版管理モジュール基盤実装（TDD）
 - **⏳ Phase 1-5**: 書籍詳細からの版管理アクセス機能
@@ -420,29 +420,57 @@ CREATE TABLE "Edition" (
 );
 ```
 
-#### 🗂️ Phase 1-2: Booksテーブル修正（pageCount削除、新フィールド追加）
+#### 🗂️ Phase 1-2: Booksテーブル修正（pageCount削除、新フィールド追加） ✅ **完了**
+
+**✅ 実装完了済み（2025年6月25日）**
 
 **既存テーブル修正**
-- **pageCount削除**: Editionsテーブルに移行（版ごとに管理）
-- **新フィールド追加**:
-  - `genre`: ジャンル（全版共通）
-  - `seriesName`: シリーズ名
-  - `seriesNumber`: シリーズ内番号
-- **マイグレーション戦略**: 段階的移行でデータ整合性を保持
+- **✅ pageCount削除**: Editionsテーブルに移行（版ごとに管理）
+- **✅ 新フィールド追加**:
+  - `genre`: ジャンル（全版共通） - varchar(100)
+  - `seriesName`: シリーズ名 - varchar(255)
+  - `seriesNumber`: シリーズ内番号 - integer
+- **✅ マイグレーション生成**: `0012_tough_bruce_banner.sql` 生成完了
+
+**✅ Drizzleマイグレーション対話式プロンプト問題解決**
+- **Claude Code制限事項**: 対話式プロンプトに対応不可のため、ユーザー手動実行が必要
+- **再発防止策実装**: CLAUDE.mdと運用ドキュメントに対応手順を明記
+- **改善されたワークフロー**: 「コマンド提示→ユーザー実行→結果確認→次ステップ」確立
+
+**✅ 実装されたBooksテーブル修正**
+```typescript
+export const books = pgTable('Book', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  subtitle: varchar('subtitle', { length: 255 }),
+  description: text('description'),
+  genre: varchar('genre', { length: 100 }), // ジャンル（全版共通）
+  seriesName: varchar('seriesName', { length: 255 }), // シリーズ名
+  seriesNumber: integer('seriesNumber'), // シリーズ内番号
+  status: writingStatusEnum('status').notNull().default('planning'),
+  // ... 他のフィールド
+})
+```
 
 #### 🗂️ Phase 1-3: マイグレーション実行・型定義追加
 
-**マイグレーション実行**
+**⏳ 次のステップ**: Phase 1-2完了により、以下の作業が実行可能
+
+**マイグレーション実行**（ユーザー実行）
 ```bash
-pnpm drizzle:generate    # マイグレーションファイル生成
 pnpm drizzle:migrate     # プロダクション用DB
 pnpm drizzle:migrate:test # テスト用DB
 ```
 
-**型定義更新**
-- Edition, NewEdition型のexport
-- 関連するimport文の更新
+**型定義更新**（Claude Code実行可能）
 - testDbUtils.cleanupDatabase()へのEditions対応追加
+- 型チェック実行
+- 統合テスト実行
+
+**前提条件**
+- **✅ マイグレーションファイル生成**: `0012_tough_bruce_banner.sql` 作成済み
+- **✅ スキーマ修正**: Booksテーブルの修正完了
+- **✅ 再発防止策**: 対話式プロンプト問題への対応策実装完了
 
 #### 🗂️ Phase 1-4: 版管理モジュール基盤実装（TDD）
 
