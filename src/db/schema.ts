@@ -36,7 +36,9 @@ export const books = pgTable('Book', {
   title: varchar('title', { length: 255 }).notNull(),
   subtitle: varchar('subtitle', { length: 255 }),
   description: text('description'),
-  pageCount: integer('pageCount'),
+  genre: varchar('genre', { length: 100 }), // ジャンル（全版共通）
+  seriesName: varchar('seriesName', { length: 255 }), // シリーズ名
+  seriesNumber: integer('seriesNumber'), // シリーズ内番号
   status: writingStatusEnum('status').notNull().default('planning'),
   createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
     .notNull()

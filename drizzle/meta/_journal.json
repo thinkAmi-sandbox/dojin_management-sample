@@ -85,6 +85,13 @@
       "when": 1750848927543,
       "tag": "0011_condemned_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1750849717995,
+      "tag": "0012_tough_bruce_banner",
+      "breakpoints": true
     }
   ]
 }

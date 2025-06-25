@@ -145,8 +145,50 @@
 - [ ] 最終的な動作確認
 - [ ] クリーンアップ作業
 
+## 9. Drizzleマイグレーション対話式プロンプト問題（2025年6月25日追記）
+
+**問題**
+- `pnpm drizzle:generate`実行時に対話式プロンプトが表示される
+- Claude Codeでは対話式入力に対応できず、コマンド実行が停止する
+- スキーマ変更（pageCount削除、genre/seriesName/seriesNumber追加）時に発生
+
+**具体的なケース**
+```bash
+pnpm drizzle:generate
+> Is genre column in Book table created or renamed from another column?
+❯ + genre             create column
+  ~ pageCount › genre rename column
+```
+
+**学び**
+- Drizzleはスキーマ変更時に自動的に対話式プロンプトを表示する
+- Claude Codeの制限により、対話式プロンプトには対応不可
+- ユーザー手動実行が必要なケースを事前に特定できる
+- カラム追加/削除/変更を伴うスキーマ変更では高確率で発生
+
+**改善点**
+- スキーマ変更を伴う作業では、事前にマイグレーション生成をユーザー操作として分離
+- Claude Codeには「実行すべきコマンドの提示」に留める
+- マイグレーション生成後の作業（migrate実行、型チェック等）はClaude Codeが継続
+
+**再発防止策**
+- CLAUDE.mdに対話式プロンプト対応の注意事項を明記
+- スキーマ変更作業時は必ずユーザー手動実行をアナウンス
+- Claude Codeは「コマンド提示→ユーザー実行→結果確認→次ステップ」の流れを確立
+
+**推奨される対話式プロンプト回答**
+- 新規カラム追加: 「+ columnName create column」を選択
+- カラム削除: 「- columnName drop column」を選択
+- カラム名変更でない場合: 「create column」を選択（リネーム選択は避ける）
+
+**適用後の効果**
+- 同様の問題を事前に認識し、適切な対処法をガイド
+- Claude Codeとユーザーの役割分担を明確化
+- 作業効率の向上とユーザーストレスの軽減
+
 ---
 
 **作成日**: 2025年6月14日  
+**更新日**: 2025年6月25日（セクション9追加）  
 **作成者**: Claude Code  
-**対象作業**: PrismaからDrizzle ORM移行
+**対象作業**: PrismaからDrizzle ORM移行、Drizzleマイグレーション運用

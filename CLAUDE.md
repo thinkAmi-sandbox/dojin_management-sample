@@ -48,13 +48,32 @@ pnpm format           # Biomeでコードをフォーマット
 ```bash
 docker compose up -d      # PostgreSQLコンテナの起動
 docker compose down       # PostgreSQLコンテナの停止
-pnpm drizzle:generate     # マイグレーションファイルの生成
+pnpm drizzle:generate     # マイグレーションファイルの生成（対話式プロンプト注意）
 pnpm drizzle:migrate      # プロダクション用データベースのマイグレーション実行
 pnpm drizzle:migrate:test # テスト用データベースのマイグレーション実行
 pnpm drizzle:push         # プロダクション用にスキーマを直接反映
 pnpm drizzle:push:test    # テスト用にスキーマを直接反映
 pnpm drizzle:studio       # Drizzle Studio GUIを開く
 ```
+
+#### **YOU MUST**: マイグレーション対話式プロンプト対応
+
+**Claude Code実行時の制限**:
+- `pnpm drizzle:generate`で対話式プロンプトが出た場合、Claude Codeでは対応不可
+- スキーマ変更（カラム追加/削除/変更）時に発生する可能性が高い
+
+**対処法**:
+1. Claude Codeがマイグレーション生成コマンドを実行できない場合は、ユーザーが手動実行
+2. 対話式プロンプトでの推奨回答：
+   - 新規カラム追加: 「+ columnName create column」を選択
+   - カラム削除: 「- columnName drop column」を選択  
+   - カラム名変更: 名前変更でない場合は「create column」を選択
+3. マイグレーション生成後、Claude Codeに制御を戻して残りの作業継続
+
+**Claude Codeの対応パターン**:
+- スキーマ変更作業時は「実行すべきコマンドの提示」に留める
+- ユーザー実行完了後、型チェック・テスト実行等の後続作業を継続
+- 「コマンド提示→ユーザー実行→結果確認→次ステップ」の流れを確立
 
 ## アーキテクチャ
 
