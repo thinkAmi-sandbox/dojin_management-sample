@@ -191,15 +191,105 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
     })
   })
 
-  describe('ボタンの配置順序', () => {
-    it('入稿関連ボタンが執筆者管理の後、ステータス変更の前に配置される', async () => {
+  describe('版管理ボタンの表示', () => {
+    it('書籍詳細画面に「📖 版管理」ボタンが存在する', async () => {
       // Arrange: テスト用書籍を作成
       const [testBook] = await drizzleService.db
         .insert(schema.books)
         .values({
-          title: 'テスト書籍',
-          subtitle: 'サブタイトル',
-          description: '説明文',
+          title: '版管理テスト書籍',
+          subtitle: 'ナビゲーションテスト',
+          description: 'TDD版管理実装',
+        })
+        .returning()
+
+      // Act: GET /books/:id にリクエスト
+      const response = await request(app.getHttpServer())
+        .get(`/books/${testBook.id}`)
+        .expect(200)
+        .expect('Content-Type', /html/)
+
+      // Assert: 版管理ボタンが存在することを確認
+      expect(response.text).toContain('📖 版管理')
+      expect(response.text).toContain(`href="/books/${testBook.id}/editions"`)
+    })
+
+    it('書籍詳細画面に「➕ 新版作成」ボタンが存在する', async () => {
+      // Arrange: テスト用書籍を作成
+      const [testBook] = await drizzleService.db
+        .insert(schema.books)
+        .values({
+          title: '新版作成テスト書籍',
+          subtitle: 'ナビゲーションテスト',
+          description: 'TDD版管理実装',
+        })
+        .returning()
+
+      // Act: GET /books/:id にリクエスト
+      const response = await request(app.getHttpServer())
+        .get(`/books/${testBook.id}`)
+        .expect(200)
+        .expect('Content-Type', /html/)
+
+      // Assert: 新版作成ボタンが存在することを確認
+      expect(response.text).toContain('➕ 新版作成')
+      expect(response.text).toContain(
+        `href="/books/${testBook.id}/editions/new"`,
+      )
+    })
+
+    it('版管理ボタンのtooltipが正しく設定されている', async () => {
+      // Arrange: テスト用書籍を作成
+      const [testBook] = await drizzleService.db
+        .insert(schema.books)
+        .values({
+          title: 'tooltip確認書籍',
+          description: 'tooltip設定確認',
+        })
+        .returning()
+
+      // Act: GET /books/:id にリクエスト
+      const response = await request(app.getHttpServer())
+        .get(`/books/${testBook.id}`)
+        .expect(200)
+        .expect('Content-Type', /html/)
+
+      // Assert: tooltipが設定されていることを確認
+      expect(response.text).toContain('この書籍の版を管理します')
+      expect(response.text).toContain('この書籍の新しい版を作成します')
+    })
+
+    it('ページ数フィールドが表示されない（Editionsテーブルに移行済み）', async () => {
+      // Arrange: テスト用書籍を作成
+      const [testBook] = await drizzleService.db
+        .insert(schema.books)
+        .values({
+          title: 'ページ数非表示確認書籍',
+          description: 'ページ数表示無し確認',
+        })
+        .returning()
+
+      // Act: GET /books/:id にリクエスト
+      const response = await request(app.getHttpServer())
+        .get(`/books/${testBook.id}`)
+        .expect(200)
+        .expect('Content-Type', /html/)
+
+      // Assert: ページ数フィールドが存在しないことを確認
+      expect(response.text).not.toContain('ページ数:')
+      expect(response.text).not.toContain('ページ数未設定')
+    })
+  })
+
+  describe('ボタンの配置順序', () => {
+    it('ボタン配置順序が正しい（執筆者管理→版管理→入稿関連→ステータス変更）', async () => {
+      // Arrange: テスト用書籍を作成
+      const [testBook] = await drizzleService.db
+        .insert(schema.books)
+        .values({
+          title: 'ボタン配置確認書籍',
+          subtitle: '配置順序テスト',
+          description: '全ボタンの配置順序確認',
         })
         .returning()
 
@@ -217,14 +307,19 @@ describe('書籍詳細画面 ナビゲーション機能', () => {
 
       const bookActionsSection = bookActionsMatch?.[0] || ''
 
-      // 順序確認：執筆者管理 → 入稿履歴 → 新規入稿 → ステータス変更
+      // 順序確認：執筆者管理 → 📖 版管理 → ➕ 新版作成 → 入稿履歴 → 新規入稿 → ステータス変更
       const authorsIndex = bookActionsSection.indexOf('執筆者管理')
+      const editionManagementIndex = bookActionsSection.indexOf('📖 版管理')
+      const newEditionIndex = bookActionsSection.indexOf('➕ 新版作成')
       const submissionsHistoryIndex = bookActionsSection.indexOf('入稿履歴')
       const newSubmissionIndex = bookActionsSection.indexOf('新規入稿')
       const statusIndex = bookActionsSection.indexOf('ステータス変更')
 
+      // 正しい順序であることを確認
       expect(authorsIndex).toBeGreaterThan(-1)
-      expect(submissionsHistoryIndex).toBeGreaterThan(authorsIndex)
+      expect(editionManagementIndex).toBeGreaterThan(authorsIndex)
+      expect(newEditionIndex).toBeGreaterThan(editionManagementIndex)
+      expect(submissionsHistoryIndex).toBeGreaterThan(newEditionIndex)
       expect(newSubmissionIndex).toBeGreaterThan(submissionsHistoryIndex)
       expect(statusIndex).toBeGreaterThan(newSubmissionIndex)
     })
