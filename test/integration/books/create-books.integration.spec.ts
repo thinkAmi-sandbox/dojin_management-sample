@@ -160,8 +160,5 @@ describe('Books Creation', () => {
       const savedBooks = await drizzleService.db.select().from(schema.books)
       expect(savedBooks).toHaveLength(0)
     })
-
-
-
   })
 })

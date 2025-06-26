@@ -265,6 +265,14 @@ pnpm start:dev
   - 型定義パッケージも含めて確認（例: `@types/method-override`）
   - **特に注意**: `@nestjs/mapped-types`, `class-validator`, `method-override`
 
+- [ ] **HTTPメソッドオーバーライド対応確認**
+  - PUT/DELETE機能を実装する場合は必須確認
+  - `@Post(':id')` メソッドでHTTPメソッドオーバーライド処理を実装
+  - `body._method === 'PUT'` および `body._method === 'DELETE'` の条件分岐
+  - ValidationPipeの手動実行パターン確認
+  - **参考実装**: 印刷所機能の `updateViaPost` メソッド
+  - **確認項目**: フォームに `<input type="hidden" name="_method" value="PUT">` 存在
+
 - [ ] **URLパスとコントローラーの対応確認**
   - URLパスから適切なコントローラーを判断
   - 例: `/books/:bookId/submissions/new` → BooksControllerに実装
@@ -317,11 +325,17 @@ pnpm start:dev
 
 `./test/integration` ディレクトリに、統合テストのテストコードを段階的に書きます。
 
-#### **YOU MUST**: 段階的テスト実装アプローチ
+#### **YOU MUST**: 段階的テスト実装アプローチ（重要な定義）
 
-**Step 1: ミニマム実装テスト（1-2テスト）**
-- [ ] 最小限の成功ケースのみ実装
-- [ ] 基本的な表示・更新機能の確認
+**⚠️ 重要**: 「段階的」は「テスト追加の順序」であり「機能の省略」ではありません
+- 実装計画書で「✅完了」記載時は必ず全機能実装済みであること
+- 「ミニマム実装」= 「基本機能のテスト優先」であり「一部機能スキップ」ではない
+- **全エンドポイントの実装とテストは必須**（段階的に追加するだけ）
+
+**Step 1: 基本機能テスト優先（1-2テスト）**
+- [ ] 最重要な成功ケースのみ先行実装
+- [ ] 基本的な表示・作成機能の確認
+- [ ] ⚠️ 注意: この段階で全エンドポイントの実装は必須（テストだけ後回し）
 - [ ] この段階でテストが失敗することを確認
 
 **Step 2: バリデーションテスト追加（2-3テスト）**
@@ -329,15 +343,17 @@ pnpm start:dev
 - [ ] 基本的なデータ型エラー
 - [ ] Step 1のテストが通ることを確認してから追加
 
-**Step 3: エッジケーステスト追加（残りテスト）**
+**Step 3: 全機能テスト追加（残りテスト）**
+- [ ] 編集・削除・エッジケース処理
 - [ ] 存在しないリソースエラー
-- [ ] 空値・特殊ケース処理
+- [ ] 全エンドポイントのテストカバレッジ達成必須
 - [ ] Step 1-2のテストが全て通ることを確認してから追加
 
 #### **避けるべきパターン**
 - ❌ 一度に9テスト全て作成する
 - ❌ 複雑なケースから先に実装する
 - ❌ テスト失敗原因の複合化
+- ❌ **機能の一部を未実装のまま「✅完了」記載する**
 
 #### **複合主キー・多対多関係実装時の追加考慮**
 - [ ] **404エラーテストの適切な期待値設定**
@@ -408,7 +424,47 @@ pnpm test:integration
 ユーザーに対して、実装した機能が問題ないかを確認します。
 
 
-### 2-6. テンプレートシステム実装時の追加検証
+### 2-6. 実装完了確認チェックリスト
+
+**YOU MUST**: 機能に✅マークを付ける前に、以下の項目を必ず確認してください：
+
+#### Phase A: 全機能実装確認
+- [ ] **仕様書に記載された全エンドポイントの実装確認**
+  - GET（一覧・詳細・フォーム）エンドポイント実装済み
+  - POST（作成）エンドポイント実装済み
+  - PUT（更新）エンドポイント実装済み
+  - DELETE（削除）エンドポイント実装済み
+  - **重要**: "ミニマム実装"での✅マークは禁止
+
+#### Phase B: HTTPメソッドオーバーライド確認
+- [ ] **PUT/DELETE処理の動作確認**
+  - フォームからの編集ボタンが正常動作
+  - フォームからの削除ボタンが正常動作
+  - `@Post(':id')` メソッドでHTTPメソッドオーバーライド実装済み
+  - ValidationPipeの手動実行が正しく動作
+
+#### Phase C: 統合テスト網羅性確認
+- [ ] **全機能のテストカバレッジ確認**
+  - 各エンドポイントに対応する統合テストが存在
+  - 正常系・異常系両方のテストケースが実装済み
+  - テスト実行時に全件パス確認済み
+
+#### Phase D: エラーハンドリング確認
+- [ ] **例外処理とエラー表示の確認**
+  - 存在しないリソースへのアクセス（404エラー）
+  - バリデーションエラー（400エラー）
+  - ValidationExceptionFilterの適用確認（MPA用エラー表示）
+
+#### Phase E: 型チェック・コード品質確認
+- [ ] **TypeScript型安全性確認**
+  - `pnpm type-check` でエラー0件
+  - import文の正確性確認（type-only vs 通常import）
+  - `pnpm lint` でコード品質チェック通過
+
+**✅マーク基準**: 上記Phase A〜E全てが完了した場合のみ✅マークを付与すること
+
+
+### 2-7. テンプレートシステム実装時の追加検証
 
 EJSテンプレートシステムやビューファイルを扱う機能を実装する際は、以下の追加検証を必須とします：
 
@@ -527,6 +583,9 @@ Priority: 低 - 表示の問題、機能への影響は軽微
 | テストでHTML不一致 | 改行・インデント問題 | 部分文字列検証に変更 | 入稿編集テスト |
 | ValidationPipeエラーがJSONで返される | ValidationExceptionFilter未適用 | パスをフィルターに追加 | 書籍機能 |
 | 空文字列でバリデーションスキップ | PartialType + Transform相互作用 | 事前チェック追加 | 書籍更新機能 |
+| `Cannot POST /resource/1` (404エラー) | HTTPメソッドオーバーライド未実装 | `@Post(':id')`でupdateViaPostメソッド追加 | 印刷所・版管理機能 |
+| `UpdateDto cannot be used as a value` | type-onlyインポートエラー | `import { UpdateDto }`に修正 | 版管理機能 |
+| ✅完了マークだが一部機能未実装 | ミニマム実装の認識齟齬 | 全機能実装後に✅マーク | 実装完了確認強化 |
 
 ### **YOU MUST**: デバッグ効率化のための事前準備
 
@@ -1002,6 +1061,29 @@ async findOne(@Param('id', ParseIntPipe) id: number) {
     deleteUrl: `/resources/${resource.id}`,
     listUrl: '/resources',
   }
+}
+
+// HTTPメソッドオーバーライド処理パターン
+@Post(':id')
+async updateViaPost(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() body: { _method?: string; [key: string]: unknown },
+  @Res() res: Response,
+) {
+  if (body._method === 'PUT') {
+    // ValidationPipeの手動実行
+    const validationPipe = new ValidationPipe({ transform: true })
+    const validatedDto = await validationPipe.transform(body, {
+      type: 'body',
+      metatype: UpdateResourceDto,
+    })
+    await this.service.update(id, validatedDto)
+    return res.redirect(`/resources/${id}`)
+  }
+  if (body._method === 'DELETE') {
+    return this.remove(id, res)
+  }
+  res.status(404).send('Not Found')
 }
 
 // 削除処理パターン

@@ -1,10 +1,5 @@
 import { Transform } from 'class-transformer'
-import {
-  IsOptional,
-  IsString,
-  MaxLength,
-  ValidateIf,
-} from 'class-validator'
+import { IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator'
 
 /**
  * 書籍更新用DTO

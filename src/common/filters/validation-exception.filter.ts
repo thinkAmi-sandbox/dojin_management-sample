@@ -110,6 +110,26 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.role = error
         } else if (error.includes('退会日')) {
           errors.leftAt = error
+        } else if (error.includes('版名')) {
+          errors.versionName = error
+        } else if (error.includes('版番号')) {
+          errors.versionNumber = error
+        } else if (error.includes('基本価格')) {
+          errors.basePrice = error
+        } else if (error.includes('印刷原価')) {
+          errors.printingCost = error
+        } else if (error.includes('発行日')) {
+          errors.publishDate = error
+        } else if (error.includes('版の詳細')) {
+          errors.editionNotes = error
+        } else if (error.includes('表紙画像URL')) {
+          errors.coverImageUrl = error
+        } else if (error.includes('ISBN')) {
+          errors.isbn = error
+        } else if (error.includes('現行版')) {
+          errors.isActive = error
+        } else if (error.includes('完売')) {
+          errors.isSoldOut = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -152,6 +172,13 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /books/:bookId/authors (執筆者追加)
           templatePath = 'book-authors/add'
           title = '執筆者追加'
+        }
+      } else if (path.match(/\/books\/\d+\/editions/)) {
+        // 書籍の版関連パス
+        if (path.match(/\/books\/\d+\/editions$/)) {
+          // POST /books/:bookId/editions (新版作成)
+          templatePath = 'editions/new'
+          title = '新版作成'
         }
       } else if (path.includes('/printing-companies')) {
         if (path.includes('/edit')) {
@@ -328,6 +355,15 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           templatePath = 'exhibits/edit'
           title = '出展申込編集'
         }
+      } else if (path.includes('/editions')) {
+        if (path.includes('/edit')) {
+          templatePath = 'editions/edit'
+          title = '版編集'
+        } else if (path.match(/\/editions\/\d+$/)) {
+          // POST /editions/:id (PUT via _method)
+          templatePath = 'editions/edit'
+          title = '版編集'
+        }
       }
 
       if (templatePath) {
@@ -503,6 +539,37 @@ export class ValidationExceptionFilter implements ExceptionFilter {
             { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
             { name: '執筆者一覧', url: `/books/${bookId}/authors` },
             { name: '執筆者追加', url: null },
+          ],
+        }
+      }
+    } else if (path.match(/\/books\/\d+\/editions/)) {
+      // 書籍の版関連パス
+      const bookIdMatch = path.match(/\/books\/(\d+)\/editions/)
+      if (bookIdMatch) {
+        const bookId = parseInt(bookIdMatch[1], 10)
+        return {
+          edition: {
+            versionName: formData.versionName || '',
+            versionNumber: formData.versionNumber || 1,
+            isbn: formData.isbn || '',
+            pageCount: formData.pageCount || '',
+            basePrice: formData.basePrice || '',
+            printingCost: formData.printingCost || '',
+            publishDate: formData.publishDate || '',
+            editionNotes: formData.editionNotes || '',
+            coverImageUrl: formData.coverImageUrl || '',
+            isActive: formData.isActive || false,
+            isSoldOut: formData.isSoldOut || false,
+          },
+          book: {
+            id: bookId,
+            title: `書籍 #${bookId}`,
+          },
+          breadcrumbs: [
+            { name: '書籍一覧', url: '/books' },
+            { name: `書籍 #${bookId}`, url: `/books/${bookId}` },
+            { name: '版一覧', url: `/books/${bookId}/editions` },
+            { name: '新版作成', url: null },
           ],
         }
       }
@@ -918,6 +985,40 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               { name: '出展申込一覧', url: '/exhibits' },
               { name: `出展申込 #${id}`, url: `/exhibits/${id}` },
               { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.includes('/editions')) {
+      // パスからIDを抽出 (例: /editions/1 -> 1)
+      const idMatch = path.match(/\/editions\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 編集の場合
+      return {
+        edition: {
+          id,
+          versionName: formData.versionName || '',
+          versionNumber: formData.versionNumber || 1,
+          isbn: formData.isbn || '',
+          pageCount: formData.pageCount || '',
+          basePrice: formData.basePrice || '',
+          printingCost: formData.printingCost || '',
+          publishDate: formData.publishDate || '',
+          editionNotes: formData.editionNotes || '',
+          coverImageUrl: formData.coverImageUrl || '',
+          isActive: formData.isActive || false,
+          isSoldOut: formData.isSoldOut || false,
+        },
+        book: {
+          id: 1, // bookIdが不明なため暫定値
+          title: '書籍', // 暫定タイトル
+        },
+        breadcrumbs: id
+          ? [
+              { name: '書籍一覧', url: '/books' },
+              { name: '書籍', url: '#' }, // bookIdが不明なため
+              { name: '版一覧', url: '#' },
+              { name: '版編集', url: null },
             ]
           : [],
       }

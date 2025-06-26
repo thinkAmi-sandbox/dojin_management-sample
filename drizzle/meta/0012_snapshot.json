@@ -54,9 +54,7 @@
         "Author_email_unique": {
           "name": "Author_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -86,12 +84,8 @@
           "name": "BookAuthor_bookId_Book_id_fk",
           "tableFrom": "BookAuthor",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -99,12 +93,8 @@
           "name": "BookAuthor_authorId_Author_id_fk",
           "tableFrom": "BookAuthor",
           "tableTo": "Author",
-          "columnsFrom": [
-            "authorId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["authorId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -112,10 +102,7 @@
       "compositePrimaryKeys": {
         "BookAuthor_bookId_authorId_pk": {
           "name": "BookAuthor_bookId_authorId_pk",
-          "columns": [
-            "bookId",
-            "authorId"
-          ]
+          "columns": ["bookId", "authorId"]
         }
       },
       "uniqueConstraints": {},
@@ -264,12 +251,8 @@
           "name": "CircleAuthor_circleId_Circle_id_fk",
           "tableFrom": "CircleAuthor",
           "tableTo": "Circle",
-          "columnsFrom": [
-            "circleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["circleId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -277,12 +260,8 @@
           "name": "CircleAuthor_authorId_Author_id_fk",
           "tableFrom": "CircleAuthor",
           "tableTo": "Author",
-          "columnsFrom": [
-            "authorId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["authorId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -290,10 +269,7 @@
       "compositePrimaryKeys": {
         "CircleAuthor_circleId_authorId_pk": {
           "name": "CircleAuthor_circleId_authorId_pk",
-          "columns": [
-            "circleId",
-            "authorId"
-          ]
+          "columns": ["circleId", "authorId"]
         }
       },
       "uniqueConstraints": {},
@@ -413,12 +389,8 @@
           "name": "Deadline_bookId_Book_id_fk",
           "tableFrom": "Deadline",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -535,12 +507,8 @@
           "name": "Edition_bookId_Book_id_fk",
           "tableFrom": "Edition",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -550,9 +518,7 @@
         "Edition_isbn_unique": {
           "name": "Edition_isbn_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "isbn"
-          ]
+          "columns": ["isbn"]
         }
       },
       "policies": {},
@@ -686,12 +652,8 @@
           "name": "ExhibitBook_exhibitId_Exhibit_id_fk",
           "tableFrom": "ExhibitBook",
           "tableTo": "Exhibit",
-          "columnsFrom": [
-            "exhibitId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exhibitId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -699,12 +661,8 @@
           "name": "ExhibitBook_bookId_Book_id_fk",
           "tableFrom": "ExhibitBook",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -712,10 +670,7 @@
       "compositePrimaryKeys": {
         "ExhibitBook_exhibitId_bookId_pk": {
           "name": "ExhibitBook_exhibitId_bookId_pk",
-          "columns": [
-            "exhibitId",
-            "bookId"
-          ]
+          "columns": ["exhibitId", "bookId"]
         }
       },
       "uniqueConstraints": {},
@@ -811,12 +766,8 @@
           "name": "Exhibit_eventId_Event_id_fk",
           "tableFrom": "Exhibit",
           "tableTo": "Event",
-          "columnsFrom": [
-            "eventId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eventId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -824,12 +775,8 @@
           "name": "Exhibit_circleId_Circle_id_fk",
           "tableFrom": "Exhibit",
           "tableTo": "Circle",
-          "columnsFrom": [
-            "circleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["circleId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1025,12 +972,8 @@
           "name": "Submission_bookId_Book_id_fk",
           "tableFrom": "Submission",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1038,12 +981,8 @@
           "name": "Submission_printingCompanyId_PrintingCompany_id_fk",
           "tableFrom": "Submission",
           "tableTo": "PrintingCompany",
-          "columnsFrom": [
-            "printingCompanyId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["printingCompanyId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1059,31 +998,17 @@
     "public.circle_role": {
       "name": "circle_role",
       "schema": "public",
-      "values": [
-        "representative",
-        "member",
-        "guest"
-      ]
+      "values": ["representative", "member", "guest"]
     },
     "public.exhibit_status": {
       "name": "exhibit_status",
       "schema": "public",
-      "values": [
-        "applied",
-        "accepted",
-        "rejected",
-        "cancelled"
-      ]
+      "values": ["applied", "accepted", "rejected", "cancelled"]
     },
     "public.writing_status": {
       "name": "writing_status",
       "schema": "public",
-      "values": [
-        "planning",
-        "writing",
-        "editing",
-        "completed"
-      ]
+      "values": ["planning", "writing", "editing", "completed"]
     }
   },
   "schemas": {},

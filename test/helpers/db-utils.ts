@@ -6,6 +6,7 @@ import * as schema from '../../src/db/schema'
 export class TestDbUtils {
   private pool: Pool
   private db: ReturnType<typeof drizzle>
+  public schema = schema // スキーマをpublicプロパティとして公開
 
   constructor() {
     const databaseUrl =

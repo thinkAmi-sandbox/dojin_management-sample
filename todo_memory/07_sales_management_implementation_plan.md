@@ -371,7 +371,7 @@ export const pricingRules = pgTable('PricingRule', {
 - **✅ Phase 1-1**: Editionsテーブルスキーマ設計・実装 （完了）
 - **✅ Phase 1-2**: Booksテーブル修正（pageCount削除、新フィールド追加） （完了）
 - **✅ Phase 1-3**: マイグレーション実行・型定義追加 （完了）
-- **⏳ Phase 1-4**: 版管理モジュール基盤実装（TDD）
+- **✅ Phase 1-4**: 版管理モジュール基盤実装（TDD） （完了）
 - **⏳ Phase 1-5**: 書籍詳細からの版管理アクセス機能
 
 #### 📋 実装の全体戦略
@@ -481,31 +481,103 @@ export const books = pgTable('Book', {
 - **✅ スキーマ修正**: Booksテーブルの修正完了
 - **✅ 再発防止策**: 対話式プロンプト問題への対応策実装完了
 
-#### 🗂️ Phase 1-4: 版管理モジュール基盤実装（TDD）
+#### 🗂️ Phase 1-4: 版管理モジュール基盤実装（TDD） ✅ **完了**
 
-**TDD段階的実装**
+**✅ 実装完了済み（2025年6月26日）**
 
-*Step 1: 統合テスト作成（2-3テスト）*
-- `test/integration/editions/editions.integration.spec.ts` 作成
-- 基本的なCRUD操作のテスト（書籍から版作成、版一覧、版詳細）
+**TDD段階的実装完了**
 
-*Step 2: プロダクションコード実装*
-- EditionsModule, EditionsService, EditionsController作成
-- DTO作成: CreateEditionDto, UpdateEditionDto
-- ValidationPipe統一パターン適用
+*✅ Step 1: 統合テスト作成（6テスト）*
+- `test/integration/editions/editions.integration.spec.ts` 作成完了
+- 完全なCRUD操作のテスト（一覧、作成、詳細、編集フォーム、更新、削除）
+- 6/6テスト成功確認（完全なCRUDテストカバレッジ達成）
 
-*Step 3: ビューファイル実装*
-- EJSテンプレート4ファイル作成（一覧、詳細、作成、編集）
-- レスポンシブ対応とグローバルナビゲーション統合
+*✅ Step 2: プロダクションコード実装*
+- EditionsModule, EditionsService, EditionsController作成完了
+- DTO作成: CreateEditionDto, UpdateEditionDto 完了
+- ValidationPipe統一パターン適用完了
 
-**URLエンドポイント設計**
-- `GET /books/:bookId/editions` - 書籍の版一覧
-- `GET /books/:bookId/editions/new` - 新版作成フォーム
-- `POST /books/:bookId/editions` - 新版作成
-- `GET /editions/:id` - 版詳細
-- `GET /editions/:id/edit` - 版編集フォーム
-- `PUT /editions/:id` - 版更新
-- `DELETE /editions/:id` - 版削除
+*✅ Step 3: ビューファイル実装*
+- EJSテンプレート4ファイル作成完了（一覧、詳細、作成、編集）
+- レスポンシブ対応とグローバルナビゲーション統合完了
+
+**⚠️ 実装中に発見した重要な問題と解決策**
+
+**問題1: 実装完了マーキングの認識齟齬**
+- **問題内容**: Phase 1-4が✅完了マークされていたが、実際には3テストのみ実装（編集・更新・削除テストが欠如）
+- **根本原因**: "ミニマム実装"の解釈違い（段階的テスト追加 vs 機能省略）
+- **解決策**: 
+  - 欠落した3つの統合テスト追加実装
+  - CLAUDE.md「段階的テスト実装アプローチ」セクション明確化
+  - 実装完了確認チェックリスト新設（Phase A〜E の5段階確認）
+
+**問題2: HTTPメソッドオーバーライド実装漏れ**
+- **問題内容**: フォームからの編集ボタンクリック時「Cannot POST /editions/1」エラー
+- **根本原因**: `@Post(':id')` メソッドでHTTPメソッドオーバーライド処理未実装
+- **解決策**: 
+  - `updateViaPost` メソッド実装（印刷所機能パターン踏襲）
+  - ValidationPipeの手動実行パターン適用
+  - TypeScript import文修正（type-only → 通常import）
+
+**🔒 再発防止策（CLAUDE.md更新完了）**
+
+*1. 実装前チェックリストの強化*
+- HTTPメソッドオーバーライド対応確認項目追加
+- PUT/DELETE機能実装時の必須確認リスト化
+
+*2. よくあるエラーパターン辞書更新*
+- `Cannot POST /resource/1` エラーパターン追加
+- `UpdateDto cannot be used as a value` TypeScriptエラー追加
+- ✅完了マークと実装状況齟齬パターン追加
+
+*3. 効率的実装パターン集拡充*
+- HTTPメソッドオーバーライド処理テンプレート追加
+- ValidationPipe手動実行パターン標準化
+
+*4. 実装完了確認チェックリスト新設*
+- Phase A: 全機能実装確認（✅マーク前の必須条件明文化）
+- Phase B: HTTPメソッドオーバーライド確認
+- Phase C: 統合テスト網羅性確認
+- Phase D: エラーハンドリング確認
+- Phase E: 型チェック・コード品質確認
+
+**✅ 実装されたURLエンドポイント**
+- `GET /books/:bookId/editions` - 書籍の版一覧 ✅
+- `GET /books/:bookId/editions/new` - 新版作成フォーム ✅
+- `POST /books/:bookId/editions` - 新版作成 ✅
+- `GET /editions/:id` - 版詳細 ✅
+- `GET /editions/:id/edit` - 版編集フォーム ✅
+- `PUT /editions/:id` - 版更新 ✅
+- `DELETE /editions/:id` - 版削除 ✅
+
+**✅ 技術的実装内容**
+- **EditionsService**: 完全CRUD実装（create, findAllByBookId, findOne, update, remove）
+- **EditionsController**: 2コントローラー分離（EditionsController, EditionDetailController）
+- **DTO設計**: ValidationPipe統一パターン適用（@Transform + class-validator）
+- **ビューファイル**: レスポンシブ対応の4ファイル実装
+- **エラーハンドリング**: NotFoundException + ParseIntPipe統一
+- **ValidationExceptionFilter**: 版管理パス対応追加
+
+**✅ 最終技術的検証結果（問題解決後）**
+- **統合テスト**: 6/6テスト通過（完全なCRUDテストカバレッジ） ✅
+- **HTTPメソッドオーバーライド**: 編集・削除フォーム動作確認 ✅
+- **型チェック**: エラー0件 ✅
+- **Lint**: 1ファイル自動修正完了 ✅
+- **ビルド**: `dist/views/editions/` にビューファイルコピー確認 ✅
+- **実装完了確認**: Phase A〜E全項目クリア ✅
+
+**✅ 改善された開発パターン（再発防止策適用後）**
+1. **実装前チェックリスト強化**: HTTPメソッドオーバーライド対応確認を必須化
+2. **TDD段階的実装の明確化**: "段階的"=テスト追加順序（機能省略ではない）
+3. **実装完了確認の厳格化**: ✅マーク前の5段階確認プロセス必須化
+4. **ValidationPipe統一**: @Transform + class-validator統一パターン
+5. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
+
+**📚 今回の学び（次フェーズへの教訓）**
+- **問題の早期発見**: 統合テスト不足は早期発見可能（テストファイル確認）
+- **動作確認の重要性**: フォーム操作の実際のテストは必須
+- **パターン踏襲の価値**: 既存の印刷所機能パターンが解決の鍵
+- **ドキュメント更新の効果**: 再発防止策の文書化により今後の品質向上
 
 #### 🗂️ Phase 1-5: 書籍詳細からの版管理アクセス機能
 

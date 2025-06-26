@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .breadcrumb { margin-bottom: 15px; color: #666; }
+        .breadcrumb a { color: #007bff; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .actions { margin-bottom: 20px; }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            padding: 8px 16px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            margin-right: 8px;
+            display: inline-block;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: left; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        .actions-cell { white-space: nowrap; }
+        .action-link { margin-right: 8px; text-decoration: none; font-size: 0.9em; }
+        .empty-message { text-align: center; padding: 40px; color: #666; }
+        
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .status-soldout { background: #fff3cd; color: #856404; }
+        .status-available { background: #d1ecf1; color: #0c5460; }
+        
+        .book-info { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+        .book-title { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .actions { text-align: center; }
+            .btn { margin-bottom: 8px; }
+            table { font-size: 0.9em; }
+            th, td { padding: 8px 4px; }
+            .book-info { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb">
+        <a href="/books">書籍一覧</a> &gt; 
+        <a href="/books/<%= book.id %>"><%= book.title %></a> &gt; 
+        版一覧
+    </div>
+
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="book-info">
+        <div class="book-title"><%= book.title %></div>
+        <% if (book.subtitle) { %>
+            <div><%= book.subtitle %></div>
+        <% } %>
+        <% if (book.description) { %>
+            <div style="color: #666; margin-top: 5px;"><%= book.description %></div>
+        <% } %>
+    </div>
+
+    <div class="actions">
+        <a href="/books/<%= book.id %>/editions/new" class="btn">➕ 新版作成</a>
+        <a href="/books/<%= book.id %>" class="btn btn-secondary">← 書籍詳細に戻る</a>
+    </div>
+
+    <% if (editions.length > 0) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>版名</th>
+                    <th>版番号</th>
+                    <th>価格</th>
+                    <th>ページ数</th>
+                    <th>発行日</th>
+                    <th>ステータス</th>
+                    <th>ISBN</th>
+                    <th>備考</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% editions.forEach(edition => { %>
+                    <tr>
+                        <td><strong><%= edition.versionName %></strong></td>
+                        <td><%= edition.versionNumber %></td>
+                        <td><%= edition.basePrice %></td>
+                        <td><%= edition.pageCount %></td>
+                        <td><%= edition.publishDate %></td>
+                        <td>
+                            <span class="status-badge <%= edition.isActive ? 'status-active' : 'status-inactive' %>">
+                                <%= edition.isActiveText %>
+                            </span>
+                            <% if (edition.isSoldOut) { %>
+                                <br>
+                                <span class="status-badge status-soldout">
+                                    <%= edition.isSoldOutText %>
+                                </span>
+                            <% } else { %>
+                                <br>
+                                <span class="status-badge status-available">
+                                    <%= edition.isSoldOutText %>
+                                </span>
+                            <% } %>
+                        </td>
+                        <td><%= edition.isbn %></td>
+                        <td><%= edition.editionNotes %></td>
+                        <td class="actions-cell">
+                            <a href="/editions/<%= edition.id %>" class="action-link">📖 詳細</a>
+                            <a href="/editions/<%= edition.id %>/edit" class="action-link">✏️ 編集</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <div class="empty-message">
+            <p>まだ版が登録されていません。</p>
+            <p><a href="/books/<%= book.id %>/editions/new" class="btn">新版を作成する</a></p>
+        </div>
+    <% } %>
+</body>
+</html>

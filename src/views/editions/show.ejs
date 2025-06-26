@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .breadcrumb { margin-bottom: 15px; color: #666; }
+        .breadcrumb a { color: #007bff; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .actions { margin-bottom: 20px; }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            padding: 8px 16px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            margin-right: 8px;
+            display: inline-block;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        
+        .detail-section { 
+            margin-bottom: 30px; 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+        .section-title { 
+            font-size: 1.2em; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            color: #495057;
+        }
+        .detail-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+        }
+        .detail-item { 
+            display: flex; 
+            margin-bottom: 10px; 
+        }
+        .detail-label { 
+            font-weight: bold; 
+            min-width: 150px; 
+            color: #495057;
+        }
+        .detail-value { 
+            flex: 1; 
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .status-soldout { background: #fff3cd; color: #856404; }
+        .status-available { background: #d1ecf1; color: #0c5460; }
+        
+        .book-info { 
+            background: #e9ecef; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+        .book-title { font-size: 1.1em; font-weight: bold; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .actions { text-align: center; }
+            .btn { margin-bottom: 8px; }
+            .detail-section { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb">
+        <a href="/books">書籍一覧</a> &gt; 
+        <a href="<%= bookDetailUrl %>"><%= book.title %></a> &gt; 
+        <a href="<%= listUrl %>">版一覧</a> &gt; 
+        <%= edition.versionName %>
+    </div>
+
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="book-info">
+        <div class="book-title"><%= book.title %></div>
+        <% if (book.subtitle) { %>
+            <div><%= book.subtitle %></div>
+        <% } %>
+    </div>
+
+    <div class="actions">
+        <a href="<%= editUrl %>" class="btn">✏️ 編集</a>
+        <a href="<%= listUrl %>" class="btn btn-secondary">← 版一覧に戻る</a>
+        <form method="POST" action="<%= deleteUrl %>" style="display: inline;" onsubmit="return confirm('この版を削除してもよろしいですか？')">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">🗑️ 削除</button>
+        </form>
+    </div>
+
+    <!-- 基本情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">📖 基本情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">版名:</div>
+                <div class="detail-value"><%= edition.versionName %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">版番号:</div>
+                <div class="detail-value"><%= edition.versionNumber %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">基本価格:</div>
+                <div class="detail-value"><%= edition.basePrice %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">ページ数:</div>
+                <div class="detail-value"><%= edition.pageCount %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">発行日:</div>
+                <div class="detail-value"><%= edition.publishDate %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">印刷原価:</div>
+                <div class="detail-value"><%= edition.printingCost %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ステータス情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">📊 ステータス情報</div>
+        <div class="detail-item">
+            <div class="detail-label">版ステータス:</div>
+            <div class="detail-value">
+                <span class="status-badge <%= edition.isActive ? 'status-active' : 'status-inactive' %>">
+                    <%= edition.isActiveText %>
+                </span>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">販売ステータス:</div>
+            <div class="detail-value">
+                <span class="status-badge <%= edition.isSoldOut ? 'status-soldout' : 'status-available' %>">
+                    <%= edition.isSoldOutText %>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">📝 詳細情報</div>
+        <div class="detail-item">
+            <div class="detail-label">ISBN:</div>
+            <div class="detail-value"><%= edition.isbn %></div>
+        </div>
+        <% if (edition.coverImageUrl) { %>
+            <div class="detail-item">
+                <div class="detail-label">表紙画像URL:</div>
+                <div class="detail-value">
+                    <a href="<%= edition.coverImageUrl %>" target="_blank"><%= edition.coverImageUrl %></a>
+                </div>
+            </div>
+        <% } %>
+        <div class="detail-item" style="flex-direction: column; align-items: stretch;">
+            <div class="detail-label" style="margin-bottom: 8px;">版の詳細:</div>
+            <div class="detail-value" style="background: white; padding: 10px; border-radius: 4px; white-space: pre-line;">
+<%= edition.editionNotes %>
+            </div>
+        </div>
+    </div>
+
+    <!-- システム情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">⚙️ システム情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">作成日:</div>
+                <div class="detail-value"><%= edition.createdAt %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">更新日:</div>
+                <div class="detail-value"><%= edition.updatedAt %></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

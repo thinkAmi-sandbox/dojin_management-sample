@@ -15,5 +15,6 @@ import { BooksListView } from './views/books-list.view'
     SubmissionsService,
     PrintingCompaniesService,
   ],
+  exports: [BooksService],
 })
 export class BooksModule {}

@@ -1,10 +1,5 @@
 import { Transform } from 'class-transformer'
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 
 /**
  * 書籍作成用DTO
@@ -27,5 +22,4 @@ export class CreateBookDto {
   @IsOptional()
   @IsString({ message: '説明は文字列で入力してください' })
   description?: string
-
 }
