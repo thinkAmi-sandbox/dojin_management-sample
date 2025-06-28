@@ -22,7 +22,7 @@ Phase 2では、Phase 1で確立した版管理基盤を活用して、版ベー
 - **✅ Phase 2-1 Step 1**: StorageLocationsテーブルスキーマ作成 （完了 2025年6月28日）
 - **✅ Phase 2-1 Step 2**: storage-locationsモジュール実装（TDD） （完了 2025年6月28日）
 
-### ⏳ Phase 2-2: Stocksテーブル・在庫管理基盤実装 （次のアクション）
+### 🔄 Phase 2-2: Stocksテーブル・在庫管理基盤実装 （Step 1完了・Step 2進行中）
 ### ⏳ Phase 2-3: StockMovementsテーブル・在庫移動履歴実装 （予定）
 ### ⏳ Phase 2-4: 統合・検証・版詳細画面への在庫表示 （予定）
 
@@ -154,7 +154,9 @@ export class CreateStorageLocationDto {
 - **✅ Phase 2-1完了**: StorageLocationsテーブル・モジュール完全実装済み（2025年6月28日）
 - **✅ 版・保管場所連携**: editionId, locationIdの外部キー設計準備完了
 
-### Step 1: Stocksテーブルスキーマ作成・マイグレーション
+### Step 1: Stocksテーブルスキーマ作成・マイグレーション ✅ 完了
+
+**実装完了済み（2025年6月28日）**
 
 #### データベーススキーマ設計詳細
 ```typescript
@@ -221,12 +223,14 @@ ALTER TABLE "Stock" ADD CONSTRAINT "unq_stock_edition_location"
 UNIQUE ("editionId", "locationId");
 ```
 
-#### 実装手順
-1. **src/db/schema.ts**: Stocksテーブル定義追加
-2. **マイグレーション生成**: `pnpm drizzle:generate`（対話式プロンプト対応）
-3. **DB適用**: `pnpm drizzle:migrate` + `pnpm drizzle:migrate:test`
-4. **型チェック**: `pnpm type-check`
-5. **testDbUtils更新**: cleanupDatabase()にStockテーブル追加
+#### 実装手順・完了状況
+1. **✅ src/db/schema.ts**: Stocksテーブル定義追加
+2. **✅ マイグレーション生成**: `pnpm drizzle:generate`（対話式プロンプトなし、正常生成）
+3. **✅ マイグレーション拡張**: 数量制約・ユニーク制約・インデックス追加
+4. **✅ DB適用**: `pnpm drizzle:migrate` + `pnpm drizzle:migrate:test`
+5. **✅ 型チェック**: `pnpm type-check`（エラー0件）
+6. **✅ testDbUtils更新**: cleanupDatabase()にStockテーブル追加
+7. **✅ 統合テスト確認**: 全303件テスト通過
 
 ### Step 2: stocksモジュール基盤実装（TDD）
 
@@ -572,4 +576,4 @@ async moveStock(moveStockDto: MoveStockDto): Promise<void> {
 ---
 
 **最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 2-2完了時
+**次回更新予定**: Phase 2-2 Step 2完了時

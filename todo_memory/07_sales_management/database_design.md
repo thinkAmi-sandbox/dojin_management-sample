@@ -78,7 +78,7 @@ export const storageLocations = pgTable('StorageLocation', {
 - Enum定義: storage_location_type（4タイプ）
 - 型定義: StorageLocation, NewStorageLocation型 export済み
 
-### 3. 在庫（Stocks）テーブル
+### 3. 在庫（Stocks）テーブル ✅ 実装済み
 
 ```typescript
 export const stocks = pgTable('Stock', {
@@ -100,6 +100,14 @@ export const stocks = pgTable('Stock', {
 - **保管場所ID参照**: locationIdで場所別在庫
 - **数量管理**: 総数量、予約済み、販売可能数量
 - **制約**: 総数量 = 予約済み + 販売可能数量
+
+**実装状況**: ✅ 完了（2025年6月28日）
+- マイグレーション: `0014_empty_blue_blade.sql`
+- 外部キー制約: editions.id、storageLocations.id への参照
+- 数量制約: 非負数チェック、計算整合性チェック
+- ユニーク制約: (editionId, locationId) 組み合わせ重複防止
+- インデックス: 版別・場所別検索最適化用4個
+- 型定義: Stock, NewStock型 export済み
 
 ### 4. 在庫移動（StockMovements）テーブル
 
@@ -333,9 +341,9 @@ SalesTransactions (1) ←→ (N) SalesDetails
 - ✅ Booksテーブル修正
 - ✅ StorageLocationsテーブル作成
 
-#### Stage 2: 在庫管理テーブル作成（Phase 2予定）
-- Stocksテーブル作成
-- StockMovementsテーブル作成
+#### Stage 2: 在庫管理テーブル作成（Phase 2進行中）
+- ✅ Stocksテーブル作成（完了 2025年6月28日）
+- ⏳ StockMovementsテーブル作成（予定）
 
 #### Stage 3: 販売管理テーブル作成（Phase 4予定）
 - SalesTransactionsテーブル作成
@@ -428,4 +436,4 @@ CHECK ("contractStartDate" <= "contractEndDate");
 ---
 
 **最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 2 在庫管理テーブル実装時
+**次回更新予定**: Phase 2-3 在庫移動履歴テーブル実装時
