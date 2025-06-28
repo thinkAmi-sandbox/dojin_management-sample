@@ -52,6 +52,7 @@
 
     <div class="actions">
         <a href="<%= listUrl %>" class="btn btn-secondary">一覧に戻る</a>
+        <a href="<%= editUrl %>" class="btn">編集</a>
         <form style="display: inline;" onsubmit="return confirm('この在庫データを削除してもよろしいですか？\n\nこの操作は元に戻せません。')" action="<%= deleteUrl %>" method="post">
             <input type="hidden" name="_method" value="DELETE">
             <button type="submit" class="btn btn-danger">削除</button>

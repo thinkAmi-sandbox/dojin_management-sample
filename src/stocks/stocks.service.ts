@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { and, desc, eq } from 'drizzle-orm'
-import { stocks, editions, storageLocations, books, Stock } from '../db/schema'
+import { Stock, books, editions, stocks, storageLocations } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateStockDto } from './dto/create-stock.dto'
 import { UpdateStockDto } from './dto/update-stock.dto'
@@ -104,15 +104,21 @@ export class StocksService {
   }
 
   async create(createStockDto: CreateStockDto): Promise<Stock> {
+    // 数値変換
+    const editionId = Number.parseInt(createStockDto.editionId, 10)
+    const locationId = Number.parseInt(createStockDto.locationId, 10)
+
+    // ID形式チェック
+    if (isNaN(editionId) || isNaN(locationId)) {
+      throw new Error('版IDまたは保管場所IDが無効です')
+    }
+
     // 同一版・場所の重複チェック
     const existingStock = await this.drizzleService.db
       .select()
       .from(stocks)
       .where(
-        and(
-          eq(stocks.editionId, createStockDto.editionId),
-          eq(stocks.locationId, createStockDto.locationId),
-        ),
+        and(eq(stocks.editionId, editionId), eq(stocks.locationId, locationId)),
       )
       .limit(1)
 
@@ -136,8 +142,8 @@ export class StocksService {
     const result = await this.drizzleService.db
       .insert(stocks)
       .values({
-        editionId: createStockDto.editionId,
-        locationId: createStockDto.locationId,
+        editionId,
+        locationId,
         quantity,
         reservedQuantity,
         availableQuantity,

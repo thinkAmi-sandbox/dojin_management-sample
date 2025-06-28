@@ -140,6 +140,22 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.isActive = error
         } else if (error.includes('完売')) {
           errors.isSoldOut = error
+        } else if (error.includes('版ID')) {
+          errors.editionId = error
+        } else if (error.includes('保管場所ID')) {
+          errors.locationId = error
+        } else if (error.includes('在庫数')) {
+          errors.quantity = error
+        } else if (error.includes('予約済み数')) {
+          errors.reservedQuantity = error
+        } else if (error.includes('販売可能数')) {
+          errors.availableQuantity = error
+        } else if (
+          error.includes('この版と保管場所の組み合わせの在庫は既に存在します')
+        ) {
+          errors._general = error
+        } else if (error.includes('在庫数量が不整合です')) {
+          errors._general = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -385,6 +401,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /editions/:id (PUT via _method)
           templatePath = 'editions/edit'
           title = '版編集'
+        }
+      } else if (path.includes('/stocks')) {
+        if (path.includes('/edit')) {
+          templatePath = 'stocks/edit'
+          title = '在庫編集'
+        } else if (path.endsWith('/stocks')) {
+          templatePath = 'stocks/index'
+          title = '在庫一覧'
+        } else if (path.match(/\/stocks\/\d+$/)) {
+          // POST /stocks/:id (PUT via _method)
+          templatePath = 'stocks/edit'
+          title = '在庫編集'
         }
       }
 
@@ -1166,6 +1194,48 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           ? [
               { name: '保管場所一覧', url: '/storage-locations' },
               { name: `保管場所 #${id}`, url: `/storage-locations/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.includes('/stocks')) {
+      // パスからIDを抽出 (例: /stocks/1 -> 1)
+      const idMatch = path.match(/\/stocks\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/stocks') {
+        return {
+          formData,
+          filters: {
+            editionId: '',
+            locationId: '',
+          },
+          stocks: [], // 空の在庫一覧
+          editions: [
+            { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍' },
+          ],
+          locations: [{ id: 1, name: 'ダミー保管場所', type: 'home' }],
+        }
+      }
+
+      // 編集の場合
+      return {
+        stock: {
+          id,
+          editionId: formData.editionId || '',
+          locationId: formData.locationId || '',
+          quantity: formData.quantity || '',
+          reservedQuantity: formData.reservedQuantity || '',
+          availableQuantity: formData.availableQuantity || '',
+          notes: formData.notes || '',
+        },
+        editions: [{ id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍' }],
+        locations: [{ id: 1, name: 'ダミー保管場所', type: 'home' }],
+        breadcrumbs: id
+          ? [
+              { name: '在庫一覧', url: '/stocks' },
+              { name: `在庫 #${id}`, url: `/stocks/${id}` },
               { name: '編集', url: null },
             ]
           : [],

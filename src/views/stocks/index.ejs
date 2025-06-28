@@ -70,6 +70,64 @@
         <a href="/stocks/check" class="btn">📋 棚卸し</a>
     </div>
 
+    <!-- エラー表示 -->
+    <% if (typeof errors !== 'undefined' && errors) { %>
+        <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
+            <% if (errors._general) { %>
+                <p>⚠️ <%= errors._general %></p>
+            <% } %>
+            <% if (errors.editionId) { %>
+                <p>⚠️ <%= errors.editionId %></p>
+            <% } %>
+            <% if (errors.locationId) { %>
+                <p>⚠️ <%= errors.locationId %></p>
+            <% } %>
+            <% if (errors.quantity) { %>
+                <p>⚠️ <%= errors.quantity %></p>
+            <% } %>
+            <% if (errors.reservedQuantity) { %>
+                <p>⚠️ <%= errors.reservedQuantity %></p>
+            <% } %>
+            <% if (errors.availableQuantity) { %>
+                <p>⚠️ <%= errors.availableQuantity %></p>
+            <% } %>
+        </div>
+    <% } %>
+
+    <!-- 在庫作成フォーム -->
+    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h3>🆕 新規在庫登録</h3>
+        <form method="POST" action="/stocks">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                <div>
+                    <label for="editionId" style="font-weight: bold;">版ID:</label>
+                    <input type="number" id="editionId" name="editionId" required value="<%= typeof formData !== 'undefined' && formData.editionId ? formData.editionId : '' %>" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label for="locationId" style="font-weight: bold;">保管場所ID:</label>
+                    <input type="number" id="locationId" name="locationId" required value="<%= typeof formData !== 'undefined' && formData.locationId ? formData.locationId : '' %>" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label for="quantity" style="font-weight: bold;">在庫数:</label>
+                    <input type="number" id="quantity" name="quantity" min="0" value="<%= typeof formData !== 'undefined' && formData.quantity ? formData.quantity : '' %>" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label for="reservedQuantity" style="font-weight: bold;">予約済み数:</label>
+                    <input type="number" id="reservedQuantity" name="reservedQuantity" min="0" value="<%= typeof formData !== 'undefined' && formData.reservedQuantity ? formData.reservedQuantity : '' %>" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label for="availableQuantity" style="font-weight: bold;">販売可能数:</label>
+                    <input type="number" id="availableQuantity" name="availableQuantity" min="0" value="<%= typeof formData !== 'undefined' && formData.availableQuantity ? formData.availableQuantity : '' %>" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label for="notes" style="font-weight: bold;">備考:</label>
+                    <input type="text" id="notes" name="notes" value="<%= typeof formData !== 'undefined' && formData.notes ? formData.notes : '' %>" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+            </div>
+            <button type="submit" class="btn">在庫登録</button>
+        </form>
+    </div>
+
     <% if (stocks.length > 0) { %>
         <table>
             <thead>

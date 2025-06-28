@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -64,7 +65,35 @@ export class StocksController {
   @UsePipes(ValidationPipe)
   @Redirect('/stocks')
   async create(@Body() createStockDto: CreateStockDto) {
-    await this.stocksService.create(createStockDto)
+    try {
+      await this.stocksService.create(createStockDto)
+    } catch (error) {
+      // 重複チェックエラーはBadRequestExceptionに変換
+      if (
+        error instanceof Error &&
+        error.message.includes(
+          'この版と保管場所の組み合わせの在庫は既に存在します',
+        )
+      ) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: [error.message],
+          error: 'Bad Request',
+        })
+      }
+      // 数量バランスチェックエラーもBadRequestExceptionに変換
+      if (
+        error instanceof Error &&
+        error.message.includes('在庫数量が不整合です')
+      ) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: [error.message],
+          error: 'Bad Request',
+        })
+      }
+      throw error
+    }
   }
 
   @Get('check')
@@ -119,7 +148,12 @@ export class StocksController {
   ) {
     if (body._method === 'PUT') {
       // ValidationPipeの手動実行
-      const validationPipe = new ValidationPipe({ transform: true })
+      const validationPipe = new ValidationPipe({
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      })
       const validatedDto = await validationPipe.transform(body, {
         type: 'body',
         metatype: UpdateStockDto,

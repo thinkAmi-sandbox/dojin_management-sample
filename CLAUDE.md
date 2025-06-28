@@ -277,6 +277,12 @@ pnpm start:dev
   - **重要**: PostgreSQL型制約（integer, timestamp等）との整合性確認
 
 **Phase 5: ValidationExceptionFilter統合確認**
+- [ ] **Phase 2-2教訓の活用必須**
+  - 詳細は `docs/development-lessons/phase-2-2-lessons.md` を参照
+  - @Redirect + ValidationPipe競合問題の事前回避策
+  - it.skip()使用ガバナンス強化策
+  - DTO型選択基準（UI入力 → string型、サービス層で数値変換）
+
 - [ ] **共通コンポーネント統合設計**
   - ValidationExceptionFilterとの統合ポイント事前特定
   - テンプレート変数依存関係マップ作成（authors, roles, formData等）
@@ -534,6 +540,10 @@ Priority: 低 - 表示の問題、機能への影響は軽微
 | `Cannot POST /resource/1` (404エラー) | HTTPメソッドオーバーライド未実装 | `@Post(':id')`でupdateViaPostメソッド追加 | 印刷所・版管理機能 |
 | `UpdateDto cannot be used as a value` | type-onlyインポートエラー | `import { UpdateDto }`に修正 | 版管理機能 |
 | ✅完了マークだが一部機能未実装 | ミニマム実装の認識齟齬 | 全機能実装後に✅マーク | 実装完了確認強化 |
+| `@Transform + @IsNotEmpty`でバリデーションスキップ | 数値変換がバリデーション前に実行される | 手動バリデーション実装に変更 | 在庫管理機能 |
+| `@Redirect`がバリデーションエラー時も実行される | デコレータ優先度問題 | `docs/development-lessons/phase-2-2-lessons.md`参照 | Phase 2-2教訓 |
+| it.skip()による技術的問題の先送り | 根本原因分析不足・優先度判断ミス | 即座解決・期限設定義務化 | Phase 2-2教訓 |
+| テストで200が返されるがエラー期待 | ValidationExceptionFilterが200でHTML返却 | テストの期待値を200に修正 | 在庫管理テスト |
 
 ### **YOU MUST**: デバッグ効率化のための事前準備
 
@@ -832,6 +842,8 @@ async findOne(id: number) {
 - イベント: `/events`, `/events/:id`（2025年6月22日追加）
 - サークル: `/circles`, `/circles/:id`（2025年6月23日追加）
 - サークルメンバー: `/circles/:circleId/members`, `/circles/:circleId/members/add`（2025年6月24日追加）
+- 保管場所: `/storage-locations`, `/storage-locations/:id`（2025年6月28日追加）
+- 在庫管理: `/stocks`, `/stocks/:id`（2025年6月28日追加）
 
 ## 効率的実装パターン集
 
@@ -1013,6 +1025,7 @@ async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
 
 **開発ノウハウ**:
 - `docs/know-how/` - 効率的プロンプティングパターン
+- `docs/development-lessons/` - 過去Phase実装教訓集 ★NEW
 - `docs/operation/` - マイグレーション等の運用手順
 
 **プロジェクト記録**:

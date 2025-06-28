@@ -332,3 +332,134 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 - import文の自動補完機能活用
 
 これらのガイドラインに従うことで、テストファイル作成時の型関連問題を防ぎ、開発効率を向上させることができます。
+
+## 9. Phase 2-2教訓に基づく追加ベストプラクティス
+
+### it.skip()使用時のガバナンス強化
+
+#### ❌ 避けるべきパターン
+```typescript
+it.skip('必須項目が空の場合はバリデーションエラーを表示する', async () => {
+  // TODO: ValidationExceptionFilterの在庫管理対応を後で修正
+  // ← 解決期限・具体的な解決方法・担当者が不明確
+})
+```
+
+**問題点**:
+- 解決期限が設定されていない
+- 具体的な解決方法が不明
+- 技術的問題の優先度が曖昧
+- 品質低下（未テスト機能の残存）
+
+#### ✅ 推奨パターン
+```typescript
+// 技術的制約により一時的にスキップする場合
+it.skip('必須項目が空の場合はバリデーションエラーを表示する', async () => {
+  // FIXME: @Redirect + ValidationPipe競合問題により一時的にスキップ
+  // 解決期限: 2025-06-28中 (当日解決必須)
+  // 解決方法: DTO型をstring化 + サービス層数値変換
+  // 参考: docs/development-lessons/phase-2-2-lessons.md
+  // 担当: Claude Code
+  // 優先度: 高（ValidationExceptionFilter関連は最高優先度）
+})
+```
+
+**改善点**:
+- 具体的な解決期限を明記
+- 技術的解決方法を文書化
+- 参考資料への明確な参照
+- 優先度の明確化
+
+### ValidationExceptionFilter統合テスト
+
+#### @Redirect競合問題の回避策
+
+**問題の背景**:
+- @Redirectデコレータが ValidationExceptionFilter より優先実行される
+- バリデーションエラー時も強制的に302リダイレクトが発生
+- 期待する200ステータス（エラーHTML表示）が得られない
+
+**解決アプローチ**:
+
+#### 1. DTO設計時の型選択
+```typescript
+// ✅ 推奨: UI入力フィールドはstring型を優先
+export class CreateResourceDto {
+  @Transform(({ value }) => value?.toString()?.trim())
+  @IsNotEmpty({ message: 'IDは必須です' })
+  @IsString({ message: 'IDは文字列で入力してください' })
+  resourceId: string // ← string型採用
+}
+
+// ❌ 避ける: 複雑な数値変換 + @Redirect組み合わせ
+export class CreateResourceDto {
+  @Transform(({ value }) => value !== '' ? Number.parseInt(value, 10) : 0)
+  @IsNotEmpty({ message: 'IDは必須です' })
+  @IsInt({ message: 'IDは整数で入力してください' })
+  resourceId: number // ← @Redirectとの組み合わせで競合
+}
+```
+
+#### 2. サービス層での数値変換
+```typescript
+async create(dto: CreateResourceDto) {
+  // DTO受け取り後に数値変換
+  const resourceId = Number.parseInt(dto.resourceId, 10)
+  
+  // バリデーション
+  if (isNaN(resourceId)) {
+    throw new Error('リソースIDが無効です')
+  }
+  
+  // 処理継続...
+}
+```
+
+#### 3. テスト期待値の調整
+```typescript
+// ✅ ValidationExceptionFilter対応テスト
+it('必須項目が空の場合はバリデーションエラーを表示する', async () => {
+  const response = await request(app.getHttpServer())
+    .post('/resources')
+    .send({ resourceId: '' })
+
+  // ValidationExceptionFilterにより200でエラーHTML返却
+  expect(response.status).toBe(200)
+  expect(response.text).toContain('IDは必須です')
+})
+```
+
+### it.skip()使用ルールの強化
+
+#### 使用制限
+1. **明確な解決期限設定を義務化**
+   - 当日解決必須: ValidationExceptionFilter関連、型安全性問題
+   - 当日解決推奨: HTTPメソッドオーバーライド問題
+   - 翌日可: HTMLレンダリング軽微問題
+
+2. **スキップ理由と解決方法の文書化必須**
+   - 技術的制約の具体的説明
+   - 解決方法の詳細手順
+   - 参考資料への明確な参照
+
+3. **優先度の明確化**
+   - ValidationExceptionFilter関連は最高優先度
+   - 技術的競合問題の先送りは原則禁止
+
+4. **定期的なレビュー**
+   - スキップされたテストの解決状況確認
+   - 解決期限超過の防止
+
+### 参考資料
+
+#### 詳細な技術的背景と解決策
+- **`docs/development-lessons/phase-2-2-lessons.md`**
+  - @Redirect + ValidationPipe競合問題の詳細
+  - DTO型選択基準のフローチャート
+  - 技術的問題の優先度マトリックス
+
+#### 成功実装例
+- **storage-locations**: 文字列ベースバリデーション成功例
+- **stocks**: @Redirect競合問題解決例
+
+これらの教訓とベストプラクティスに従うことで、Phase 2-2で発生した技術的問題の再発を防ぎ、より効率的で安定した開発プロセスを実現できます。
