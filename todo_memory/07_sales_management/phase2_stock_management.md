@@ -22,7 +22,7 @@ Phase 2では、Phase 1で確立した版管理基盤を活用して、版ベー
 - **✅ Phase 2-1 Step 1**: StorageLocationsテーブルスキーマ作成 （完了 2025年6月28日）
 - **✅ Phase 2-1 Step 2**: storage-locationsモジュール実装（TDD） （完了 2025年6月28日）
 
-### 🔄 Phase 2-2: Stocksテーブル・在庫管理基盤実装 （Step 1完了・Step 2進行中）
+### ✅ Phase 2-2: Stocksテーブル・在庫管理基盤実装 - **基本機能完了** (2025年6月28日)
 ### ⏳ Phase 2-3: StockMovementsテーブル・在庫移動履歴実装 （予定）
 ### ⏳ Phase 2-4: 統合・検証・版詳細画面への在庫表示 （予定）
 
@@ -232,29 +232,31 @@ UNIQUE ("editionId", "locationId");
 6. **✅ testDbUtils更新**: cleanupDatabase()にStockテーブル追加
 7. **✅ 統合テスト確認**: 全303件テスト通過
 
-### Step 2: stocksモジュール基盤実装（TDD）
+### Step 2: stocksモジュール基盤実装（TDD） ✅ 基本機能完了
 
-#### TDD統合テスト作成（約10件、段階的実装）
+**実装完了済み（2025年6月28日）**
 
-**Step 1: 基本機能テスト（2テスト）**
-- **在庫一覧表示テスト**: `GET /stocks`で版別・場所別在庫表示確認
-- **在庫作成テスト**: `POST /stocks`で新規在庫レコード作成確認
+#### TDD統合テスト実装状況（段階的実装）
 
-**Step 2: バリデーションテスト（3テスト）**
+**✅ Step 1: 基本機能テスト（2テスト完了）**
+- **✅ 在庫一覧表示テスト**: `GET /stocks`で版別・場所別在庫表示確認完了
+- **✅ 在庫作成テスト**: `POST /stocks`で新規在庫レコード作成確認完了
+
+**⏳ Step 2: バリデーションテスト（3テスト - 進行中）**
 - **必須項目バリデーション**: editionId, locationId必須チェック
 - **数量制約テスト**: 負の数量、不正な数量バランスのエラー確認
 - **重複チェック**: 同一版・場所での重複在庫作成エラー確認
 
-**Step 3: 全機能テスト（5テスト）**
+**⏳ Step 3: 全機能テスト（5テスト - 予定）**
 - **在庫詳細表示**: `GET /stocks/:id`で詳細情報表示
 - **在庫数量更新**: `PUT /stocks/:id`で数量更新・整合性確認
 - **棚卸機能**: `POST /stocks/check`で一括在庫確認・調整
 - **版別在庫表示**: `GET /editions/:id/stocks`で特定版在庫状況
 - **在庫削除**: `DELETE /stocks/:id`で在庫レコード削除
 
-#### プロダクションコード実装詳細
+#### ✅ プロダクションコード実装完了
 
-**StocksService実装**
+**✅ StocksService実装完了**
 ```typescript
 @Injectable()
 export class StocksService {
@@ -284,7 +286,7 @@ export class StocksService {
 }
 ```
 
-**StocksController実装**
+**✅ StocksController実装完了**
 ```typescript
 @Controller('stocks')
 export class StocksController {
@@ -318,7 +320,7 @@ export class StocksController {
 }
 ```
 
-**DTO実装（標準化パターン）**
+**✅ DTO実装完了（標準化パターン）**
 ```typescript
 export class CreateStockDto {
   @Transform(({ value }) => value ? Number.parseInt(value, 10) : undefined)
@@ -365,20 +367,33 @@ export class StockCheckDto {
 }
 ```
 
-#### URLエンドポイント（7個）
-- `GET /stocks` - 在庫一覧（版別・場所別フィルタ）
-- `GET /stocks/check` - 棚卸画面表示
+#### ✅ URLエンドポイント実装状況
+**✅ 基本機能実装済み（6エンドポイント）**
+- **✅ `GET /stocks`** - 在庫一覧（版別・場所別フィルタ）
+- **✅ `GET /stocks/check`** - 棚卸画面表示
+- **✅ `POST /stocks`** - 在庫作成
+- **✅ `GET /stocks/:id`** - 在庫詳細表示
+- **✅ `PUT /stocks/:id`** - 在庫数量更新（HTTPメソッドオーバーライド対応）
+- **✅ `DELETE /stocks/:id`** - 在庫削除（HTTPメソッドオーバーライド対応）
+
+**⏳ 今後の予定エンドポイント**
 - `POST /stocks/check` - 棚卸実行処理
-- `GET /stocks/:id` - 在庫詳細表示
-- `PUT /stocks/:id` - 在庫数量更新
-- `DELETE /stocks/:id` - 在庫削除
 - `GET /editions/:id/stocks` - 特定版の在庫状況（EditionsControllerに追加）
 
-#### ビューファイル実装
-- **stocks/index.ejs**: 在庫一覧（フィルタ機能付き、版名・場所名表示）
-- **stocks/show.ejs**: 在庫詳細（編集・削除ボタン付き）
-- **stocks/check.ejs**: 棚卸画面（一括更新フォーム）
-- **editions/show.ejs拡張**: 在庫状況セクション追加
+#### ✅ ビューファイル実装完了
+- **✅ stocks/index.ejs**: 在庫一覧（フィルタ機能付き、版名・場所名表示、レスポンシブ対応）
+- **✅ stocks/show.ejs**: 在庫詳細（編集・削除ボタン付き、レスポンシブ対応）
+- **✅ stocks/check.ejs**: 棚卸画面（将来の一括更新フォーム準備）
+- **⏳ editions/show.ejs拡張**: 在庫状況セクション追加（Phase 2-4予定）
+
+#### ✅ 技術的実装完了項目
+- **✅ ValidationPipe統一**: @Transform + class-validator統一パターン適用
+- **✅ HTTPメソッドオーバーライド**: PUT/DELETE処理の統一実装
+- **✅ エラーハンドリング**: NotFoundException + ParseIntPipe統一
+- **✅ app.module.ts統合**: StocksModule追加完了
+- **✅ 統合テスト**: 305/305テスト通過（+2テスト追加）
+- **✅ 型チェック**: TypeScriptエラー0件
+- **✅ ビルド**: 全ビューファイル dist/ へ正常コピー確認
 
 ## 🗂️ Phase 2-3: 在庫移動履歴実装（2-3日）
 
@@ -576,4 +591,5 @@ async moveStock(moveStockDto: MoveStockDto): Promise<void> {
 ---
 
 **最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 2-2 Step 2完了時
+**現在の作業**: Phase 2-2 Step 2 バリデーションテスト実装中  
+**次回更新予定**: Phase 2-2 Step 3完了時
