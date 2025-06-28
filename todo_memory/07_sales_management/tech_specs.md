@@ -18,7 +18,7 @@ DELETE /editions/:id                    # 版削除
 POST   /editions/:id                    # HTTPメソッドオーバーライド（PUT/DELETE）
 ```
 
-### 保管場所管理関連 ⏳ Phase 2-1実装予定
+### 保管場所管理関連 ✅ Phase 2-1実装完了
 ```
 GET    /storage-locations               # 保管場所一覧
 GET    /storage-locations/new           # 新規保管場所フォーム
@@ -30,15 +30,22 @@ DELETE /storage-locations/:id           # 保管場所削除
 POST   /storage-locations/:id           # HTTPメソッドオーバーライド（PUT/DELETE）
 ```
 
-### 在庫管理関連 ⏳ Phase 2-2〜2-3実装予定
+### 在庫管理関連 ⏳ Phase 2-2実装予定・Phase 2-3実装予定
 ```
-GET    /stocks                          # 在庫一覧（版別・場所別）
-GET    /stocks/check                    # 棚卸画面
-POST   /stocks/check                    # 棚卸実行
-GET    /stocks/movements                # 在庫移動履歴
-POST   /stock-movements                 # 在庫移動記録
-GET    /editions/:id/stocks             # 特定版の在庫状況
+# Phase 2-2: 在庫管理基盤（次のアクション）
+GET    /stocks                          # 在庫一覧（版別・場所別フィルタ）
+GET    /stocks/check                    # 棚卸画面表示
+POST   /stocks/check                    # 棚卸実行処理
+GET    /stocks/:id                      # 在庫詳細表示
 PUT    /stocks/:id                      # 在庫数量更新
+DELETE /stocks/:id                      # 在庫削除
+POST   /stocks/:id                      # HTTPメソッドオーバーライド（PUT/DELETE）
+GET    /editions/:id/stocks             # 特定版の在庫状況（EditionsControllerに追加）
+
+# Phase 2-3: 在庫移動履歴（予定）
+GET    /stocks/movements                # 在庫移動履歴一覧
+POST   /stock-movements                 # 在庫移動記録作成
+GET    /stock-movements/:id             # 在庫移動詳細
 GET    /editions/:id/stock-movements    # 特定版の在庫移動履歴
 ```
 
@@ -103,7 +110,7 @@ src/editions/
     └── edit.ejs                    # 版編集フォーム
 ```
 
-#### 2. 保管場所管理モジュール ⏳ Phase 2-1実装予定
+#### 2. 保管場所管理モジュール ✅ Phase 2-1実装完了
 ```
 src/storage-locations/
 ├── storage-locations.module.ts
@@ -119,21 +126,24 @@ src/storage-locations/
     └── edit.ejs
 ```
 
-#### 3. 在庫管理モジュール ⏳ Phase 2-2〜2-3実装予定
+#### 3. 在庫管理モジュール ⏳ Phase 2-2実装予定・Phase 2-3実装予定
 ```
 src/stocks/
 ├── stocks.module.ts
 ├── stocks.controller.ts
 ├── stocks.service.ts
-├── stock-movements.service.ts
+├── stock-movements.service.ts              # Phase 2-3実装予定
 ├── dto/
-│   ├── create-stock-movement.dto.ts
-│   ├── update-stock.dto.ts
-│   └── stock-check.dto.ts
+│   ├── create-stock.dto.ts                 # Phase 2-2実装予定
+│   ├── update-stock.dto.ts                 # Phase 2-2実装予定
+│   ├── stock-check.dto.ts                  # Phase 2-2実装予定
+│   ├── stock-filters.dto.ts                # Phase 2-2実装予定
+│   └── create-stock-movement.dto.ts        # Phase 2-3実装予定
 └── views/
-    ├── index.ejs                   # 在庫一覧
-    ├── check.ejs                   # 棚卸画面
-    └── movements.ejs               # 移動履歴
+    ├── index.ejs                   # 在庫一覧（Phase 2-2実装予定）
+    ├── show.ejs                    # 在庫詳細（Phase 2-2実装予定）
+    ├── check.ejs                   # 棚卸画面（Phase 2-2実装予定）
+    └── movements.ejs               # 移動履歴（Phase 2-3実装予定）
 ```
 
 #### 4. 販売管理モジュール ⏳ Phase 4実装予定

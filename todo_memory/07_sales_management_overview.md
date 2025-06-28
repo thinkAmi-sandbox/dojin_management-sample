@@ -33,7 +33,7 @@
 ### 🔄 Phase 2: 在庫管理の版対応 - **進行中**
 - **✅ Phase 2-1 Step 1**: StorageLocationsテーブルスキーマ作成 （完了 2025年6月28日）
 - **✅ Phase 2-1 Step 2**: storage-locationsモジュール実装（TDD） （完了 2025年6月28日）
-- **⏳ Phase 2-2**: Stocksテーブル・在庫管理基盤実装 （次のアクション）
+- **⏳ Phase 2-2**: Stocksテーブル・在庫管理基盤実装 （次のアクション・詳細計画確定）
 - **⏳ Phase 2-3**: StockMovementsテーブル・在庫移動履歴実装 （予定）
 - **⏳ Phase 2-4**: 統合・検証・版詳細画面への在庫表示 （予定）
 
@@ -50,12 +50,36 @@
 
 ## 🎯 次のアクション（優先度順）
 
-### 🔥 最優先 - Phase 2-2
-**Stocksテーブル・在庫管理基盤実装**
-- Stocksテーブルスキーマ設計・マイグレーション作成
-- 在庫管理モジュール実装（TDD）
-- 版（Editions）との関連機能実装
-- 保管場所（StorageLocations）との関連機能実装
+### 🔥 最優先 - Phase 2-2: Stocksテーブル・在庫管理基盤実装
+**実装スコープ（推定2-3日）**
+
+#### Step 1: Stocksテーブルスキーマ作成・マイグレーション
+- **テーブル設計**: 版ID・保管場所ID参照、数量管理（総数・予約済・販売可能）
+- **制約定義**: 数量チェック制約、整合性制約（総数量=予約済+販売可能）
+- **インデックス**: 版別・場所別検索最適化用複合インデックス
+- **マイグレーション**: テスト用・プロダクション用DB適用
+
+#### Step 2: stocksモジュール実装（TDD段階的実装）
+- **統合テスト作成**: 約10件（基本機能→バリデーション→全機能の3段階）
+- **StocksService**: CRUD操作、在庫照会・更新・調整・統計機能
+- **StocksController**: ValidationPipe統一、HTTPメソッドオーバーライド対応
+- **DTO実装**: UpdateStockDto、StockCheckDto（標準化@Transformパターン）
+- **ビューファイル**: 在庫一覧・棚卸画面（レスポンシブ対応）
+
+#### 実装エンドポイント（7個）
+- `GET /stocks` - 在庫一覧（版別・場所別フィルタ）
+- `GET /stocks/check` - 棚卸画面
+- `POST /stocks/check` - 棚卸実行
+- `GET /editions/:id/stocks` - 特定版在庫状況
+- `PUT /stocks/:id` - 在庫数量更新
+- `GET /stocks/:id` - 在庫詳細
+- `DELETE /stocks/:id` - 在庫削除
+
+#### 技術実装ポイント
+- **既存パターン踏襲**: 版管理・保管場所管理の成功パターン適用
+- **データ整合性**: トランザクション処理による在庫数量整合性保証
+- **ValidationExceptionFilter**: 在庫管理パス対応追加
+- **エラーハンドリング**: NotFoundException + ParseIntPipe統一
 
 ### 📋 Phase 2-1完了済みエンドポイント ✅
 - `GET /storage-locations` - 保管場所一覧 ✅

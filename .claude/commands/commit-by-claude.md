@@ -14,6 +14,7 @@ allowed-tools: ["Bash"]
 - **subject**: 機能の概要を日本語で記載
 - **body**: 以下の順に記載
   - 前回のコミット以降のすべてのプロンプトを日本語で完全記載
+    - プロンプトには `[Request interrupted by user for tool use]` は不要 
   - 実施した作業の概要を記載
 - **ファイルパス**: ユーザー環境情報保護のため `/path/to` に変換
 - **署名**: 以下を必ず含める
@@ -44,6 +45,7 @@ Co-Authored-By: Claude mailto:noreply@anthropic.com
 - [ ] 日本語で記載されている
 - [ ] 署名が含まれている
 - [ ] 実際のプロンプト順序が保持されている
+- [ ] `[Request interrupted by user for tool use]` という記載がない 
 
 ### ファイルパス変換例
 変換前: /Users/thinkami/project/nestjs/dojin_management-sample

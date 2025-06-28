@@ -154,9 +154,9 @@ export class CreateStorageLocationDto {
 - **✅ Phase 2-1完了**: StorageLocationsテーブル・モジュール完全実装済み（2025年6月28日）
 - **✅ 版・保管場所連携**: editionId, locationIdの外部キー設計準備完了
 
-### Step 1: Stocksテーブルスキーマ作成
+### Step 1: Stocksテーブルスキーマ作成・マイグレーション
 
-#### データベーススキーマ設計
+#### データベーススキーマ設計詳細
 ```typescript
 export const stocks = pgTable('Stock', {
   id: serial('id').primaryKey(),
@@ -170,50 +170,211 @@ export const stocks = pgTable('Stock', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
 })
+
+// 型定義のexport
+export type Stock = typeof stocks.$inferSelect
+export type NewStock = typeof stocks.$inferInsert
 ```
 
-#### 設計ポイント
-- **版ID参照**: editionIdでの版ベース在庫管理
-- **保管場所ID参照**: locationIdでの場所別在庫
-- **数量管理**: 総数量、予約済み、販売可能数量
-- **最終確認日時**: 棚卸し管理用
-- **制約**: 総数量 = 予約済み + 販売可能数量
+#### 設計ポイント・制約詳細
+- **外部キー制約**:
+  - `editionId`: CASCADE DELETE（版削除時に在庫も削除）
+  - `locationId`: RESTRICT（保管場所削除時は在庫がないことを確認）
+- **数量管理**: 3つの数量フィールドで正確な在庫管理
+  - `quantity`: 総在庫数（物理的な在庫数）
+  - `reservedQuantity`: 予約済み数量（販売確定だが未出荷）
+  - `availableQuantity`: 販売可能数量（すぐに販売できる数量）
+- **最終確認日時**: 棚卸し・在庫確認の記録
+- **複合主キー候補**: (editionId, locationId) でユニーク制約検討
 
-#### マイグレーション・制約
+#### マイグレーション・制約・インデックス
 ```sql
--- 在庫数のマイナス防止
+-- 1. 基本テーブル作成（drizzle generateで生成）
+CREATE TABLE "Stock" (
+  "id" serial PRIMARY KEY,
+  "editionId" integer NOT NULL REFERENCES "Edition"("id") ON DELETE CASCADE,
+  "locationId" integer NOT NULL REFERENCES "StorageLocation"("id"),
+  "quantity" integer DEFAULT 0 NOT NULL,
+  "reservedQuantity" integer DEFAULT 0 NOT NULL,
+  "availableQuantity" integer DEFAULT 0 NOT NULL,
+  "lastCheckedAt" timestamp,
+  "notes" text,
+  "createdAt" timestamp DEFAULT now() NOT NULL,
+  "updatedAt" timestamp DEFAULT now() NOT NULL
+);
+
+-- 2. 数量制約追加
 ALTER TABLE "Stock" ADD CONSTRAINT "chk_quantity_positive" 
 CHECK ("quantity" >= 0 AND "reservedQuantity" >= 0 AND "availableQuantity" >= 0);
 
--- 在庫計算整合性
 ALTER TABLE "Stock" ADD CONSTRAINT "chk_quantity_balance" 
 CHECK ("quantity" = "reservedQuantity" + "availableQuantity");
 
--- パフォーマンス最適化用インデックス
+-- 3. パフォーマンス最適化インデックス
 CREATE INDEX idx_stocks_edition_location ON "Stock" ("editionId", "locationId");
+CREATE INDEX idx_stocks_edition ON "Stock" ("editionId");
+CREATE INDEX idx_stocks_location ON "Stock" ("locationId");
+CREATE INDEX idx_stocks_last_checked ON "Stock" ("lastCheckedAt");
+
+-- 4. ユニーク制約（同じ版・場所の組み合わせは1レコードまで）
+ALTER TABLE "Stock" ADD CONSTRAINT "unq_stock_edition_location" 
+UNIQUE ("editionId", "locationId");
 ```
+
+#### 実装手順
+1. **src/db/schema.ts**: Stocksテーブル定義追加
+2. **マイグレーション生成**: `pnpm drizzle:generate`（対話式プロンプト対応）
+3. **DB適用**: `pnpm drizzle:migrate` + `pnpm drizzle:migrate:test`
+4. **型チェック**: `pnpm type-check`
+5. **testDbUtils更新**: cleanupDatabase()にStockテーブル追加
 
 ### Step 2: stocksモジュール基盤実装（TDD）
 
-#### TDD統合テスト作成（6-8テスト）
-- **版別在庫一覧表示**: 特定版の全保管場所在庫表示
-- **保管場所別在庫表示**: 特定保管場所の全版在庫表示
-- **在庫数量更新・調整**: 在庫数の更新処理
-- **在庫不足チェック**: 販売可能数量のチェック
-- **在庫統計情報**: 総在庫数、場所別分布等
-- **バリデーションテスト**: 数量制約、整合性チェック
+#### TDD統合テスト作成（約10件、段階的実装）
 
-#### プロダクションコード実装
-- **StocksService実装**: 在庫照会、更新、調整機能
-- **StocksController実装**: ValidationPipe統一パターン
-- **DTO作成**: UpdateStockDto, StockCheckDto
+**Step 1: 基本機能テスト（2テスト）**
+- **在庫一覧表示テスト**: `GET /stocks`で版別・場所別在庫表示確認
+- **在庫作成テスト**: `POST /stocks`で新規在庫レコード作成確認
 
-#### URLエンドポイント
-- `GET /stocks` - 在庫一覧（版別・場所別）
-- `GET /stocks/check` - 棚卸画面
-- `POST /stocks/check` - 棚卸実行
-- `GET /editions/:id/stocks` - 特定版の在庫状況
+**Step 2: バリデーションテスト（3テスト）**
+- **必須項目バリデーション**: editionId, locationId必須チェック
+- **数量制約テスト**: 負の数量、不正な数量バランスのエラー確認
+- **重複チェック**: 同一版・場所での重複在庫作成エラー確認
+
+**Step 3: 全機能テスト（5テスト）**
+- **在庫詳細表示**: `GET /stocks/:id`で詳細情報表示
+- **在庫数量更新**: `PUT /stocks/:id`で数量更新・整合性確認
+- **棚卸機能**: `POST /stocks/check`で一括在庫確認・調整
+- **版別在庫表示**: `GET /editions/:id/stocks`で特定版在庫状況
+- **在庫削除**: `DELETE /stocks/:id`で在庫レコード削除
+
+#### プロダクションコード実装詳細
+
+**StocksService実装**
+```typescript
+@Injectable()
+export class StocksService {
+  // 在庫一覧取得（版別・場所別フィルタ対応）
+  async findAll(filters?: { editionId?: number; locationId?: number }): Promise<StockWithRelations[]>
+  
+  // 在庫詳細取得（関連情報込み）
+  async findOne(id: number): Promise<StockWithRelations>
+  
+  // 在庫作成（重複チェック付き）
+  async create(createStockDto: CreateStockDto): Promise<Stock>
+  
+  // 在庫更新（数量整合性チェック付き）
+  async update(id: number, updateStockDto: UpdateStockDto): Promise<Stock>
+  
+  // 在庫削除（存在確認付き）
+  async remove(id: number): Promise<void>
+  
+  // 特定版の在庫状況取得
+  async findByEdition(editionId: number): Promise<StockWithLocation[]>
+  
+  // 棚卸実行（一括在庫調整）
+  async performStockCheck(stockCheckDto: StockCheckDto): Promise<StockCheckResult>
+  
+  // 在庫統計情報
+  async getStockSummary(): Promise<StockSummary>
+}
+```
+
+**StocksController実装**
+```typescript
+@Controller('stocks')
+export class StocksController {
+  @Get()
+  @Render('stocks/index')
+  async findAll(@Query() filters: StockFiltersDto) // 在庫一覧
+
+  @Get('check')
+  @Render('stocks/check')
+  async renderStockCheckForm() // 棚卸画面
+
+  @Post('check')
+  @UsePipes(ValidationPipe)
+  @Redirect('/stocks')
+  async performStockCheck(@Body() stockCheckDto: StockCheckDto) // 棚卸実行
+
+  @Get(':id')
+  @Render('stocks/show')
+  async findOne(@Param('id', ParseIntPipe) id: number) // 在庫詳細
+
+  @Put(':id')
+  @UsePipes(ValidationPipe)
+  @Redirect('/stocks/:id')
+  async update(@Param('id', ParseIntPipe) id: number, @Body() updateStockDto: UpdateStockDto) // 在庫更新
+
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) // 在庫削除
+
+  @Post(':id')
+  async updateViaPost(...) // HTTPメソッドオーバーライド
+}
+```
+
+**DTO実装（標準化パターン）**
+```typescript
+export class CreateStockDto {
+  @Transform(({ value }) => value ? Number.parseInt(value, 10) : undefined)
+  @IsNotEmpty({ message: '版IDは必須です' })
+  @IsInt({ message: '版IDは整数で入力してください' })
+  editionId: number
+
+  @Transform(({ value }) => value ? Number.parseInt(value, 10) : undefined)
+  @IsNotEmpty({ message: '保管場所IDは必須です' })
+  @IsInt({ message: '保管場所IDは整数で入力してください' })
+  locationId: number
+
+  @Transform(({ value }) => value !== '' ? Number.parseInt(value, 10) : 0)
+  @IsOptional()
+  @IsInt({ message: '在庫数は整数で入力してください' })
+  @Min(0, { message: '在庫数は0以上で入力してください' })
+  quantity?: number = 0
+
+  @Transform(({ value }) => value !== '' ? Number.parseInt(value, 10) : 0)
+  @IsOptional()
+  @IsInt({ message: '予約済み数は整数で入力してください' })
+  @Min(0, { message: '予約済み数は0以上で入力してください' })
+  reservedQuantity?: number = 0
+
+  @Transform(({ value }) => value !== '' ? Number.parseInt(value, 10) : 0)
+  @IsOptional()
+  @IsInt({ message: '販売可能数は整数で入力してください' })
+  @Min(0, { message: '販売可能数は0以上で入力してください' })
+  availableQuantity?: number = 0
+
+  @Transform(({ value }) => value === '' ? undefined : value)
+  @IsOptional()
+  @IsString({ message: '備考は文字列で入力してください' })
+  notes?: string
+}
+
+export class UpdateStockDto extends PartialType(CreateStockDto) {}
+
+export class StockCheckDto {
+  @IsArray({ message: '在庫チェックデータは配列で入力してください' })
+  @ValidateNested({ each: true })
+  @Type(() => StockCheckItemDto)
+  stocks: StockCheckItemDto[]
+}
+```
+
+#### URLエンドポイント（7個）
+- `GET /stocks` - 在庫一覧（版別・場所別フィルタ）
+- `GET /stocks/check` - 棚卸画面表示
+- `POST /stocks/check` - 棚卸実行処理
+- `GET /stocks/:id` - 在庫詳細表示
 - `PUT /stocks/:id` - 在庫数量更新
+- `DELETE /stocks/:id` - 在庫削除
+- `GET /editions/:id/stocks` - 特定版の在庫状況（EditionsControllerに追加）
+
+#### ビューファイル実装
+- **stocks/index.ejs**: 在庫一覧（フィルタ機能付き、版名・場所名表示）
+- **stocks/show.ejs**: 在庫詳細（編集・削除ボタン付き）
+- **stocks/check.ejs**: 棚卸画面（一括更新フォーム）
+- **editions/show.ejs拡張**: 在庫状況セクション追加
 
 ## 🗂️ Phase 2-3: 在庫移動履歴実装（2-3日）
 
