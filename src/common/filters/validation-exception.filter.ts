@@ -98,6 +98,16 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.applicationNotes = error
         } else if (error.includes('結果備考')) {
           errors.resultNotes = error
+        } else if (error.includes('保管場所名')) {
+          errors.name = error
+        } else if (error.includes('保管場所タイプ')) {
+          errors.type = error
+        } else if (error.includes('委託販売フラグ')) {
+          errors.isConsignment = error
+        } else if (error.includes('住所')) {
+          errors.address = error
+        } else if (error.includes('連絡先情報')) {
+          errors.contactInfo = error
         } else if (error.includes('書籍') || error.includes('bookId')) {
           errors.bookId = error
         } else if (error.includes('頒布予定数')) {
@@ -329,6 +339,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /circles/:circleId/members (新規メンバー追加)
           templatePath = 'circles/members/add'
           title = 'メンバー追加'
+        }
+      } else if (path.includes('/storage-locations')) {
+        if (path.includes('/edit')) {
+          templatePath = 'storage-locations/edit'
+          title = '保管場所編集'
+        } else if (path.endsWith('/storage-locations')) {
+          templatePath = 'storage-locations/new'
+          title = '保管場所新規作成'
+        } else if (path.match(/\/storage-locations\/\d+$/)) {
+          // POST /storage-locations/:id (PUT via _method)
+          templatePath = 'storage-locations/edit'
+          title = '保管場所編集'
         }
       } else if (path.includes('/circles')) {
         console.log('🔍 通常のサークル分岐に入りました')
@@ -1100,6 +1122,53 @@ export class ValidationExceptionFilter implements ExceptionFilter {
             ],
           }
         }
+      }
+    } else if (path.includes('/storage-locations')) {
+      // パスからIDを抽出 (例: /storage-locations/1 -> 1)
+      const idMatch = path.match(/\/storage-locations\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/storage-locations') {
+        return {
+          formData,
+          typeOptions: [
+            { value: 'home', label: '自宅' },
+            { value: 'warehouse', label: '倉庫' },
+            { value: 'consignment', label: '委託販売' },
+            { value: 'event', label: 'イベント' },
+          ],
+          breadcrumbs: [
+            { name: '保管場所一覧', url: '/storage-locations' },
+            { name: '新規登録', url: null },
+          ],
+        }
+      }
+
+      // 編集の場合
+      return {
+        storageLocation: {
+          id,
+          name: formData.name || '',
+          type: formData.type || 'home',
+          isConsignment: formData.isConsignment || false,
+          address: formData.address || '',
+          contactInfo: formData.contactInfo || '',
+          notes: formData.notes || '',
+        },
+        typeOptions: [
+          { value: 'home', label: '自宅' },
+          { value: 'warehouse', label: '倉庫' },
+          { value: 'consignment', label: '委託販売' },
+          { value: 'event', label: 'イベント' },
+        ],
+        breadcrumbs: id
+          ? [
+              { name: '保管場所一覧', url: '/storage-locations' },
+              { name: `保管場所 #${id}`, url: `/storage-locations/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
       }
     }
 

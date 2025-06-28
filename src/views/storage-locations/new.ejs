@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .required {
+      color: red;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      display: inline-block;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+    .error {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><%= title %></h1>
+    </div>
+
+    <form action="/storage-locations" method="POST">
+      <div class="form-group">
+        <label for="name">保管場所名 <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          required
+          maxlength="255"
+          placeholder="保管場所名を入力してください"
+          value="<%= locals.formData ? formData.name : '' %>"
+        >
+        <% if (locals.errors && errors.name) { %>
+          <div class="error"><%= errors.name %></div>
+        <% } %>
+        <div class="help-text">必須項目です。255文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="type">保管場所タイプ <span class="required">*</span></label>
+        <select id="type" name="type" required>
+          <option value="">選択してください</option>
+          <% typeOptions.forEach(option => { %>
+            <option value="<%= option.value %>" <%= (locals.formData && formData.type === option.value) ? 'selected' : '' %>>
+              <%= option.label %>
+            </option>
+          <% }) %>
+        </select>
+        <% if (locals.errors && errors.type) { %>
+          <div class="error"><%= errors.type %></div>
+        <% } %>
+        <div class="help-text">必須項目です。保管場所のタイプを選択してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label>委託販売フラグ</label>
+        <div class="checkbox-group">
+          <input 
+            type="hidden" 
+            name="isConsignment" 
+            value="false"
+          >
+          <input 
+            type="checkbox" 
+            id="isConsignment" 
+            name="isConsignment" 
+            value="true"
+            <%= (locals.formData && formData.isConsignment) ? 'checked' : '' %>
+          >
+          <label for="isConsignment" style="margin-bottom: 0;">委託販売に使用する</label>
+        </div>
+        <% if (locals.errors && errors.isConsignment) { %>
+          <div class="error"><%= errors.isConsignment %></div>
+        <% } %>
+        <div class="help-text">委託販売で使用する場合はチェックしてください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="address">住所</label>
+        <input 
+          type="text" 
+          id="address" 
+          name="address"
+          maxlength="500"
+          placeholder="住所を入力してください"
+          value="<%= locals.formData ? formData.address : '' %>"
+        >
+        <% if (locals.errors && errors.address) { %>
+          <div class="error"><%= errors.address %></div>
+        <% } %>
+        <div class="help-text">任意項目です。500文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="contactInfo">連絡先情報</label>
+        <input 
+          type="text" 
+          id="contactInfo" 
+          name="contactInfo"
+          maxlength="500"
+          placeholder="電話番号、メールアドレスなど"
+          value="<%= locals.formData ? formData.contactInfo : '' %>"
+        >
+        <% if (locals.errors && errors.contactInfo) { %>
+          <div class="error"><%= errors.contactInfo %></div>
+        <% } %>
+        <div class="help-text">任意項目です。500文字以内で入力してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">備考</label>
+        <textarea 
+          id="notes" 
+          name="notes" 
+          rows="4"
+          maxlength="1000"
+          placeholder="備考があれば入力してください"
+        ><%= locals.formData ? formData.notes : '' %></textarea>
+        <% if (locals.errors && errors.notes) { %>
+          <div class="error"><%= errors.notes %></div>
+        <% } %>
+        <div class="help-text">任意項目です。1000文字以内で入力してください。</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">登録</button>
+        <a href="/storage-locations" class="btn btn-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
