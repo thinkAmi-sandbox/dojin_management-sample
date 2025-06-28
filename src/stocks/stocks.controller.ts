@@ -62,11 +62,10 @@ export class StocksController {
   }
 
   @Post()
-  @UsePipes(ValidationPipe)
-  @Redirect('/stocks')
-  async create(@Body() createStockDto: CreateStockDto) {
+  async create(@Body() createStockDto: CreateStockDto, @Res() res: Response) {
     try {
       await this.stocksService.create(createStockDto)
+      return res.redirect('/stocks')
     } catch (error) {
       // 重複チェックエラーはBadRequestExceptionに変換
       if (

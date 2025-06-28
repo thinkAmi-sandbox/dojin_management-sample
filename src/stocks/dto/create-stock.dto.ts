@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
+import { IsDefined, IsInt, IsOptional, IsString, Min } from 'class-validator'
 
 /**
  * 在庫作成用DTO
@@ -7,16 +7,24 @@ import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
  */
 export class CreateStockDto {
   // 版ID（必須）
-  @Transform(({ value }) => value?.toString()?.trim())
-  @IsNotEmpty({ message: '版IDは必須です' })
-  @IsString({ message: '版IDは文字列で入力してください' })
-  editionId: string
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined
+    const num = Number(value)
+    return isNaN(num) ? value : num
+  })
+  @IsDefined({ message: '版IDは必須です' })
+  @IsInt({ message: '版IDは整数で入力してください' })
+  editionId: number
 
   // 保管場所ID（必須）
-  @Transform(({ value }) => value?.toString()?.trim())
-  @IsNotEmpty({ message: '保管場所IDは必須です' })
-  @IsString({ message: '保管場所IDは文字列で入力してください' })
-  locationId: string
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined
+    const num = Number(value)
+    return isNaN(num) ? value : num
+  })
+  @IsDefined({ message: '保管場所IDは必須です' })
+  @IsInt({ message: '保管場所IDは整数で入力してください' })
+  locationId: number
 
   // 総在庫数（オプショナル、デフォルト0）
   @Transform(({ value }) => (value !== '' ? Number.parseInt(value, 10) : 0))

@@ -129,11 +129,9 @@ describe('在庫管理基本機能（Integration）', () => {
 
   // Step 2: バリデーションテスト（3テスト）
   describe('POST /stocks - バリデーションエラー', () => {
-    it('必須項目が空の場合はバリデーションエラーを表示する', async () => {
+    it('必須項目が未送信の場合はバリデーションエラーを表示する', async () => {
       const stockData = {
-        // editionIdとlocationIdを故意に空にする
-        editionId: '',
-        locationId: '',
+        // editionIdとlocationIdを送信しない
         quantity: 100,
       }
 
@@ -145,11 +143,11 @@ describe('在庫管理基本機能（Integration）', () => {
       expect(response.status).toBe(200)
 
       // バリデーションエラーメッセージが含まれることを確認
-      // レイアウト内に埋め込まれているため、より柔軟にチェック
       const html = response.text
 
-      expect(html).toContain('版IDは必須です')
-      expect(html).toContain('保管場所IDは必須です')
+      // 未送信の場合、整数変換エラーが発生する
+      expect(html).toContain('版IDは整数で入力してください')
+      expect(html).toContain('保管場所IDは整数で入力してください')
     })
 
     it('数量制約違反の場合はバリデーションエラーを表示する', async () => {
