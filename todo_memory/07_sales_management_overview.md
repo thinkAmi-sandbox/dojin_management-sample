@@ -32,14 +32,16 @@
 
 ### 🔄 Phase 2: 在庫管理の版対応 - **進行中**
 - **✅ Phase 2-1 Step 1**: StorageLocationsテーブルスキーマ作成 （完了 2025年6月28日）
-- **⏳ Phase 2-1 Step 2**: storage-locationsモジュール実装（TDD） （次のアクション）
-- **⏳ Phase 2-2**: Stocksテーブル・在庫管理基盤実装 （予定）
+- **✅ Phase 2-1 Step 2**: storage-locationsモジュール実装（TDD） （完了 2025年6月28日）
+- **⏳ Phase 2-2**: Stocksテーブル・在庫管理基盤実装 （次のアクション）
 - **⏳ Phase 2-3**: StockMovementsテーブル・在庫移動履歴実装 （予定）
 - **⏳ Phase 2-4**: 統合・検証・版詳細画面への在庫表示 （予定）
 
-**現在の状況**:
+**Phase 2-1完了成果**:
 - StorageLocationテーブル実装完了（4タイプ、9フィールド）
-- 次は storage-locations モジュールのTDD実装
+- 完全CRUD保管場所管理機能（7エンドポイント）
+- 統合テスト13件追加、全303件通過
+- ビューファイル4件（一覧、詳細、作成、編集）
 
 ### ⏳ Phase 3-5: 今後の計画
 - **Phase 3**: 既存機能の版対応（ExhibitBooksテーブル修正等）
@@ -48,22 +50,21 @@
 
 ## 🎯 次のアクション（優先度順）
 
-### 🔥 最優先 - Phase 2-1 Step 2
-**storage-locationsモジュール実装（TDD）**
-- 統合テスト作成（完全CRUD機能テスト 4-6テスト）
-- StorageLocationsService実装
-- StorageLocationsController実装（ValidationPipe統一パターン）
-- DTO作成（CreateStorageLocationDto, UpdateStorageLocationDto）
-- ビューファイル4件作成（一覧、詳細、作成、編集）
+### 🔥 最優先 - Phase 2-2
+**Stocksテーブル・在庫管理基盤実装**
+- Stocksテーブルスキーマ設計・マイグレーション作成
+- 在庫管理モジュール実装（TDD）
+- 版（Editions）との関連機能実装
+- 保管場所（StorageLocations）との関連機能実装
 
-### 📋 実装URLエンドポイント
-- `GET /storage-locations` - 保管場所一覧
-- `GET /storage-locations/new` - 新規保管場所フォーム
-- `POST /storage-locations` - 保管場所作成
-- `GET /storage-locations/:id` - 保管場所詳細
-- `GET /storage-locations/:id/edit` - 保管場所編集フォーム
-- `PUT /storage-locations/:id` - 保管場所更新
-- `DELETE /storage-locations/:id` - 保管場所削除
+### 📋 Phase 2-1完了済みエンドポイント ✅
+- `GET /storage-locations` - 保管場所一覧 ✅
+- `GET /storage-locations/new` - 新規保管場所フォーム ✅
+- `POST /storage-locations` - 保管場所作成 ✅
+- `GET /storage-locations/:id` - 保管場所詳細 ✅
+- `GET /storage-locations/:id/edit` - 保管場所編集フォーム ✅
+- `PUT /storage-locations/:id` - 保管場所更新 ✅
+- `DELETE /storage-locations/:id` - 保管場所削除 ✅
 
 ## 📚 詳細ドキュメント
 
@@ -96,15 +97,16 @@
 ## 📈 品質指標
 
 ### 現在の技術的検証状況
-- **統合テスト**: 287/288テスト通過 ✅
+- **統合テスト**: 303/303テスト通過 ✅
 - **型チェック**: TypeScriptエラー0件 ✅
 - **コード品質**: Lint・フォーマット完了 ✅
 - **ビルド**: 全ビューファイル正常コピー確認 ✅
 
 ### 実装済み機能
 - **版管理**: 完全CRUD（作成、一覧、詳細、編集、削除）
-- **保管場所基盤**: データベーススキーマ実装済み
+- **保管場所管理**: 完全CRUD（作成、一覧、詳細、編集、削除）
 - **書籍ナビゲーション**: 書籍詳細→版管理への直接アクセス
+- **ValidationExceptionFilter**: 保管場所パス対応完了
 
 ## 🚀 期待される効果
 
@@ -121,4 +123,4 @@
 ---
 
 **最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 2-1 Step 2完了時
+**次回更新予定**: Phase 2-2完了時
