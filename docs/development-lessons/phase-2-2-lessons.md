@@ -360,6 +360,42 @@ it.skip('バリデーションテスト', async () => {
 
 ---
 
-**更新日**: 2025年6月28日  
+## 8. 追加改善（2025年6月28日実施）
+
+### 手動バリデーション削除・class-validator統一
+
+#### 問題の再検討
+当初手動バリデーションで解決したが、Editionsモジュールの成功パターンを適用することでclass-validator統一を実現。
+
+#### 最終解決パターン
+```typescript
+// ✅ Editionsパターンを適用した最終解決
+export class CreateStockDto {
+  // 空文字列→undefined変換で必須チェックを有効化
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined
+    const num = Number(value)
+    return isNaN(num) ? value : num
+  })
+  @IsDefined({ message: '版IDは必須です' })
+  @IsInt({ message: '版IDは整数で入力してください' })
+  editionId: number // ← number型でDTO内で変換完了
+}
+```
+
+#### 技術的ポイント
+1. **@IsNotEmptyを@IsDefinedに変更**: 空文字列がundefinedに変換されるため
+2. **重複@UsePipes(ValidationPipe)削除**: グローバル設定との競合回避
+3. **@Redirect削除、手動res.redirect()制御**: ValidationPipe競合問題解決
+
+#### 成果
+- 手動バリデーションコードの完全削除
+- サービス層での文字列→数値変換処理不要
+- class-validator統一パターンの維持
+- 全313件の統合テスト通過
+
+---
+
+**最終更新**: 2025年6月28日  
 **適用範囲**: Phase 2-3以降の全機能実装  
-**効果測定**: 類似問題の再発防止、開発効率向上、品質安定化
+**効果測定**: 類似問題の再発防止、開発効率向上、品質安定化、コード保守性向上

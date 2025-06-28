@@ -615,10 +615,11 @@ async moveStock(moveStockDto: MoveStockDto): Promise<void> {
    - フォームデータ復元機能（バリデーションエラー時の入力値保持）
 
 ### 技術的知見・課題解決
-1. **class-validator vs 手動バリデーション**
+1. **class-validator vs 手動バリデーション → class-validator統一パターンへ改善**
    - **問題**: @Transformと@IsNotEmptyの組み合わせで数値変換時にバリデーションがスキップされる
-   - **解決**: 手動バリデーション実装による確実なエラーチェック
-   - **教訓**: 複雑な型変換が必要な場合は手動バリデーションが効果的
+   - **当初解決**: 手動バリデーション実装による確実なエラーチェック
+   - **最終改善**: Editionsモジュールの成功パターンを適用し、class-validator統一を実現
+   - **教訓**: 空文字列→undefined変換と@IsDefinedの組み合わせが効果的
 
 2. **@Redirect vs 手動レスポンス制御**
    - **問題**: @Redirectデコレータがバリデーションエラー時も強制リダイレクトを実行
@@ -642,6 +643,26 @@ async moveStock(moveStockDto: MoveStockDto): Promise<void> {
 
 ---
 
+### ✅ 手動バリデーション削除・class-validator統一（2025年6月28日追加実装）
+
+**改善内容**:
+1. **CreateStockDto改善**
+   - editionId/locationIdを文字列型から数値型に変更
+   - Editionsモジュールの成功パターン適用（空文字列→undefined変換）
+   - @IsNotEmptyを@IsDefinedに変更し、必須チェックを実現
+
+2. **技術的改善点**
+   - StocksControllerから重複した@UsePipes(ValidationPipe)を削除
+   - @Redirectデコレータを削除し、手動res.redirect()制御に変更
+   - StocksServiceの文字列→数値変換処理を削除（DTOで変換済み）
+
+3. **成果**
+   - 手動バリデーション不要でclass-validator統一パターンを維持
+   - ValidationPipe競合問題を解決
+   - 全313件の統合テストが通過
+
+---
+
 **最終更新**: 2025年6月28日  
-**現在の作業**: Phase 2-2 Step 2バリデーションテスト実装完了、Step 3全機能テスト実装予定  
-**次回更新予定**: Phase 2-2完全完了時またはPhase 2-3着手時
+**現在の作業**: Phase 2-2完全完了（手動バリデーション削除・class-validator統一実装済み）
+**次回更新予定**: Phase 2-3着手時
