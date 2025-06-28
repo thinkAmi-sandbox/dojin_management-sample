@@ -366,3 +366,28 @@ export const storageLocations = pgTable('StorageLocation', {
 
 export type StorageLocation = typeof storageLocations.$inferSelect
 export type NewStorageLocation = typeof storageLocations.$inferInsert
+
+export const stocks = pgTable('Stock', {
+  id: serial('id').primaryKey(),
+  editionId: integer('editionId')
+    .notNull()
+    .references(() => editions.id, { onDelete: 'cascade' }),
+  locationId: integer('locationId')
+    .notNull()
+    .references(() => storageLocations.id),
+  quantity: integer('quantity').notNull().default(0),
+  reservedQuantity: integer('reservedQuantity').notNull().default(0), // 予約済み数量
+  availableQuantity: integer('availableQuantity').notNull().default(0), // 販売可能数量
+  lastCheckedAt: timestamp('lastCheckedAt', { mode: 'date', precision: 3 }),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Stock = typeof stocks.$inferSelect
+export type NewStock = typeof stocks.$inferInsert
