@@ -91,7 +91,7 @@ pnpm drizzle:studio       # Drizzle Studio GUIを開く
 - **デコレータ**: ルーティング、バリデーション、DIに広く使用
 - **DTO**: リクエストバリデーションにclass-validatorを使用
 - **Drizzle**: データベーススキーマは`src/db/schema.ts`で定義
-- **テスト**: 詳細は`docs/02_test.md`を参照。ユニット/統合/E2Eの3層構造
+- **テスト**: 詳細は`docs/test/overview.md`を参照。ユニット/統合/E2Eの3層構造
 
 ### 設定
 - **TypeScript**: ES2023ターゲットでStrictモード有効
@@ -161,25 +161,10 @@ export class BooksController {
 - HTTPメソッドオーバーライドでPUT/DELETEをサポート（_methodパラメータ使用）
 
 ### データベース設計
-- 詳細は`docs/db/`ディレクトリを参照
-- 現在実装済みのテーブル：
-  - `Book`: 書籍情報の管理（タイトル、サブタイトル、説明、ページ数、執筆ステータス）
-  - `Deadline`: 締切情報の管理（タイトル、締切日、説明、書籍との関連）
-  - `Author`: 執筆者情報の管理（名前、メールアドレス、プロフィール）
-  - `BookAuthor`: 書籍と執筆者の多対多関連テーブル
-  - `PrintingCompany`: 印刷所情報の管理（印刷所名、公式サイト、備考）
-  - `Submission`: 入稿情報の管理（書籍・印刷所との関連、ステータス、部数、コスト、配送情報）
-
-- 実装済みのテーブル（2025年6月22日追加）：
-  - `Event`: イベント情報の管理（イベント名、開催日、会場、申込期間、説明）
-  - `Circle`: サークル情報の管理（サークル名、代表者名、連絡先、説明）
-
-- 実装済みのテーブル（2025年6月24日追加）：
-  - `CircleAuthor`: サークルメンバー関連テーブル（サークルと執筆者の多対多関係、役割、参加期間）
-
-- 実装予定のテーブル：
-  - `Exhibit`: 出展申込情報の管理（イベント・サークルとの関連、ステータス、スペース情報）
-  - `ExhibitBook`: 出展書籍関連テーブル（出展申込と書籍の多対多関係、頒布予定数、価格）
+- **詳細**: `docs/db/`ディレクトリを参照
+- **スキーマ定義**: `src/db/schema.ts`で管理
+- **主要テーブル**: Book, Author, PrintingCompany, Submission, Event, Circle
+- **関係テーブル**: BookAuthor, CircleAuthor
 
 ### テスト設計
 - 詳細は`docs/test/overview.md`を参照
@@ -464,56 +449,19 @@ pnpm test:integration
 **✅マーク基準**: 上記Phase A〜E全てが完了した場合のみ✅マークを付与すること
 
 
-### 2-7. テンプレートシステム実装時の追加検証
+### 2-7. ビューファイル作成時の必須手順
 
-EJSテンプレートシステムやビューファイルを扱う機能を実装する際は、以下の追加検証を必須とします：
+#### **YOU MUST**: ビューファイル作成時の必須ビルド手順
 
-#### ビルド設定の確認
-- `nest-cli.json` の `assets` 設定でビューファイルが適切にコピーされるか確認
-- ビルド後の `dist/` ディレクトリ構造とアプリケーションのパス設定が整合しているか確認
+**新しいビューファイル（*.ejs）を作成した場合は、必ず以下の手順を実行**：
 
-#### **YOU MUST**: 正しいnest-cli.json設定
-```json
-{
-  "compilerOptions": {
-    "deleteOutDir": true,
-    "assets": ["views/**/*"]
-  }
-}
-```
-- **注意**: `"src/views/**/*"` ではなく `"views/**/*"` を使用
-- **注意**: 複雑なoutDir指定は避け、シンプルな形式を使用
+1. **統合テスト成功後、必ず `pnpm build` を実行**
+2. **`dist/views/` にビューファイルがコピーされたことを確認**
+3. **ユーザーに動作確認を依頼する前に上記を完了**
 
-#### **YOU MUST**: 環境対応のmain.ts設定
-```typescript
-// __dirnameがdist/srcを含むかどうかでビルド後か判定
-const isBuilt = __dirname.includes('dist')
-const viewsPath = isBuilt
-  ? join(__dirname, '..', 'views')  // dist/views
-  : join(__dirname, 'views')        // src/views
-app.setBaseViewsDir(viewsPath)
-```
+**理由**: 開発サーバー（pnpm start:dev）は `src/views/` を直接参照するため問題が隠れるが、ビルド後実行（pnpm start:prod）やIDE実行では `dist/views/` が必要。
 
-#### よくある設定エラーと対処法
-- **エラー**: "Failed to lookup view" in views directory "/path/to/dist/src/views"
-  - **原因**: nest-cli.jsonでビューファイルがコピーされていない
-  - **対処**: assets設定を `"views/**/*"` に修正
-- **エラー**: 開発環境では動作するが本番ビルドでエラー
-  - **原因**: main.tsで環境別パス設定ができていない
-  - **対処**: 上記の環境判定ロジックを追加
-
-#### 複数環境での動作確認
-- **YOU MUST**: 開発サーバーでの動作確認はユーザーが行います
-- **YOU MUST**: ビルド後の実行での動作確認はユーザーが行います  
-- **YOU MUST**: IDE（WebStorm等）からの実行での動作確認はユーザーが行います
-- Claude Codeは動作確認用のコマンド実行は行わず、ユーザーに確認を依頼します
-
-#### パス設定の論理的検証
-- `__dirname` とビルド後のディレクトリ構造の関係を理解
-- `setBaseViewsDir()` で指定するパスが実際のファイル配置と一致するか確認
-- 開発時: `src/views/` → 本番時: `dist/views/` となることを確認
-
-これらの検証を怠ると、開発環境では動作するが本番ビルドやIDE実行で失敗する問題が発生する可能性があります。詳細は `docs/02_view_configuration.md` を参照してください。
+**詳細設定**: `docs/02_view_configuration.md` を参照してください。
 
 ## 効率的エラー解決戦略
 
@@ -639,126 +587,31 @@ console.log('✅ 処理完了')
 
 #### **YOU MUST**: 適切なクリーンアップパターンの選択
 
-**業界標準**: `beforeEach`でのクリーンアップが推奨（Ruby DatabaseCleaner、Jest、pytest等）
-
-**基本原則（2025年6月21日統一完了）**:
+**基本原則**:
 - **`beforeEach`のみ**: 各テスト開始時にクリーンな状態を保証（推奨・統一済み）
-- **afterEch削除完了**: 全36ファイルでafterEchクリーンアップを完全削除
-- **フレーキーテスト解消**: 二重クリーンアップ削除による競合状態回避
+- **`afterEach`は避ける**: フレーキーテストの原因となるため基本的に不使用
 
-#### **YOU MUST**: 統一されたクリーンアップパターン（2025年6月21日完了）
+**詳細**: `docs/test/database-cleanup-strategy.md` を参照
 
-**統一パターン: beforeEachのみ（全36ファイル適用済み）**
+#### **YOU MUST**: 統一されたクリーンアップパターン
+
+**統一パターン**:
 ```typescript
 beforeEach(async () => {
-  // 各テスト前に全データをクリーンアップ（他のテストファイルの影響を除去）
   await testDbUtils.cleanupDatabase()
-  
   // テスト用データの作成
-  // ...
-})
-```
-- **適用完了**: 36ファイル全てで統一済み（削除系テストを含む）
-- **効果確認済み**: フレーキーテスト解消、パフォーマンス向上、デバッグ性向上
-- **業界標準準拠**: Ruby DatabaseCleaner、Jest、pytest等と同じパターン
-
-**旧パターン（廃止済み）: beforeEach + afterEach**
-- **削除完了**: 全ファイルでafterEch使用を完全削除
-- **削除理由**: 冗長処理、競合状態、フレーキーテストの原因
-- **例外なし**: 削除系テストも含めて全ファイルでbeforeEchのみに統一
-
-#### **YOU MUST**: フレーキーテスト修正完了記録（2025年6月21日）
-
-**完了したフレーキーテスト解消プロジェクト**:
-
-**Phase 1: 不要import削除（完了）**
-1. 9ファイルのafterEchのimport削除
-2. 未使用コード削除によるコード品質向上
-
-**Phase 2: afterEchのみファイル変更（完了）**
-1. 25ファイルでafterEch→beforeEchに移行
-2. 業界標準パターンへの統一
-
-**Phase 3: 両方パターンファイル統一（完了）**
-1. 6ファイルでafterEch削除、beforeEchのみに統一
-2. 削除系テストも含めて全ファイル統一
-
-**最終検証結果（完了）**:
-1. 全統合テスト実行で252/252テスト成功確認（2025年6月22日更新）
-2. フレーキーテスト完全解消とパフォーマンス向上を確認
-3. 36ファイル全てでbeforeEchのみパターン統一
-4. testDbUtils.cleanupDatabase()にEvent/Submission/Circle対応追加完了
-
-#### **YOU MUST**: 解決済み問題パターンと対処法
-
-| 問題 | 原因 | 解決方法 | 現在の状態 |
-|------|------|----------|-----------|
-| **403エラーがランダム発生** | afterEchでの競合状態 | afterEch削除、beforeEchのみ使用 | ✅ 解決済み（36ファイル全て） |
-| **expected 1 but got 16** | 他ファイルからのデータ残留 | beforeEchでクリーンアップ強化 | ✅ 解決済み（全ファイル統一） |
-| **テストファイル間の影響** | afterEch削除による副作用 | beforeEch統一で根本解決 | ✅ 解決済み（例外なし） |
-| **削除処理の検証失敗** | 前回テストデータの蓄積 | beforeEchクリーンアップで解決 | ✅ 解決済み（削除系も統一） |
-
-#### **YOU MUST**: 新規テストファイル作成時のテンプレート（統一パターン）
-
-```typescript
-import type { INestApplication } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
-import request from 'supertest'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AppModule } from '../../../src/app.module'
-import { DrizzleService } from '../../../src/drizzle/drizzle.service'
-import { testDbUtils } from '../../helpers/db-utils'
-import { setupTestApp } from '../setup-test-app'
-
-describe('Feature Test', () => {
-  let app: INestApplication
-  let drizzleService: DrizzleService
-
-  beforeAll(async () => {
-    // アプリケーション初期化
-  })
-
-  afterAll(async () => {
-    await testDbUtils.closeConnection()
-    await app.close()
-  })
-
-  beforeEach(async () => {
-    // 各テスト前に全データをクリーンアップ（統一済みパターン）
-    await testDbUtils.cleanupDatabase()
-    
-    // テスト用データ作成
-    // ...
-  })
-
-  // afterEch は一切使用しない（完全廃止済み）
-  // 理由: フレーキーテスト防止、業界標準準拠、パフォーマンス向上
-
-  describe('テストケース', () => {
-    // テスト実装
-  })
 })
 ```
 
-#### **YOU MUST**: Vitestテスト関数の明示的import（重要）
+#### **YOU MUST**: Vitestテスト関数の明示的import
 
 **必須ルール**: 新規テストファイル作成時は必ず以下のimport文を記述すること
 ```typescript
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 ```
 
-**理由**: `tsconfig.test.json` の `"types": ["vitest/globals"]` 設定では型解決できないため
+**理由**: `tsconfig.test.json` の globals設定では型解決できないため
 
-**禁止事項**: globals設定に依存したimport省略は行わない（型エラーの原因となる）
-
-#### デバッグ時の確認事項（解決済み問題の参考）
-
-1. **データ蓄積確認**: `expect(data).toHaveLength(1) but got 16` → ✅ beforeEchクリーンアップ統一で解決済み
-2. **フレーキーテスト**: 断続的な403/400エラー → ✅ afterEch完全削除で解決済み
-3. **テストファイル依存**: 単体実行では成功、全体実行で失敗 → ✅ 全ファイル統一で解決済み
-4. **データベースリセット**: `pnpm drizzle:push:test` で強制リセット可能（緊急時のみ）
-
-**現在の状況**: 252/252テスト成功、フレーキーテスト完全解消、業界標準準拠完了（2025年6月22日更新）
 
 ### 既存パターンの活用
 
@@ -1144,486 +997,26 @@ async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
 </html>
 ```
 
-## ValidationPipe統一リファクタリング完了記録
+## 関連ドキュメント
 
-### 🎉 2025年6月21日完了 🎉
+### docs/ ディレクトリ構造
 
-**ValidationPipe統一リファクタリングプロジェクトが完全完了しました！**
+**設計・仕様書**:
+- `docs/01_url.md` - URL設計とエンドポイント一覧
+- `docs/02_view_configuration.md` - EJSビューファイル設定詳細
+- `docs/db/` - データベース設計（テーブル別詳細）
 
-#### 主要成果
-- **手動バリデーション完全削除**: 約300行のコード削減
-- **統合テスト100%成功**: 195/195テスト成功維持
-- **DTO標準化完了**: 12ファイル、31件のメッセージ統一
-- **型安全性向上**: any型削除、厳密な型定義
-- **ValidationExceptionFilter**: 全パス対応、MPA用エラーハンドリング
+**テスト関連**:
+- `docs/test/overview.md` - テスト戦略とベストプラクティス
+- `docs/test/database-cleanup-strategy.md` - データベースクリーンアップ詳細
+- `docs/test/best_practices.md` - 統合テストベストプラクティス
 
-#### 確立されたパターン
-1. **コントローラー**: ValidationPipe + @UsePipes統一
-2. **DTO**: @Transform + class-validator統一
-3. **エラーハンドリング**: ValidationExceptionFilter自動処理
-4. **メッセージ**: 日本語エラーメッセージ統一
+**開発ノウハウ**:
+- `docs/know-how/` - 効率的プロンプティングパターン
+- `docs/operation/` - マイグレーション等の運用手順
 
-#### 開発効率向上
-- 新機能実装時のバリデーション処理が大幅簡素化
-- 一貫したエラーハンドリングによる予測可能な動作
-- チーム開発における明確なコーディング規約確立
-
-詳細は `temp_memory/validation-refactoring-plan.md` を参照。
-
-## 入稿機能実装完了記録
-
-### 🎉 2025年6月21日完了（Phase 3-2 コスト集計機能追加実装） 🎉
-
-**入稿機能（Submissions）の基本機能から高度な集計機能まで完全実装が完了しました！**
-
-#### 主要成果
-- **Phase 1 基本機能**: 一覧・詳細・作成機能完全実装
-- **Phase 2 編集・削除機能**: 編集・削除機能完全実装
-- **Phase 3-1 進行中入稿一覧**: 納期管理・進捗確認機能実装
-- **Phase 3-2 コスト集計機能**: 印刷所別・書籍別・期間別集計機能実装
-- **統合テスト207件全通過**: 新機能含む全テスト成功維持
-- **外部キー関連**: 書籍・印刷所との適切な関連実装
-- **JavaScript UI**: 削除確認ダイアログ等のユーザビリティ機能
-
-#### 実装されたエンドポイント
-- `GET /submissions` - 入稿一覧
-- `GET /submissions/in-progress` - 進行中入稿一覧（納期順表示）
-- `GET /submissions/costs` - コスト集計・分析画面（フィルタリング対応）
-- `GET /books/:bookId/submissions` - 書籍別入稿履歴
-- `GET /books/:bookId/submissions/new` - 新規入稿作成フォーム
-- `POST /books/:bookId/submissions` - 入稿作成処理
-- `GET /submissions/:id` - 入稿詳細
-- `GET /submissions/:id/edit` - 入稿編集フォーム
-- `PUT /submissions/:id` - 入稿更新処理（HTTPメソッドオーバーライド対応）
-- `DELETE /submissions/:id` - 入稿削除処理（HTTPメソッドオーバーライド対応）
-
-#### 技術的な実装内容
-- **Drizzle ORM**: JOIN処理による関連データ取得、WHERE/ORDER BY条件での絞り込み
-- **高度な集計処理**: GROUP BY、SUM()、AVG()、COUNT()等の集計関数活用
-- **ValidationPipe統一**: class-validator + @Transform統一パターン適用
-- **コスト自動計算**: 印刷費+送料+その他費用=合計の自動計算機能
-- **ステータス管理**: 5段階ステータス（準備中・入稿済み・印刷中・納品済み・キャンセル）
-- **納期管理機能**: 進行中入稿の納期順表示、3日以内の緊急納期アラート
-- **コスト集計機能**: 印刷所別・書籍別・期間別の多軸集計とフィルタリング
-- **レスポンシブUI**: セクション構造化によるモバイル対応、統計情報表示
-- **エラーハンドリング**: 404・400エラーの適切な処理
-
-#### 確立された開発パターン
-1. **実装前チェックリスト**: スキーマ定義確認、既存パターン分析の4段階手順
-2. **段階的テスト実装**: ミニマム→バリデーション→エッジケースの3段階アプローチ
-3. **削除機能パターン**: 存在確認→削除→リダイレクトの標準パターン確立
-4. **型安全性**: TypeScript型定義の事前修正によるエラー回避
-
-#### 開発効率向上への貢献
-- 既存パターン（印刷所機能）踏襲による高速実装
-- 統合テスト駆動開発による仕様明確化・エラー早期発見
-- エラー解決パターン辞書による効率的デバッグ
-- 段階的実装戦略による複雑性回避
-
-#### Phase 3-1 進行中入稿一覧の特徴
-- **業務効率化**: 進行中案件の一元管理による作業効率向上
-- **納期管理**: 緊急度順表示と3日以内アラートによる納期遅延防止
-- **統計情報**: 進行中件数・緊急件数の可視化
-- **既存パターン活用**: findAll()メソッドパターンを拡張したWHERE/ORDER BY実装
-
-#### Phase 3-2 コスト集計機能の特徴
-- **多軸集計**: 印刷所別・書籍別・期間別の3軸同時集計
-- **フィルタリング**: 期間指定・ステータス絞り込みによる柔軟な分析
-- **統計情報**: 総コスト・平均・最大・最小の自動計算表示
-- **レスポンシブUI**: モバイル対応の集計テーブルとフィルター機能
-- **Drizzle ORM活用**: GROUP BY、集計関数による型安全な集計処理
-
-詳細は `temp_memory/submissions-todo.md` を参照。
-
-## ナビゲーション改善プロジェクト完了記録
-
-### 🎉 2025年6月21日完了 🎉
-
-**直接URL入力依存の解消とユーザビリティ向上プロジェクトが完全完了しました！**
-
-#### 主要成果
-- **Phase 1 グローバルナビゲーション拡充**: 4つの主要機能への統一されたアクセス
-- **Phase 2 書籍詳細画面機能拡充**: 入稿関連機能への効率的アクセス  
-- **Phase 3 入稿一覧サブナビゲーション**: タブ形式による高度機能アクセス
-- **Phase 4 E2Eナビゲーション統合**: 完全なナビゲーションフローの検証
-- **統合テスト238件全通過**: 新機能含む全テスト成功維持
-- **TDD実践**: テストファーストによる品質保証実装
-
-#### 実装されたナビゲーション機能
-**グローバルヘッダーナビゲーション**:
-- ホーム、書籍一覧、執筆者一覧、印刷所一覧、入稿一覧の統一アクセス
-- レスポンシブ対応（モバイル・タブレット対応）
-- ホバーエフェクトとアクセシビリティ対応
-
-**書籍詳細画面からの入稿アクセス**:
-- 「📋 入稿履歴」ボタン → `/books/:id/submissions`
-- 「➕ 新規入稿」ボタン → `/books/:id/submissions/new`
-- アイコン付きボタンとtooltip実装
-- 適切な配置順序（執筆者管理→入稿関連→ステータス変更）
-
-**入稿一覧サブナビゲーション**:
-- 「全て」「進行中のみ」「コスト集計」タブ形式ナビゲーション
-- アクティブ状態の視覚的フィードバック
-- 3つの入稿ページ全てで統一されたデザイン
-
-**E2Eナビゲーション**:
-- 直接URL入力なしで全機能アクセス可能
-- 完全なナビゲーションフローの検証
-- 一貫性テスト（全ページで統一されたナビゲーション）
-
-#### 技術的な実装内容
-- **TDD実践**: RED→GREEN→REFACTORサイクルによる品質保証
-- **統合テスト駆動**: 各フェーズでテストファーストによる実装
-- **レスポンシブ対応**: モバイル・タブレット環境での最適表示
-- **ホーム画面実装**: AppControllerのEJSテンプレート化
-- **統一デザイン**: ホバーエフェクト、アクティブ状態、アイコン活用
-- **アクセシビリティ**: tooltip、aria-label等の対応
-
-#### 確立された開発パターン
-1. **TDD段階的実装**: テスト作成→失敗確認→実装→成功確認の4段階
-2. **フェーズ分割戦略**: 複雑なプロジェクトの段階的進行
-3. **E2Eテスト設計**: 完全なユーザーフローによる品質保証
-4. **統合テスト活用**: 各機能の協調動作確認
-
-#### UX大幅改善効果
-- **直接URL入力不要**: 全機能にGUIからアクセス可能
-- **作業効率向上**: 関連機能への迅速な移動（書籍→入稿、入稿一覧→高度機能）
-- **使いやすさ向上**: 直感的なナビゲーションによるユーザビリティ向上
-- **一貫性確保**: 全ページで統一されたナビゲーション体験
-
-#### 保守性・拡張性向上
-- **テスト保護**: 全ナビゲーション機能がテストでカバー
-- **設計一貫性**: 統一されたナビゲーションパターンの確立
-- **拡張性**: 新機能追加時のナビゲーション拡張が容易
-- **実装パターン**: 今後のナビゲーション機能追加の指針確立
-
-詳細は `todo_memory/navigation-improvement-plan.md` を参照。
-
-## ナビゲーション改善プロジェクト計画（アーカイブ）
-
-### 🎯 2025年6月21日計画策定→完了
-
-**直接URL入力依存の解消とユーザビリティ向上プロジェクト**
-
-#### 問題の特定
-現在のアプリケーションでは、以下の機能に直接URL入力でしかアクセスできない状況：
-
-**📍 グローバルナビゲーション不足**：
-- `/authors` - 執筆者一覧
-- `/printing-companies` - 印刷所一覧  
-- `/submissions` - 入稿一覧
-- `/submissions/in-progress` - 進行中入稿一覧
-- `/submissions/costs` - 入稿コスト集計
-
-**📍 書籍詳細から入稿機能へのアクセス不足**：
-- `/books/:bookId/submissions` - 書籍の入稿履歴
-- `/books/:bookId/submissions/new` - 書籍から新規入稿作成
-
-**📍 入稿一覧から高度機能へのアクセス不足**：
-- `/submissions/in-progress` - 進行中入稿一覧
-- `/submissions/costs` - コスト集計画面
-
-#### 解決方針
-**TDD（テスト駆動開発）方式**でのナビゲーション改善実装
-
-#### 実装計画
-
-##### Phase 1: グローバルナビゲーション拡充（TDD）
-**1-1. 統合テスト作成**
-- `test/integration/navigation/global-navigation.integration.spec.ts` 作成
-- 全ページでヘッダーに以下のリンクが存在することをテスト：
-  - 書籍一覧、執筆者一覧、印刷所一覧、入稿一覧
-- **テスト実行して失敗を確認**
-
-**1-2. プロダクションコード実装**
-- `shared/header.ejs` にナビゲーションリンク追加
-- レスポンシブ対応（モバイルではハンバーガーメニュー）
-
-**1-3. テスト成功確認**
-- 統合テストが全て通ることを確認
-- ブラウザで動作確認
-
-##### Phase 2: 書籍詳細画面の機能拡充（TDD）
-**2-1. 統合テスト作成**
-- `test/integration/books/show-navigation.integration.spec.ts` 作成
-- 書籍詳細画面に以下のボタンが存在することをテスト：
-  - "入稿履歴" → `/books/:id/submissions`
-  - "新規入稿" → `/books/:id/submissions/new`
-- **テスト実行して失敗を確認**
-
-**2-2. プロダクションコード実装**
-- `books/show.ejs` に入稿関連ボタン追加
-- 適切なスタイリングとアイコン
-
-**2-3. テスト成功確認**
-- 統合テストが全て通ることを確認
-- 実際の画面遷移を確認
-
-##### Phase 3: 入稿一覧画面の高度機能アクセス（TDD）
-**3-1. 統合テスト作成**
-- `test/integration/submissions/index-navigation.integration.spec.ts` 作成
-- 入稿一覧画面に以下のリンクが存在することをテスト：
-  - "進行中のみ表示" → `/submissions/in-progress`
-  - "コスト集計" → `/submissions/costs`
-- **テスト実行して失敗を確認**
-
-**3-2. プロダクションコード実装**
-- `submissions/index.ejs` にサブナビゲーション追加
-- タブ形式またはボタン形式で実装
-
-**3-3. テスト成功確認**
-- 統合テストが全て通ることを確認
-- 画面遷移とレイアウトを確認
-
-##### Phase 4: 全体統合テスト
-**4-1. E2Eナビゲーションテスト作成**
-- `test/integration/navigation/full-navigation.integration.spec.ts` 作成
-- 直接URL入力なしで全機能にアクセス可能かテスト
-- **テスト実行して全て通ることを確認**
-
-**4-2. リファクタリング（必要に応じて）**
-- コード重複の削除
-- スタイルの統一
-
-#### 期待される効果
-- **UX大幅改善**: 直接URL入力不要でスムーズな画面遷移
-- **作業効率向上**: 各機能への迅速なアクセス
-- **保守性向上**: テスト保護されたナビゲーション機能
-
-#### 開発手法
-**各フェーズの進め方**：
-1. 統合テスト作成（RED）
-2. テスト失敗確認
-3. プロダクションコード実装（GREEN）
-4. テスト成功確認
-5. リファクタリング（REFACTOR）
-
-**優先度**: 高（UX改善によるシステム価値向上）
-**工数見積**: 6-8時間（TDD含む）
-**実装期間**: 2025年6月21日〜
-
-詳細は `todo_memory/navigation-improvement-plan.md` を参照。
-
-## イベント管理機能実装完了記録
-
-### 🎉 2025年6月22日完了（Phase 1-B: イベント管理アプリケーション実装） 🎉
-
-**イベント管理機能（Events）の基本CRUD機能が完全実装完了しました！**
-
-#### 主要成果
-- **TDD（統合テスト駆動開発）**でミニマム実装完了
-- **ValidationPipe統一パターン**を適用したDTO設計
-- **印刷所機能パターン踏襲**による高品質実装
-- **全CRUD機能**実装完了（一覧・詳細・作成・編集・削除）
-
-#### 実装されたエンドポイント
-- `GET /events` - イベント一覧
-- `GET /events/new` - 新規イベント登録フォーム
-- `POST /events` - イベント作成処理
-- `GET /events/:id` - イベント詳細
-- `GET /events/:id/edit` - イベント編集フォーム
-- `PUT /events/:id` - イベント更新処理（HTTPメソッドオーバーライド対応）
-- `DELETE /events/:id` - イベント削除処理（HTTPメソッドオーバーライド対応）
-
-#### 技術的実装内容
-- **DTO設計**: CreateEventDto, UpdateEventDto（ValidationPipe統一パターン）
-- **サービス層**: EventsService（印刷所パターン踏襲、型安全な実装）
-- **コントローラー層**: EventsController（NestJS標準命名、ValidationPipe統合）
-- **ビューファイル**: EJSテンプレート4ファイル（レスポンシブ対応）
-- **モジュール統合**: EventsModule作成、app.module.ts統合完了
-
-#### 確立された開発パターン
-1. **実装前チェックリスト**: スキーマ確認→既存パターン分析→依存関係確認→データフロー設計
-2. **TDD段階的実装**: ミニマムテスト→失敗確認→実装→成功確認
-3. **ValidationPipe統一**: @Transform + class-validator統一パターン
-4. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
-
-#### 動作確認済み機能
-- **HTTP 200レスポンス**: `/events`エンドポイント正常動作
-- **データ表示**: イベントデータの一覧表示確認
-- **日付フォーマット**: 日本語ロケール（2024/12/7形式）
-- **レイアウト統合**: グローバルナビゲーション適用
-- **ビルド成功**: `dist/views/events/`にビューファイルコピー完了
-
-#### データベーススキーマ実装済み
-- **eventsテーブル**: `src/db/schema.ts`に実装済み
-- **型定義**: Event, NewEvent型をexport済み
-- **マイグレーション**: `drizzle/0006_huge_omega_sentinel.sql`適用済み
-
-#### 次のステップ
-- **Phase 1-C**: サークル管理機能（Circles）実装予定
-- **Phase 1-D**: 出展申込機能（Exhibits）実装予定
-- **Phase 2**: イベント・サークル・出展の関連機能実装予定
-
-詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
-
-## サークル管理機能スキーマ実装完了記録
-
-### 🎉 2025年6月22日完了（Phase 1-C-A: サークル管理用データベーススキーマ実装） 🎉
-
-**サークル管理機能（Circles）のデータベーススキーマ実装が完全完了しました！**
-
-#### 主要成果
-- **circlesテーブルスキーマ実装**: 既存パターン踏襲のPascalCase命名
-- **マイグレーション適用完了**: テスト用・プロダクション用両方成功
-- **testDbUtils.cleanupDatabase()拡張**: Event/Submission/Circle対応追加
-- **統合テスト252件全通過**: データベースクリーンアップ問題根本解決
-
-#### 実装されたテーブル定義
-```typescript
-export const circles = pgTable('Circle', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-  representativeName: varchar('representativeName', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull(),
-  description: text('description'),
-  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
-export type Circle = typeof circles.$inferSelect;
-export type NewCircle = typeof circles.$inferInsert;
-```
-
-#### 技術的実装内容
-- **データベーススキーマ**: PascalCase テーブル名、camelCase フィールド名
-- **マイグレーションファイル**: `drizzle/0007_exotic_felicia_hardy.sql`
-- **型定義**: Circle, NewCircle型をexport
-- **testDbUtils修正**: Event/Submission/Circleテーブル対応追加
-
-#### 重要な修正内容
-- **データベースクリーンアップ問題解決**: testDbUtils.cleanupDatabase()にEvent/Submission/Circle対応追加
-- **統合テスト修正**: イベント機能のレイアウトシステム対応
-- **フレーキーテスト根本解決**: データベースクリーンアップ統一で252件全通過
-
-#### 検証結果
-- **統合テスト**: 252/252テスト通過 ✅
-- **型チェック**: エラー0件 ✅
-- **マイグレーション**: テスト用・プロダクション用両方成功 ✅
-- **コミット**: `2626d56` 正常完了 ✅
-
-#### 次のステップ
-- **Phase 1-C-B**: サークル管理アプリケーション実装（TDD統合テスト駆動）
-- **Phase 1-D**: 出展申込機能スキーマ・アプリケーション実装
-- **Phase 2**: イベント・サークル・出展の関連機能実装
-
-詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
-
-## サークル管理機能実装完了記録
-
-### 🎉 2025年6月23日完了（Phase 1-C-B: サークル管理アプリケーション実装） 🎉
-
-**サークル管理機能（Circles）の基本CRUD機能が完全実装完了しました！**
-
-#### 主要成果
-- **TDD（統合テスト駆動開発）**でミニマム実装完了
-- **ValidationPipe統一パターン**を適用したDTO設計
-- **イベント機能パターン踏襲**による高品質実装
-- **全CRUD機能**実装完了（一覧・詳細・作成・編集・削除）
-
-#### 実装されたエンドポイント
-- `GET /circles` - サークル一覧
-- `GET /circles/new` - 新規サークル登録フォーム
-- `POST /circles` - サークル作成処理
-- `GET /circles/:id` - サークル詳細
-- `GET /circles/:id/edit` - サークル編集フォーム
-- `PUT /circles/:id` - サークル更新処理（HTTPメソッドオーバーライド対応）
-- `DELETE /circles/:id` - サークル削除処理（HTTPメソッドオーバーライド対応）
-
-#### 技術的実装内容
-- **DTO設計**: CreateCircleDto, UpdateCircleDto（ValidationPipe統一パターン）
-- **サービス層**: CirclesService（印刷所パターン踏襲、型安全な実装）
-- **コントローラー層**: CirclesController（NestJS標準命名、ValidationPipe統合）
-- **ビューファイル**: EJSテンプレート4ファイル（レスポンシブ対応）
-- **モジュール統合**: CirclesModule作成、app.module.ts統合完了
-
-#### 確立された開発パターン
-1. **実装前チェックリスト**: スキーマ確認→既存パターン分析→依存関係確認→データフロー設計
-2. **TDD段階的実装**: ミニマムテスト→失敗確認→実装→成功確認
-3. **ValidationPipe統一**: @Transform + class-validator統一パターン
-4. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
-
-#### 技術的検証結果
-- **ビルド**: ✅ 成功（dist/views/circles/ にビューファイルコピー確認）
-- **統合テスト**: ✅ 2/2テスト通過（サークル機能のみ）
-- **Lint**: ✅ 成功（6ファイル自動修正、コード品質向上）
-- **型チェック**: ✅ エラー0件
-- **動作確認**: ✅ ユーザー確認済み
-
-#### データベーススキーマ実装済み
-- **circlesテーブル**: `src/db/schema.ts`に実装済み
-- **型定義**: Circle, NewCircle型をexport済み
-- **マイグレーション**: `drizzle/0007_exotic_felicia_hardy.sql`適用済み
-
-#### 次のステップ
-- **Phase 1-D**: 出展申込機能（Exhibits）実装予定
-- **Phase 2**: イベント・サークル・出展の関連機能実装予定
-
-詳細は `todo_memory/06_event_exhibit_implementation_plan.md` を参照。
-
-## サークルメンバー管理機能実装完了記録
-
-### 🎉 2025年6月24日完了（Phase 3-1-B: サークルメンバー管理アプリケーション実装） 🎉
-
-**サークルメンバー管理機能（Circle Members）の完全実装が完了しました！**
-
-#### 主要成果
-- **TDD（統合テスト駆動開発）**による品質保証実装
-- **複合主キー対応**（circleId + authorId）の多対多関係管理
-- **ValidationPipe統一パターン**適用とValidationExceptionFilter統合
-- **JOIN処理による関連データ取得**とフィルタリング機能実装
-
-#### 実装されたエンドポイント
-- `GET /circles/:circleId/members` - サークルメンバー一覧（役割・参加期間表示）
-- `GET /circles/:circleId/members/add` - メンバー追加フォーム（利用可能執筆者フィルタリング）
-- `POST /circles/:circleId/members` - メンバー追加処理（バリデーション統合）
-- `GET /circles/:circleId/members/:authorId/edit` - メンバー編集フォーム
-- `PUT /circles/:circleId/members/:authorId` - メンバー更新処理（HTTPメソッドオーバーライド対応）
-- `DELETE /circles/:circleId/members/:authorId` - メンバー削除処理
-
-#### 技術的実装内容
-- **複合主キー管理**: circleId + authorId の関係管理
-- **JOIN処理**: Drizzle ORMでのinner join、select構文活用
-- **フィルタリング**: notInArray()による利用可能執筆者絞り込み
-- **参加期間管理**: joinedAt, leftAtによるアクティブ/非アクティブ管理
-- **役割管理**: representative/member/guest の3段階役割システム
-- **ValidationExceptionFilter拡張**: サークルメンバー管理パス対応追加
-
-#### 確立された開発パターン
-1. **実装前チェックリスト強化**: 複合主キー・多対多関係の事前設計確認
-2. **404エラーテスト修正**: NestJSデフォルト動作（JSON応答）への対応
-3. **ValidationExceptionFilter統合**: テンプレート変数不足問題の根本解決
-4. **段階的エラー解決**: 2Failed → 0Failed への体系的問題解決
-
-#### 重要な問題解決事例
-1. **404エラーテスト**: HTML期待からJSON応答への修正
-2. **ValidationExceptionFilter**: prepareFormDataメソッドへのサークルメンバーパス追加
-3. **テンプレート変数不足**: authors, roles変数の適切な提供
-4. **console.logクリーンアップ**: デバッグログ削除による本番対応
-
-#### 技術的検証結果
-- **統合テスト**: 6/6通過（2Failed → 0Failed達成） ✅
-- **全統合テスト**: 275/275通過（他機能への影響なし） ✅
-- **型チェック**: エラー0件 ✅
-- **Lint**: 自動整形完了 ✅
-- **console.logクリーンアップ**: 7箇所削除完了 ✅
-
-#### 開発効率向上への貢献
-- 複合主キー実装パターンの確立
-- ValidationExceptionFilter統合ベストプラクティス確立
-- 多対多関係管理の標準テンプレート確立
-- TDD段階的実装による品質保証プロセス確立
-
-#### 次のステップ
-- **Phase 3-2**: 出展書籍管理機能（ExhibitBooks）実装予定
-- **Phase 4**: イベント・サークル・出展の統合機能実装予定
-
-この実装により、サークル運営における執筆者管理の効率化と、システム全体の多対多関係管理能力が大幅に向上しました。
+**プロジェクト記録**:
+- `docs/project-history.md` - 各機能の実装完了記録
 
 ---
 
