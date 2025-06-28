@@ -31,6 +31,13 @@ export const circleRoleEnum = pgEnum('circle_role', [
   'guest',
 ])
 
+export const storageLocationTypeEnum = pgEnum('storage_location_type', [
+  'home',
+  'warehouse',
+  'consignment',
+  'event',
+])
+
 export const books = pgTable('Book', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -339,3 +346,23 @@ export const editions = pgTable('Edition', {
 
 export type Edition = typeof editions.$inferSelect
 export type NewEdition = typeof editions.$inferInsert
+
+export const storageLocations = pgTable('StorageLocation', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  type: storageLocationTypeEnum('type').notNull(),
+  isConsignment: boolean('isConsignment').notNull().default(false),
+  address: text('address'),
+  contactInfo: text('contactInfo'),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type StorageLocation = typeof storageLocations.$inferSelect
+export type NewStorageLocation = typeof storageLocations.$inferInsert

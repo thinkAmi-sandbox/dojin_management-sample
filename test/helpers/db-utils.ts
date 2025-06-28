@@ -106,6 +106,14 @@ export class TestDbUtils {
       } catch {
         // テーブルが存在しない場合は無視
       }
+      // StorageLocationテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "StorageLocation" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
     } catch (error) {
       console.error(
         'データベースのクリーンアップでエラーが発生しました:',
