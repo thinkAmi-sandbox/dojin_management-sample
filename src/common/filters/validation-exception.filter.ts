@@ -156,6 +156,22 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors._general = error
         } else if (error.includes('在庫数量が不整合です')) {
           errors._general = error
+        } else if (error.includes('移動元保管場所')) {
+          errors.fromLocationId = error
+        } else if (error.includes('移動先保管場所')) {
+          errors.toLocationId = error
+        } else if (error.includes('移動数量')) {
+          errors.quantity = error
+        } else if (error.includes('移動タイプ')) {
+          errors.movementType = error
+        } else if (error.includes('関連レコードタイプ')) {
+          errors.referenceType = error
+        } else if (error.includes('関連レコードID')) {
+          errors.referenceId = error
+        } else if (error.includes('移動理由')) {
+          errors.reason = error
+        } else if (error.includes('作成者')) {
+          errors.createdBy = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -413,6 +429,11 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /stocks/:id (PUT via _method)
           templatePath = 'stocks/edit'
           title = '在庫編集'
+        }
+      } else if (path.includes('/stock-movements')) {
+        if (path.endsWith('/stock-movements')) {
+          templatePath = 'stock-movements/index'
+          title = '在庫移動履歴'
         }
       }
 
@@ -1239,6 +1260,24 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               { name: '編集', url: null },
             ]
           : [],
+      }
+    } else if (path.includes('/stock-movements')) {
+      // 在庫移動履歴関連パス
+      if (path === '/stock-movements') {
+        return {
+          formData,
+          filters: {
+            editionId: '',
+            movementType: '',
+            fromLocationId: '',
+            toLocationId: '',
+          },
+          movements: [], // 空の移動履歴
+          editions: [
+            { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍' },
+          ],
+          locations: [{ id: 1, name: 'ダミー保管場所', type: 'home' }],
+        }
       }
     }
 

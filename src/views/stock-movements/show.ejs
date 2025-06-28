@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        /* セクション構造 */
+        .detail-section { margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: #495057; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .detail-item { display: flex; margin-bottom: 10px; }
+        .detail-label { font-weight: bold; min-width: 150px; color: #6c757d; }
+        .detail-value { flex: 1; }
+        
+        /* 移動タイプ表示 */
+        .movement-type { font-weight: bold; padding: 4px 12px; border-radius: 12px; display: inline-block; }
+        .type-inbound { background: #d4edda; color: #155724; }
+        .type-outbound { background: #f8d7da; color: #721c24; }
+        .type-transfer { background: #cce7ff; color: #004085; }
+        .type-sale { background: #fff3cd; color: #856404; }
+        .type-return { background: #d1ecf1; color: #0c5460; }
+        .type-adjustment { background: #e2e3e5; color: #383d41; }
+        .type-disposal { background: #f5c6cb; color: #721c24; }
+        
+        /* 数量強調 */
+        .quantity-highlight { font-size: 1.1em; font-weight: bold; color: #007bff; }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-item { flex-direction: column; }
+            .detail-label { min-width: auto; margin-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="<%= listUrl %>" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <!-- 基本情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">📋 移動記録基本情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">移動ID:</span>
+                <span class="detail-value"><%= movement.id %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">移動日時:</span>
+                <span class="detail-value"><%= movement.movedAt %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">移動数量:</span>
+                <span class="detail-value quantity-highlight"><%= movement.quantity %>冊</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">移動タイプ:</span>
+                <span class="detail-value">
+                    <span class="movement-type type-<%= movement.movementType.toLowerCase() %>">
+                        <%= movement.movementType %>
+                    </span>
+                </span>
+            </div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">移動理由:</span>
+            <span class="detail-value"><%= movement.reason %></span>
+        </div>
+    </div>
+
+    <!-- 版情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">📚 版情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">版名:</span>
+                <span class="detail-value"><%= movement.editionName %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">定価:</span>
+                <span class="detail-value"><%= movement.editionBasePrice %></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移動情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">🔄 移動情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">移動元:</span>
+                <span class="detail-value"><%= movement.fromLocationName %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">移動先:</span>
+                <span class="detail-value"><%= movement.toLocationName %></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">🔧 管理情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">作成者:</span>
+                <span class="detail-value"><%= movement.createdBy %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">記録日時:</span>
+                <span class="detail-value"><%= movement.createdAt %></span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

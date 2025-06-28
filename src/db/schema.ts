@@ -39,13 +39,13 @@ export const storageLocationTypeEnum = pgEnum('storage_location_type', [
 ])
 
 export const stockMovementTypeEnum = pgEnum('stock_movement_type', [
-  'inbound',      // 入庫（印刷所から納品）
-  'outbound',     // 出庫（イベント/委託先へ）
-  'transfer',     // 移動（場所間移動）
-  'sale',         // 販売による減少
-  'return',       // 返品による増加
-  'adjustment',   // 棚卸調整
-  'disposal',     // 廃棄
+  'inbound', // 入庫（印刷所から納品）
+  'outbound', // 出庫（イベント/委託先へ）
+  'transfer', // 移動（場所間移動）
+  'sale', // 販売による減少
+  'return', // 返品による増加
+  'adjustment', // 棚卸調整
+  'disposal', // 廃棄
 ])
 
 export const books = pgTable('Book', {
@@ -407,10 +407,10 @@ export const stockMovements = pgTable('StockMovement', {
   editionId: integer('editionId')
     .notNull()
     .references(() => editions.id, { onDelete: 'cascade' }),
-  fromLocationId: integer('fromLocationId')
-    .references(() => storageLocations.id),
-  toLocationId: integer('toLocationId')
-    .references(() => storageLocations.id),
+  fromLocationId: integer('fromLocationId').references(
+    () => storageLocations.id,
+  ),
+  toLocationId: integer('toLocationId').references(() => storageLocations.id),
   quantity: integer('quantity').notNull(),
   movementType: stockMovementTypeEnum('movementType').notNull(),
   referenceType: varchar('referenceType', { length: 50 }), // 'sale', 'exhibit', 'consignment'

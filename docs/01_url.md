@@ -157,6 +157,46 @@
 | PUT | `/circles/:circleId/members/:authorId` | メンバー情報更新処理（_method=PUT） |
 | DELETE | `/circles/:circleId/members/:authorId` | メンバー削除処理（_method=DELETE） |
 
+### 版管理（Editions）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/books/:bookId/editions` | 版一覧ページ |
+| GET | `/books/:bookId/editions/new` | 新規版作成フォーム |
+| POST | `/books/:bookId/editions` | 版作成処理 |
+| GET | `/editions/:id` | 版詳細ページ |
+| GET | `/editions/:id/edit` | 版編集フォーム |
+| PUT | `/editions/:id` | 版更新処理（_method=PUT） |
+| DELETE | `/editions/:id` | 版削除処理（_method=DELETE） |
+
+### 保管場所管理（Storage Locations）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/storage-locations` | 保管場所一覧ページ |
+| GET | `/storage-locations/new` | 新規保管場所登録フォーム |
+| POST | `/storage-locations` | 保管場所作成処理 |
+| GET | `/storage-locations/:id` | 保管場所詳細ページ |
+| GET | `/storage-locations/:id/edit` | 保管場所編集フォーム |
+| PUT | `/storage-locations/:id` | 保管場所更新処理（_method=PUT） |
+| DELETE | `/storage-locations/:id` | 保管場所削除処理（_method=DELETE） |
+
+### 在庫管理（Stocks）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/stocks` | 在庫一覧ページ |
+| GET | `/stocks/new` | 新規在庫登録フォーム |
+| POST | `/stocks` | 在庫作成処理 |
+| GET | `/stocks/:id` | 在庫詳細ページ |
+| GET | `/stocks/:id/edit` | 在庫編集フォーム |
+| PUT | `/stocks/:id` | 在庫更新処理（_method=PUT） |
+| DELETE | `/stocks/:id` | 在庫削除処理（_method=DELETE） |
+
+### 在庫移動履歴（Stock Movements）
+| メソッド | URL | 説明 |
+|---------|-----|------|
+| GET | `/stock-movements` | 在庫移動履歴一覧ページ（フィルタ機能付き） |
+| POST | `/stock-movements` | 在庫移動記録作成処理 |
+| GET | `/stock-movements/:id` | 在庫移動記録詳細ページ |
+
 ## 実装時の注意事項
 
 ### HTTPメソッドオーバーライド
