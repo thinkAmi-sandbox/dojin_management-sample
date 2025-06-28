@@ -1,8 +1,8 @@
   ---
-description: "ここまでの作業を必要なドキュメントへ反映させるためのカスタムコマンド"
-allowed-tools: ["Bash"]
+description: "ここまでの作業を指定したドキュメントと関連ファイルに反映させるためのカスタムコマンド"
+allowed-tools: ["Read", "Edit", "MultiEdit", "Write", "TodoRead", "TodoWrite", "Bash", "LS", "Glob", "Grep", "Task"]
   ---
 
-# ドキュメントへ反映させるためのコマンド
+# ドキュメント更新コマンド
 
-ここまでの作業を $ARGUMENTS や関係するファイルに反映してください
+ここまでの作業を @$ARGUMENTS や関連するファイルに反映してください
