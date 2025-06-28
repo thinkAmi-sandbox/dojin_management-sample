@@ -13,6 +13,7 @@ import { EventsModule } from './events/events.module'
 import { ExhibitBooksModule } from './exhibit-books/exhibit-books.module'
 import { ExhibitsModule } from './exhibits/exhibits.module'
 import { PrintingCompaniesModule } from './printing-companies/printing-companies.module'
+import { StocksModule } from './stocks/stocks.module'
 import { StorageLocationsModule } from './storage-locations/storage-locations.module'
 import { SubmissionsModule } from './submissions/submissions.module'
 
@@ -30,6 +31,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
     ExhibitBooksModule,
     ExhibitsModule,
     PrintingCompaniesModule,
+    StocksModule,
     StorageLocationsModule,
     SubmissionsModule,
   ],

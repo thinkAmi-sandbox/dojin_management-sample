@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        /* フィルターセクション */
+        .filter-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .filter-form { display: flex; gap: 10px; align-items: end; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-weight: bold; margin-bottom: 5px; }
+        .filter-group input, .filter-group select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* テーブルスタイル */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .actions-cell { white-space: nowrap; }
+        .action-link { margin-right: 8px; text-decoration: none; color: #007bff; }
+        .action-link:hover { text-decoration: underline; }
+        .empty-message { text-align: center; padding: 40px; color: #666; }
+        
+        /* 在庫数量表示 */
+        .stock-number { font-weight: bold; text-align: right; }
+        .stock-total { color: #155724; }
+        .stock-reserved { color: #856404; }
+        .stock-available { color: #0c5460; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .filter-form { flex-direction: column; align-items: stretch; }
+            table { font-size: 0.9em; }
+            .actions-cell { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <!-- フィルターセクション -->
+    <div class="filter-section">
+        <form class="filter-form" method="GET" action="/stocks">
+            <div class="filter-group">
+                <label for="editionId">版ID</label>
+                <input type="number" id="editionId" name="editionId" value="<%= filters.editionId %>" placeholder="版IDで絞り込み">
+            </div>
+            <div class="filter-group">
+                <label for="locationId">保管場所ID</label>
+                <input type="number" id="locationId" name="locationId" value="<%= filters.locationId %>" placeholder="保管場所IDで絞り込み">
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn">絞り込み</button>
+                <a href="/stocks" class="btn btn-secondary">クリア</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="actions">
+        <a href="/stocks/check" class="btn">📋 棚卸し</a>
+    </div>
+
+    <% if (stocks.length > 0) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>版</th>
+                    <th>保管場所</th>
+                    <th>在庫数</th>
+                    <th>予約済み</th>
+                    <th>販売可能数</th>
+                    <th>最終確認日</th>
+                    <th>備考</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% stocks.forEach(stock => { %>
+                    <tr>
+                        <td><%= stock.editionName %></td>
+                        <td><%= stock.locationName %></td>
+                        <td class="stock-number stock-total"><%= stock.quantity %></td>
+                        <td class="stock-number stock-reserved"><%= stock.reservedQuantity %></td>
+                        <td class="stock-number stock-available"><%= stock.availableQuantity %></td>
+                        <td><%= stock.lastCheckedAt %></td>
+                        <td><%= stock.notes || '-' %></td>
+                        <td class="actions-cell">
+                            <a href="/stocks/<%= stock.id %>" class="action-link">詳細</a>
+                            <form style="display: inline;" method="POST" action="/stocks/<%= stock.id %>" onsubmit="return confirm('本当に削除しますか？')">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" style="background: none; border: none; color: #dc3545; cursor: pointer; text-decoration: underline;">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <div class="empty-message">
+            <p>在庫データが登録されていません。</p>
+        </div>
+    <% } %>
+</body>
+</html>
