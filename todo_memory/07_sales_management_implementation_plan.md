@@ -686,20 +686,144 @@ Phase 1完了により、Phase 2（在庫管理の版対応）に移行する準
 - **既存機能拡張**: ExhibitBooksテーブルの版対応準備完了
 - **開発パターン**: TDD統合テスト駆動開発パターンの確立
 
-### Phase 2: 在庫管理の版対応（1-2週間）
-1. **データベース**
-   - StorageLocationsテーブルの作成
-   - Stocksテーブルの作成（版ベース）
-   - StockMovementsテーブルの作成
+### Phase 2: 在庫管理の版対応（1-2週間）- 詳細実装計画
 
-2. **在庫管理モジュール**
-   - 在庫照会機能
-   - 在庫移動記録機能
-   - 棚卸機能
+#### 📊 Phase 2 進捗状況
+- **⏳ Phase 2-1**: StorageLocationsテーブル・モジュール実装 （予定）
+- **⏳ Phase 2-2**: Stocksテーブル・在庫管理基盤実装 （予定）
+- **⏳ Phase 2-3**: StockMovementsテーブル・在庫移動履歴実装 （予定）
+- **⏳ Phase 2-4**: 統合・検証・版詳細画面への在庫表示 （予定）
 
-3. **統合テスト**
-   - 在庫の増減テスト
-   - 在庫移動履歴テスト
+#### 📋 実装の全体戦略
+
+**CLAUDE.mdのTDD実装パターン（統合テスト駆動開発）**を適用して、在庫管理システムを段階的に構築します。Phase 1で確立した版管理基盤を活用し、版IDベースの在庫管理を実現します。
+
+#### 🗂️ Phase 2-1: 保管場所管理実装（1-2日）
+
+**前提条件**
+- **✅ Phase 1完了**: 版管理基盤の完全実装済み
+- **✅ 版ID基盤**: editionIdを使った関連テーブル設計が可能
+
+**Step 1: StorageLocationsテーブルスキーマ作成**
+- **保管場所タイプenum**: home, warehouse, consignment, event
+- **基本情報フィールド**: 名前、住所、連絡先、メモ
+- **委託フラグ**: 委託販売場所かどうかの判定用
+- **マイグレーション生成・実行**: 対話式プロンプト対応
+
+**Step 2: storage-locationsモジュール実装（TDD）**
+- **統合テスト作成**: 完全CRUD機能テスト（4-6テスト）
+  - 保管場所一覧表示
+  - 新規保管場所作成
+  - 保管場所詳細表示・編集・削除
+- **StorageLocationsService実装**: CRUD操作、型安全性確保
+- **StorageLocationsController実装**: ValidationPipe統一パターン
+- **DTO作成**: CreateStorageLocationDto, UpdateStorageLocationDto
+- **ビューファイル4件作成**: 一覧、詳細、作成、編集
+
+**URLエンドポイント**
+- `GET /storage-locations` - 保管場所一覧
+- `GET /storage-locations/new` - 新規保管場所フォーム
+- `POST /storage-locations` - 保管場所作成
+- `GET /storage-locations/:id` - 保管場所詳細
+- `GET /storage-locations/:id/edit` - 保管場所編集フォーム
+- `PUT /storage-locations/:id` - 保管場所更新
+- `DELETE /storage-locations/:id` - 保管場所削除
+
+#### 🗂️ Phase 2-2: 在庫管理基盤実装（2-3日）
+
+**前提条件**
+- **✅ Phase 2-1完了**: StorageLocationsテーブル・モジュール実装済み
+- **✅ 版・保管場所連携**: editionId, locationIdの外部キー設計
+
+**Step 1: Stocksテーブルスキーマ作成**
+- **版ID参照**: editionIdでの版ベース在庫管理
+- **保管場所ID参照**: locationIdでの場所別在庫
+- **数量管理**: 総数量、予約済み、販売可能数量
+- **最終確認日時**: 棚卸し管理用
+- **マイグレーション生成・実行**: 複合キー設計対応
+
+**Step 2: stocksモジュール基盤実装（TDD）**
+- **統合テスト作成**: 在庫管理機能テスト（6-8テスト）
+  - 版別在庫一覧表示
+  - 保管場所別在庫表示
+  - 在庫数量更新・調整
+  - 在庫不足チェック
+- **StocksService実装**: 在庫照会、更新、調整機能
+- **StocksController実装**: ValidationPipe統一パターン
+- **DTO作成**: UpdateStockDto, StockCheckDto
+
+**URLエンドポイント**
+- `GET /stocks` - 在庫一覧（版別・場所別）
+- `GET /stocks/check` - 棚卸画面
+- `POST /stocks/check` - 棚卸実行
+- `GET /editions/:id/stocks` - 特定版の在庫状況
+- `PUT /stocks/:id` - 在庫数量更新
+
+#### 🗂️ Phase 2-3: 在庫移動履歴実装（2-3日）
+
+**前提条件**
+- **✅ Phase 2-2完了**: Stocksテーブル・在庫管理基盤実装済み
+- **✅ トランザクション設計**: 在庫移動時の整合性保証準備
+
+**Step 1: StockMovementsテーブルスキーマ作成**
+- **移動タイプenum**: inbound, outbound, transfer, sale, return, adjustment, disposal
+- **移動元・移動先**: fromLocationId, toLocationId参照
+- **関連レコード参照**: referenceType, referenceId（販売ID、出展ID等）
+- **移動理由・作成者**: トレーサビリティ確保
+
+**Step 2: 在庫移動機能実装（TDD）**
+- **統合テスト作成**: 在庫移動機能テスト（6-8テスト）
+  - 在庫移動記録作成
+  - 移動履歴一覧表示
+  - 版別移動履歴表示
+  - トランザクション整合性確認
+- **StockMovementsService実装**: 移動記録、履歴照会
+- **在庫移動API実装**: トランザクション処理による整合性保証
+
+**URLエンドポイント**
+- `GET /stocks/movements` - 在庫移動履歴
+- `POST /stock-movements` - 在庫移動記録
+- `GET /editions/:id/stock-movements` - 特定版の在庫移動履歴
+
+#### 🗂️ Phase 2-4: 統合・検証・版詳細画面への在庫表示（1日）
+
+**前提条件**
+- **✅ Phase 2-1〜2-3完了**: 在庫管理機能の完全実装済み
+- **✅ 版管理連携**: Phase 1の版詳細画面拡張準備
+
+**Step 1: 全体統合テスト**
+- **版→在庫→移動フロー**: 一連の処理テスト
+- **データ整合性確認**: 版削除時の在庫データ削除
+- **エラーハンドリング検証**: 在庫不足、不正移動等
+
+**Step 2: 版詳細画面への在庫表示機能追加**
+- **版詳細画面拡張**: 在庫状況セクション追加
+- **在庫サマリー表示**: 場所別在庫数、総在庫数
+- **在庫管理ボタン**: 在庫確認・移動へのリンク
+
+**完了条件**
+- **統合テスト**: 全在庫管理機能テスト通過
+- **型チェック**: TypeScriptエラー0件
+- **版ベース在庫管理**: 完全動作確認
+- **書籍詳細→版詳細→在庫確認**: ユーザーフロー完成
+
+#### 📊 技術的実装ポイント
+
+**CLAUDE.md準拠パターン**
+1. **実装前チェックリスト**: スキーマ確認→既存パターン分析→依存関係確認
+2. **TDD段階的実装**: ミニマムテスト→失敗確認→実装→成功確認
+3. **ValidationPipe統一**: @Transform + class-validator統一パターン
+4. **エラーハンドリング**: NotFoundException + ParseIntPipe統一
+
+**既存パターン踏襲**
+- **参考実装**: 印刷所機能（完全CRUD）、版管理機能（関連テーブル）
+- **ValidationExceptionFilter**: 在庫管理パス対応追加
+- **HTTPメソッドオーバーライド**: PUT/DELETE処理の統一実装
+
+**データ整合性保証**
+- **外部キー制約**: CASCADE DELETE設定による一貫性保持
+- **トランザクション処理**: 在庫移動時の原子性保証
+- **在庫計算**: 総数量 = 予約済み + 販売可能数量
 
 ### Phase 3: 既存機能の版対応（2週間）
 1. **データマイグレーション**
