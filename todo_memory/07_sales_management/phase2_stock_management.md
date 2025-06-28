@@ -23,7 +23,9 @@ Phase 2では、Phase 1で確立した版管理基盤を活用して、版ベー
 - **✅ Phase 2-1 Step 2**: storage-locationsモジュール実装（TDD） （完了 2025年6月28日）
 
 ### ✅ Phase 2-2: Stocksテーブル・在庫管理基盤実装 - **全機能完了** (2025年6月28日)
-### ⏳ Phase 2-3: StockMovementsテーブル・在庫移動履歴実装 （予定）
+### 🔄 Phase 2-3: StockMovementsテーブル・在庫移動履歴実装 - **Step 1完了** (2025年6月29日)
+- **✅ Phase 2-3 Step 1**: StockMovementsテーブルスキーマ作成 （完了 2025年6月29日）
+- **⏳ Phase 2-3 Step 2**: 在庫移動機能実装（TDD） （予定）
 ### ⏳ Phase 2-4: 統合・検証・版詳細画面への在庫表示 （予定）
 
 ## 🗂️ Phase 2-1: 保管場所管理実装（1-2日）
@@ -407,9 +409,11 @@ export class StockCheckDto {
 - **✅ Phase 2-2完了**: Stocksテーブル・在庫管理基盤実装済み
 - **✅ トランザクション設計**: 在庫移動時の整合性保証準備
 
-### Step 1: StockMovementsテーブルスキーマ作成
+### Step 1: StockMovementsテーブルスキーマ作成 ✅ 完了
 
-#### データベーススキーマ設計
+**実装完了済み（2025年6月29日）**
+
+#### データベーススキーマ設計・実装完了
 ```typescript
 export const stockMovementTypeEnum = pgEnum('stock_movement_type', [
   'inbound',      // 入庫（印刷所から納品）
@@ -437,11 +441,50 @@ export const stockMovements = pgTable('StockMovement', {
 })
 ```
 
-#### 設計ポイント
+#### 設計ポイント・実装詳細
 - **移動タイプenum**: inbound, outbound, transfer, sale, return, adjustment, disposal
-- **移動元・移動先**: fromLocationId, toLocationId参照
+- **移動元・移動先**: fromLocationId, toLocationId参照（NULL許可）
 - **関連レコード参照**: referenceType, referenceId（販売ID、出展ID等）
 - **移動理由・作成者**: トレーサビリティ確保
+- **外部キー制約**: editionId（CASCADE DELETE）、fromLocationId・toLocationId（RESTRICT）
+
+#### マイグレーション実行・検証完了 ✅
+- **マイグレーションファイル生成**: `drizzle/0015_wise_ricochet.sql` 正常生成 ✅
+- **プロダクション・テスト DB適用**: 両環境でマイグレーション成功 ✅
+- **型チェック**: TypeScriptエラー0件 ✅
+- **統合テスト**: 全313件テスト通過確認 ✅
+- **testDbUtils更新**: StockMovementテーブルのクリーンアップ処理追加 ✅
+
+#### 実装されたStockMovementテーブル仕様
+```sql
+CREATE TYPE "public"."stock_movement_type" AS ENUM('inbound', 'outbound', 'transfer', 'sale', 'return', 'adjustment', 'disposal');
+CREATE TABLE "StockMovement" (
+  "id" serial PRIMARY KEY NOT NULL,
+  "editionId" integer NOT NULL,
+  "fromLocationId" integer,
+  "toLocationId" integer,
+  "quantity" integer NOT NULL,
+  "movementType" "stock_movement_type" NOT NULL,
+  "referenceType" varchar(50),
+  "referenceId" integer,
+  "reason" text,
+  "movedAt" timestamp (3) DEFAULT now() NOT NULL,
+  "createdBy" varchar(255),
+  "createdAt" timestamp (3) DEFAULT now() NOT NULL
+);
+
+-- 外部キー制約
+ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_editionId_Edition_id_fk" 
+FOREIGN KEY ("editionId") REFERENCES "public"."Edition"("id") ON DELETE cascade;
+ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_fromLocationId_StorageLocation_id_fk" 
+FOREIGN KEY ("fromLocationId") REFERENCES "public"."StorageLocation"("id");
+ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_toLocationId_StorageLocation_id_fk" 
+FOREIGN KEY ("toLocationId") REFERENCES "public"."StorageLocation"("id");
+```
+
+#### テストインフラ整備完了
+- **testDbUtils.cleanupDatabase()**: StockMovementテーブルのクリーンアップ処理追加
+- **統合テスト基盤**: Phase 2-3 Step 2の TDD実装準備完了
 
 ### Step 2: 在庫移動機能実装（TDD）
 
@@ -663,6 +706,42 @@ async moveStock(moveStockDto: MoveStockDto): Promise<void> {
 
 ---
 
-**最終更新**: 2025年6月28日  
-**現在の作業**: Phase 2-2完全完了（手動バリデーション削除・class-validator統一実装済み）
-**次回更新予定**: Phase 2-3着手時
+## 📝 Phase 2-3 Step 1完了記録（2025年6月29日）
+
+### 実装完了内容
+1. **StockMovementsテーブルスキーマ作成**
+   - **✅ stock_movement_type enum定義**: 7つの移動タイプ（inbound, outbound, transfer, sale, return, adjustment, disposal）
+   - **✅ StockMovementテーブル作成**: 12フィールドの完全なテーブル定義
+   - **✅ 適切な外部キー制約**: editionId（CASCADE DELETE）、fromLocationId・toLocationId（RESTRICT）
+
+2. **マイグレーション実行・品質検証**
+   - **✅ マイグレーションファイル生成**: `drizzle/0015_wise_ricochet.sql` 正常生成
+   - **✅ データベース適用**: プロダクション・テスト両環境で成功
+   - **✅ 型チェック**: TypeScriptエラー0件
+   - **✅ 統合テスト**: 全313件テスト通過確認
+
+3. **テストインフラ整備**
+   - **✅ testDbUtils更新**: cleanupDatabase()にStockMovementテーブルのクリーンアップ処理追加
+   - **✅ 既存機能確認**: 全既存テストへの影響なし
+
+### 技術的成果
+- **データ設計**: 在庫移動のトレーサビリティを完全に追跡可能な設計完成
+- **外部キー制約**: 版削除時の移動履歴CASCADE DELETE、保管場所の参照整合性確保
+- **enum活用**: 7つの移動タイプで多様な在庫移動パターンに対応
+- **NULL許可設計**: fromLocationId・toLocationIdのNULL許可で柔軟な移動記録が可能
+
+### Phase 2-3の進捗
+- **✅ Step 1完了**: StockMovementsテーブルスキーマ作成（2025年6月29日）
+- **⏳ Step 2予定**: 在庫移動機能実装（TDD統合テスト駆動開発）
+
+### 次回作業予定
+Phase 2-3 Step 2の在庫移動機能実装（TDD）:
+- 在庫移動記録・履歴表示の統合テスト作成
+- StockMovementsService・Controller実装
+- トランザクション処理による在庫整合性保証
+
+---
+
+**最終更新**: 2025年6月29日  
+**現在の作業**: Phase 2-3 Step 1完了（StockMovementsテーブルスキーマ作成済み）
+**次回更新予定**: Phase 2-3 Step 2着手時

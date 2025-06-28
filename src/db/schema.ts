@@ -38,6 +38,16 @@ export const storageLocationTypeEnum = pgEnum('storage_location_type', [
   'event',
 ])
 
+export const stockMovementTypeEnum = pgEnum('stock_movement_type', [
+  'inbound',      // 入庫（印刷所から納品）
+  'outbound',     // 出庫（イベント/委託先へ）
+  'transfer',     // 移動（場所間移動）
+  'sale',         // 販売による減少
+  'return',       // 返品による増加
+  'adjustment',   // 棚卸調整
+  'disposal',     // 廃棄
+])
+
 export const books = pgTable('Book', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -391,3 +401,29 @@ export const stocks = pgTable('Stock', {
 
 export type Stock = typeof stocks.$inferSelect
 export type NewStock = typeof stocks.$inferInsert
+
+export const stockMovements = pgTable('StockMovement', {
+  id: serial('id').primaryKey(),
+  editionId: integer('editionId')
+    .notNull()
+    .references(() => editions.id, { onDelete: 'cascade' }),
+  fromLocationId: integer('fromLocationId')
+    .references(() => storageLocations.id),
+  toLocationId: integer('toLocationId')
+    .references(() => storageLocations.id),
+  quantity: integer('quantity').notNull(),
+  movementType: stockMovementTypeEnum('movementType').notNull(),
+  referenceType: varchar('referenceType', { length: 50 }), // 'sale', 'exhibit', 'consignment'
+  referenceId: integer('referenceId'), // 関連するレコードのID
+  reason: text('reason'),
+  movedAt: timestamp('movedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  createdBy: varchar('createdBy', { length: 255 }),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+})
+
+export type StockMovement = typeof stockMovements.$inferSelect
+export type NewStockMovement = typeof stockMovements.$inferInsert
