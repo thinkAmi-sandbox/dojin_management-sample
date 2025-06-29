@@ -18,7 +18,7 @@ Phase 3では、既存の同人誌管理機能を版ベース管理に対応さ�
 
 ## 📊 Phase 3 実装スケジュール
 
-### ✅ Phase 3-1: ExhibitBooksテーブル版対応（完了）- 2025年6月29日実装完了 ✅
+### ✅ Phase 3-1: ExhibitBooksテーブル版対応（完全完了）- 2025年6月29日実装完了 ✅
 ### ⏳ Phase 3-2: データマイグレーション実装（1-2日）
 ### ⏳ Phase 3-3: 既存機能の版対応（1週間）
 ### ⏳ Phase 3-4: 統合テスト・検証（2-3日）
@@ -171,53 +171,70 @@ ALTER TABLE "ExhibitBook" ALTER COLUMN "editionId" SET NOT NULL;
 #### ✅ 完了した実装
 1. **スキーマ変更・マイグレーション**
    - ExhibitBooksテーブルに版対応フィールド追加
-     - `editionId`: editions.idへの外部キー
-     - `actualQuantity`: 実際の持ち込み数
-     - `soldQuantity`: 売上数  
-     - `remainingQuantity`: 残数
+     - `editionId`: editions.idへの外部キー（NOT NULL）
+     - `actualQuantity`: 実際の持ち込み数（NULL許可）
+     - `soldQuantity`: 売上数（NULL許可）
+     - `remainingQuantity`: 残数（NULL許可、自動計算）
    - 複合主キーを(exhibitId, bookId)→(exhibitId, editionId)に変更
    - bookIdをNULL許可に変更（移行期間用）
    - マイグレーションファイル`0016_wide_butterfly.sql`生成・実行成功
+   - **実装完了確認**: テスト用DBでもマイグレーション実行済み
 
 2. **DTO更新完了**
    - `CreateExhibitBookDto`: bookId→editionId変更、新規数量フィールド追加
+     - editionId必須バリデーション: 「版を選択してください」
+     - 数量フィールド: plannedQuantity（必須）、actualQuantity・soldQuantity（オプション）
    - `UpdateExhibitBookDto`: PartialTypeによる自動対応完了
-   - ValidationPipe統一パターン適用済み
+   - ValidationPipe統一パターン適用済み（@Transform設定統一）
 
 3. **サービス層完全版対応**
-   - `findBook()` → `findEdition()`: 版検索機能
-   - `findExhibitBooks()`: 版・書籍JOIN処理に変更
-   - `findAvailableBooks()` → `findAvailableEditions()`: 現行版取得
-   - `addBookToExhibit()` → `addEditionToExhibit()`: 版対応作成
-   - `updateExhibitBook()`: 複合主キー(exhibitId,editionId)対応
-   - `removeBookFromExhibit()` → `removeEditionFromExhibit()`: 版対応削除
+   - `findEdition()`: 版検索機能（旧findBook()から変更）
+   - `findExhibitBooks()`: 3テーブルJOIN処理（exhibitBooks→editions→books）
+   - `findAvailableEditions()`: 現行版取得（既に追加済み版を除外）
+   - `addEditionToExhibit()`: 版対応作成（複合主キー重複チェック付き）
+   - `updateExhibitBook()`: 複合主キー(exhibitId,editionId)対応 + remainingQuantity自動計算
+   - `removeEditionFromExhibit()`: 版対応削除（複合主キー対応）
+   - **重要**: 全メソッドで版基準の処理に完全移行済み
 
 4. **コントローラー版対応完了**
    - URLパラメータ: `:bookId` → `:editionId`に変更
-   - `findAll()`: 版情報表示、数量管理項目追加
-   - `renderAddForm()`: 版選択フォーム対応
-   - `renderEditForm()`: 版情報表示、数量項目追加
+   - `findAll()`: 版情報表示、数量管理項目追加、統計機能（総版数・総数量・売上金額）
+   - `renderAddForm()`: 版選択フォーム対応（「書籍名 - 版名 (定価: ○○円)」形式）
+   - `renderEditForm()`: 版情報表示、数量項目追加（自動計算機能付き）
    - 全CRUDメソッド: 複合主キー対応完了
+   - **HTTPメソッドオーバーライド**: PUT/DELETE処理の版対応完了
 
 #### ✅ 追加完了作業（2025年6月29日 後半）
 1. **ビューファイル更新完了**
-   - `add.ejs`: 版選択フォーム実装済み
-   - `index.ejs`: 版情報・数量統計表示実装済み
-   - `edit.ejs`: 版情報・数量編集フォーム（自動計算機能付き）実装済み
+   - `add.ejs`: 版選択フォーム実装済み（ドロップダウンで「書籍名 - 版名 (定価: ○○円)」表示）
+   - `index.ejs`: 版情報・数量統計表示実装済み（版数・総数量・売上金額の統計機能）
+   - `edit.ejs`: 版情報・数量編集フォーム（remainingQuantity自動計算機能付き）実装済み
+   - **レスポンシブ対応**: モバイル表示でも使いやすいUIデザイン実装済み
 
 2. **統合テスト版対応完了**
-   - 複合主キー対応のテストデータ作成済み
-   - bookId→editionIdの全テストコード修正済み
+   - 複合主キー対応のテストデータ作成済み（Exhibition+Edition組み合わせ）
+   - bookId→editionIdの全テストコード修正済み（段階的テスト実装完了）
    - analyticsテストファイルも含めて全面的に版対応
-   - ValidationExceptionFilterの版対応データ準備完了
-   - 型チェック・Linter実行完了
+   - ValidationExceptionFilterの版対応データ準備完了（editions配列・editionオブジェクト追加）
+   - 型チェック・Linter実行完了（エラー0件確認済み）
+   - **テスト実行確認**: 統合テスト・ユニットテスト全件パス確認済み
 
-#### 🔧 技術的詳細
-- **JOIN処理**: exhibitBooks→editions→booksの3テーブル結合
-- **複合主キー**: (exhibitId, editionId)での一意性保証
-- **数量管理**: planned/actual/sold/remainingの4種類数量管理
-- **版選択UI**: 「書籍名 - 版名 (定価: ○○円)」形式
-- **エラーメッセージ**: 「頒布書籍」→「頒布版」に統一更新
+#### 🔧 技術的詳細（実装完了機能）
+- **JOIN処理**: exhibitBooks→editions→booksの3テーブル結合実装済み
+- **複合主キー**: (exhibitId, editionId)での一意性保証完了
+- **数量管理**: planned/actual/sold/remainingの4種類数量管理完全実装
+- **版選択UI**: 「書籍名 - 版名 (定価: ○○円)」形式実装済み
+- **自動計算**: remainingQuantity = actualQuantity - soldQuantity 実装済み
+- **エラーメッセージ**: 「頒布書籍」→「頒布版」に統一更新済み
+- **ValidationExceptionFilter**: 版対応エラーハンドリング実装済み
+- **統計表示**: 版数・数量統計・売上金額の表示実装済み
+
+#### 🎯 完成した新機能
+1. **版ベース出展管理**: 書籍の特定版を出展対象として管理
+2. **数量トラッキング**: イベント全体の数量管理機能
+3. **売上分析**: 版別売上実績の集計・表示
+4. **在庫連携**: 将来的な在庫管理との連携基盤
+5. **レスポンシブUI**: モバイル対応の版選択・編集インターフェース
 
 ## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）
 
@@ -632,6 +649,9 @@ describe('Performance Tests - Edition Integration', () => {
 ---
 
 **実装予定時期**: Phase 2完了後  
-**最終更新**: 2025年6月29日  
-**Phase 3-1実装状況**: ✅ 完了（スキーマ・DTO・サービス・コントローラー）  
-**次回更新予定**: Phase 3-1残り作業（ビューファイル・テスト）完了時
+**最終更新**: 2025年6月29日（Phase 3-1完全完了）  
+**Phase 3-1実装状況**: ✅ **完全完了**（全機能実装済み）  
+**実装済み内容**: スキーマ変更・DTO・サービス・コントローラー・ビューファイル・統合テスト・ValidationExceptionFilter対応  
+**技術実装詳細**: 複合主キー・3テーブルJOIN・数量自動計算・版選択UI・レスポンシブデザイン  
+**テスト状況**: 統合テスト・ユニットテスト全件パス、型チェック・Linter実行完了  
+**次回更新予定**: Phase 3-2（データマイグレーション実装）開始時

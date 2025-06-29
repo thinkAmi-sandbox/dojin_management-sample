@@ -502,7 +502,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               price: formData.price || '',
               displayOrder: formData.displayOrder || '',
             },
-            updateUrl: `/exhibits/${exhibitId}/books/${bookId}`,
+            updateUrl: `/exhibits/${exhibitId}/books/${editionId}`,
             backUrl: `/exhibits/${exhibitId}/books`,
             breadcrumbs: [
               { name: '出展申込一覧', url: '/exhibits' },

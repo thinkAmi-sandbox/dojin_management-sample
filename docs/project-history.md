@@ -87,9 +87,41 @@
 
 詳細は `todo_memory/07_sales_management/phase2_stock_management.md` を参照。
 
+### 🎉 Phase 3-1: ExhibitBooksテーブル版対応 - 完全完了 (2025年6月29日) 🎉
+
+**出展管理システムの版対応実装が完全成功しました！**
+
+#### 主要成果
+- **ExhibitBooksテーブル版対応**: bookId→editionId移行、複合主キー変更
+- **数量管理機能**: planned/actual/sold/remainingの4種類数量トラッキング
+- **3テーブルJOIN処理**: exhibitBooks→editions→books連携
+- **版選択UI**: 「書籍名 - 版名 (定価: ○○円)」形式実装
+- **統合テスト版対応**: 複合主キー対応、段階的テスト完了
+
+#### 技術的成果
+- **スキーマ変更**: マイグレーション0016_wide_butterfly.sql成功実行
+- **複合主キー**: (exhibitId, editionId)での一意性保証
+- **自動計算**: remainingQuantity = actualQuantity - soldQuantity
+- **HTTPメソッドオーバーライド**: PUT/DELETE処理の版対応
+- **ValidationExceptionFilter拡張**: 版対応エラーハンドリング
+
+#### 実装内容
+- **スキーマ・マイグレーション**: editionId・数量フィールド追加
+- **DTO・サービス・コントローラー**: 全て版対応に完全移行
+- **ビューファイル**: add/index/edit.ejsの版対応UI実装
+- **統合テスト**: bookId→editionIdテストコード全面修正
+
+#### UI/UX改善
+- **レスポンシブデザイン**: モバイル対応の版選択・編集画面
+- **統計機能**: 版数・総数量・売上金額の表示
+- **自動計算**: 編集画面での残数リアルタイム計算
+
+詳細は `todo_memory/07_sales_management/phase3_legacy_migration.md` を参照。
+
 ---
 
 **更新履歴**:
 - 2025-06-28: 初版作成（CLAUDE.mdから移行）
 - 2025-06-28: Phase 2-1完了記録追加
 - 2025-06-29: Phase 2全体完了記録追加
+- 2025-06-29: Phase 3-1（ExhibitBooks版対応）完了記録追加
