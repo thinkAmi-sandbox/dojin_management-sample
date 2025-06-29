@@ -14,6 +14,7 @@ import { EventsModule } from './events/events.module'
 import { ExhibitBooksModule } from './exhibit-books/exhibit-books.module'
 import { ExhibitsModule } from './exhibits/exhibits.module'
 import { PrintingCompaniesModule } from './printing-companies/printing-companies.module'
+import { SalesModule } from './sales/sales.module'
 import { StockMovementsModule } from './stock-movements/stock-movements.module'
 import { StocksModule } from './stocks/stocks.module'
 import { StorageLocationsModule } from './storage-locations/storage-locations.module'
@@ -82,6 +83,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
     ExhibitBooksModule,
     ExhibitsModule,
     PrintingCompaniesModule,
+    SalesModule,
     StockMovementsModule,
     StocksModule,
     StorageLocationsModule,
