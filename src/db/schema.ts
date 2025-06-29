@@ -48,6 +48,13 @@ export const stockMovementTypeEnum = pgEnum('stock_movement_type', [
   'disposal', // 廃棄
 ])
 
+export const salesTransactionTypeEnum = pgEnum('sales_transaction_type', [
+  'event', // イベント直販
+  'consignment', // 委託販売
+  'online', // オンライン販売
+  'direct', // 個人間直接販売
+])
+
 export const books = pgTable('Book', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -430,3 +437,52 @@ export const stockMovements = pgTable('StockMovement', {
 
 export type StockMovement = typeof stockMovements.$inferSelect
 export type NewStockMovement = typeof stockMovements.$inferInsert
+
+export const salesTransactions = pgTable('SalesTransaction', {
+  id: serial('id').primaryKey(),
+  transactionType: salesTransactionTypeEnum('transactionType').notNull(),
+  eventId: integer('eventId').references(() => events.id),
+  exhibitId: integer('exhibitId').references(() => exhibits.id),
+  locationId: integer('locationId').references(() => storageLocations.id),
+  customerName: varchar('customerName', { length: 255 }),
+  customerEmail: varchar('customerEmail', { length: 255 }),
+  totalAmount: integer('totalAmount').notNull(),
+  discountAmount: integer('discountAmount').default(0),
+  finalAmount: integer('finalAmount').notNull(),
+  paymentMethod: varchar('paymentMethod', { length: 50 }),
+  transactionDate: timestamp('transactionDate', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type SalesTransaction = typeof salesTransactions.$inferSelect
+export type NewSalesTransaction = typeof salesTransactions.$inferInsert
+
+export const salesDetails = pgTable('SalesDetail', {
+  id: serial('id').primaryKey(),
+  transactionId: integer('transactionId')
+    .notNull()
+    .references(() => salesTransactions.id, { onDelete: 'cascade' }),
+  editionId: integer('editionId')
+    .notNull()
+    .references(() => editions.id),
+  quantity: integer('quantity').notNull(),
+  unitPrice: integer('unitPrice').notNull(),
+  discountAmount: integer('discountAmount').default(0),
+  subtotal: integer('subtotal').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+})
+
+export type SalesDetail = typeof salesDetails.$inferSelect
+export type NewSalesDetail = typeof salesDetails.$inferInsert

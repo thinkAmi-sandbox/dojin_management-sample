@@ -1,6 +1,6 @@
 {
-  "id": "736315a4-4767-4874-a61f-ab46ce2f7130",
-  "prevId": "d1680fa1-171a-47e6-93c7-60c27a7069d4",
+  "id": "ef6c2492-83bb-410a-b487-137a5aac3fd3",
+  "prevId": "736315a4-4767-4874-a61f-ab46ce2f7130",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -856,6 +856,230 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.SalesDetail": {
+      "name": "SalesDetail",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "transactionId": {
+          "name": "transactionId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "editionId": {
+          "name": "editionId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unitPrice": {
+          "name": "unitPrice",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discountAmount": {
+          "name": "discountAmount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "subtotal": {
+          "name": "subtotal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "SalesDetail_transactionId_SalesTransaction_id_fk": {
+          "name": "SalesDetail_transactionId_SalesTransaction_id_fk",
+          "tableFrom": "SalesDetail",
+          "tableTo": "SalesTransaction",
+          "columnsFrom": ["transactionId"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "SalesDetail_editionId_Edition_id_fk": {
+          "name": "SalesDetail_editionId_Edition_id_fk",
+          "tableFrom": "SalesDetail",
+          "tableTo": "Edition",
+          "columnsFrom": ["editionId"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.SalesTransaction": {
+      "name": "SalesTransaction",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "transactionType": {
+          "name": "transactionType",
+          "type": "sales_transaction_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eventId": {
+          "name": "eventId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exhibitId": {
+          "name": "exhibitId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locationId": {
+          "name": "locationId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "customerName": {
+          "name": "customerName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "customerEmail": {
+          "name": "customerEmail",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalAmount": {
+          "name": "totalAmount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discountAmount": {
+          "name": "discountAmount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "finalAmount": {
+          "name": "finalAmount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paymentMethod": {
+          "name": "paymentMethod",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transactionDate": {
+          "name": "transactionDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "SalesTransaction_eventId_Event_id_fk": {
+          "name": "SalesTransaction_eventId_Event_id_fk",
+          "tableFrom": "SalesTransaction",
+          "tableTo": "Event",
+          "columnsFrom": ["eventId"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "SalesTransaction_exhibitId_Exhibit_id_fk": {
+          "name": "SalesTransaction_exhibitId_Exhibit_id_fk",
+          "tableFrom": "SalesTransaction",
+          "tableTo": "Exhibit",
+          "columnsFrom": ["exhibitId"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "SalesTransaction_locationId_StorageLocation_id_fk": {
+          "name": "SalesTransaction_locationId_StorageLocation_id_fk",
+          "tableFrom": "SalesTransaction",
+          "tableTo": "StorageLocation",
+          "columnsFrom": ["locationId"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.StockMovement": {
       "name": "StockMovement",
       "schema": "",
@@ -1306,6 +1530,11 @@
       "name": "exhibit_status",
       "schema": "public",
       "values": ["applied", "accepted", "rejected", "cancelled"]
+    },
+    "public.sales_transaction_type": {
+      "name": "sales_transaction_type",
+      "schema": "public",
+      "values": ["event", "consignment", "online", "direct"]
     },
     "public.stock_movement_type": {
       "name": "stock_movement_type",

@@ -18,14 +18,25 @@ Phase 4では、Phase 1-3で構築した版管理・在庫管理基盤を活用�
 
 ## 📊 Phase 4 実装スケジュール
 
-### ⏳ Phase 4-1: 販売取引基盤実装（2-3日）
+### ✅ Phase 4-1: 販売取引基盤実装（2-3日）
 ### ⏳ Phase 4-2: 価格管理システム実装（1-2日）
 ### ⏳ Phase 4-3: 売上レポート機能実装（2-3日）
 ### ⏳ Phase 4-4: 在庫連携・統合テスト（1-2日）
 
 ## 🗂️ Phase 4-1: 販売取引基盤実装（2-3日）
 
-### データベーススキーマ実装
+### ✅ データベーススキーマ実装 **完了**
+
+**実装完了日**: 2025年6月29日  
+**実装内容**: 
+- ✅ salesTransactionTypeEnum定義
+- ✅ SalesTransactionsテーブル定義  
+- ✅ SalesDetailsテーブル定義
+- ✅ マイグレーションファイル生成（0018_gifted_liz_osborn.sql）
+- ✅ 本番・テスト環境への適用完了
+- ✅ TypeScript型定義完了
+
+**詳細実装内容**:
 
 #### SalesTransactionsテーブル
 ```typescript
@@ -70,7 +81,25 @@ export const salesDetails = pgTable('SalesDetail', {
 })
 ```
 
-### 販売管理サービス実装
+### ⏳ 販売管理サービス実装 **次のステップ**
+
+**次回実装予定**: SalesService、DTOクラス、統合テスト
+**実装項目**:
+- [ ] SalesService（販売取引作成・一覧取得・レポート機能）
+- [ ] CreateSalesTransactionDto、CreateSalesDetailDto
+- [ ] 販売管理統合テスト
+
+### 📋 現在の実装状況
+
+**Phase 4-1の実装状況**:
+- ✅ **スキーマ実装**: 完了（2025年6月29日）
+- ⏳ **サービス実装**: 未着手
+- ⏳ **コントローラー実装**: 未着手  
+- ⏳ **DTO実装**: 未着手
+- ⏳ **ビュー実装**: 未着手
+- ⏳ **統合テスト**: 未着手
+
+### 📋 実装済みのサービス実装サンプル
 
 #### SalesService
 ```typescript
@@ -956,6 +985,17 @@ describe('Sales Integration Tests', () => {
 
 ---
 
-**実装予定時期**: Phase 3完了後  
-**最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 4実装開始時
+**実装開始日**: 2025年6月29日  
+**最終更新**: 2025年6月29日  
+**次回更新予定**: Phase 4-1サービス実装完了時
+
+## 📝 実装履歴
+
+### 2025年6月29日
+- ✅ **Phase 4-1スキーマ実装完了**
+  - salesTransactionTypeEnum定義
+  - SalesTransactionsテーブル（販売取引記録）
+  - SalesDetailsテーブル（販売明細）
+  - マイグレーション生成・適用完了
+  - TypeScript型定義完了
+- 📝 次のステップ: SalesService実装予定
