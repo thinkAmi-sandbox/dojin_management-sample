@@ -7,6 +7,7 @@ import {
   events,
   books,
   circles,
+  editions,
   exhibitBooks,
   exhibits,
 } from '../../../src/db/schema'
@@ -105,6 +106,27 @@ describe('Circle Analytics Integration Tests', () => {
       ])
       .returning({ id: books.id })
 
+    // テスト用版データ作成
+    const editionResults = await drizzleService.db
+      .insert(editions)
+      .values([
+        {
+          bookId: bookResults[0].id,
+          versionName: '初版',
+          versionNumber: 1,
+          basePrice: 2000,
+          isActive: true,
+        },
+        {
+          bookId: bookResults[1].id,
+          versionName: '初版',
+          versionNumber: 1,
+          basePrice: 1500,
+          isActive: true,
+        },
+      ])
+      .returning({ id: editions.id })
+
     // テスト用出展申込データ作成（サークル別実績パターン）
     const exhibitResults = await drizzleService.db
       .insert(exhibits)
@@ -144,26 +166,26 @@ describe('Circle Analytics Integration Tests', () => {
       ])
       .returning({ id: exhibits.id })
 
-    // テスト用出展書籍データ作成
+    // テスト用出展書籍データ作成（版対応）
     await drizzleService.db.insert(exhibitBooks).values([
       // テストサークル1の書籍（高収益）
       {
         exhibitId: exhibitResults[0].id,
-        bookId: bookResults[0].id,
+        editionId: editionResults[0].id,
         plannedQuantity: 50,
         price: 2000,
         displayOrder: 1,
       },
       {
         exhibitId: exhibitResults[0].id,
-        bookId: bookResults[1].id,
+        editionId: editionResults[1].id,
         plannedQuantity: 30,
         price: 1500,
         displayOrder: 2,
       },
       {
         exhibitId: exhibitResults[1].id,
-        bookId: bookResults[0].id,
+        editionId: editionResults[0].id,
         plannedQuantity: 40,
         price: 2000,
         displayOrder: 1,
@@ -171,7 +193,7 @@ describe('Circle Analytics Integration Tests', () => {
       // テストサークル2の書籍（中収益）
       {
         exhibitId: exhibitResults[2].id,
-        bookId: bookResults[0].id,
+        editionId: editionResults[0].id,
         plannedQuantity: 100,
         price: 800,
         displayOrder: 1,
@@ -179,7 +201,7 @@ describe('Circle Analytics Integration Tests', () => {
       // テストサークル3の書籍（低収益）
       {
         exhibitId: exhibitResults[4].id,
-        bookId: bookResults[1].id,
+        editionId: editionResults[1].id,
         plannedQuantity: 20,
         price: 500,
         displayOrder: 1,

@@ -151,9 +151,7 @@ describe('Stocks Forms', () => {
     })
 
     it('存在しない在庫IDでアクセスすると404エラーになる', async () => {
-      await request(app.getHttpServer())
-        .get('/stocks/999999/edit')
-        .expect(404)
+      await request(app.getHttpServer()).get('/stocks/999999/edit').expect(404)
     })
   })
 })

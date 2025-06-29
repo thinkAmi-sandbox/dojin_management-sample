@@ -44,45 +44,47 @@
                 </div>
             </div>
 
-            <% if (books.length === 0) { %>
+            <% if (editions.length === 0) { %>
                 <div style="text-align: center; padding: 40px; color: #666;">
                     <p style="font-size: 16px; margin-bottom: 20px;">
-                        追加可能な書籍がありません
+                        追加可能な版がありません
                     </p>
                     <p style="font-size: 14px; color: #999; margin-bottom: 20px;">
-                        すべての書籍が既に追加されているか、書籍が登録されていません。
+                        すべての版が既に追加されているか、現行版が登録されていません。
                     </p>
                     <a href="<%= backUrl %>" class="btn btn-secondary">戻る</a>
                 </div>
             <% } else { %>
                 <form method="POST" action="/exhibits/<%= exhibit.id %>/books">
-                    <div class="form-group <%= errors.bookId ? 'error' : '' %>">
-                        <label for="bookId" class="form-label">書籍 *</label>
+                    <div class="form-group <%= errors.editionId ? 'error' : '' %>">
+                        <label for="editionId" class="form-label">版選択 *</label>
                         <select 
-                            id="bookId" 
-                            name="bookId" 
+                            id="editionId" 
+                            name="editionId" 
                             class="form-select" 
                             required
-                            onchange="updateBookPreview()"
+                            onchange="updateEditionPreview()"
                         >
-                            <option value="">書籍を選択してください</option>
-                            <% books.forEach(function(book) { %>
+                            <option value="">版を選択してください</option>
+                            <% editions.forEach(function(edition) { %>
                                 <option 
-                                    value="<%= book.id %>"
-                                    <%= formData.bookId == book.id ? 'selected' : '' %>
-                                    data-title="<%= book.title %>"
-                                    data-subtitle="<%= book.subtitle %>"
-                                    data-pages="<%= book.formattedPageCount %>"
+                                    value="<%= edition.id %>"
+                                    <%= formData.editionId == edition.id ? 'selected' : '' %>
+                                    data-title="<%= edition.book.title %>"
+                                    data-subtitle="<%= edition.book.subtitle %>"
+                                    data-version="<%= edition.versionName %>"
+                                    data-price="<%= edition.basePrice %>"
+                                    data-pages="<%= edition.pageCount || '-' %>"
                                 >
-                                    <%= book.title %><% if (book.subtitle) { %> - <%= book.subtitle %><% } %>
+                                    <%= edition.displayText %>
                                 </option>
                             <% }) %>
                         </select>
-                        <% if (errors.bookId) { %>
-                            <div class="error-message"><%= errors.bookId %></div>
+                        <% if (errors.editionId) { %>
+                            <div class="error-message"><%= errors.editionId %></div>
                         <% } %>
-                        <div id="bookPreview" class="book-preview" style="display: none;">
-                            <!-- 選択された書籍の詳細情報がここに表示される -->
+                        <div id="editionPreview" class="book-preview" style="display: none;">
+                            <!-- 選択された版の詳細情報がここに表示される -->
                         </div>
                     </div>
 
@@ -105,8 +107,42 @@
                         <div class="form-text">何冊頒布する予定ですか？</div>
                     </div>
 
+                    <div class="form-group <%= errors.actualQuantity ? 'error' : '' %>">
+                        <label for="actualQuantity" class="form-label">実際持込数</label>
+                        <input 
+                            type="number" 
+                            id="actualQuantity" 
+                            name="actualQuantity" 
+                            class="form-control" 
+                            value="<%= formData.actualQuantity %>"
+                            min="0"
+                            step="1"
+                        >
+                        <% if (errors.actualQuantity) { %>
+                            <div class="error-message"><%= errors.actualQuantity %></div>
+                        <% } %>
+                        <div class="form-text">イベント当日の実際の持ち込み数</div>
+                    </div>
+
+                    <div class="form-group <%= errors.soldQuantity ? 'error' : '' %>">
+                        <label for="soldQuantity" class="form-label">売上数</label>
+                        <input 
+                            type="number" 
+                            id="soldQuantity" 
+                            name="soldQuantity" 
+                            class="form-control" 
+                            value="<%= formData.soldQuantity %>"
+                            min="0"
+                            step="1"
+                        >
+                        <% if (errors.soldQuantity) { %>
+                            <div class="error-message"><%= errors.soldQuantity %></div>
+                        <% } %>
+                        <div class="form-text">実際に販売した数</div>
+                    </div>
+
                     <div class="form-group <%= errors.price ? 'error' : '' %>">
-                        <label for="price" class="form-label">価格 *</label>
+                        <label for="price" class="form-label">販売価格 *</label>
                         <input 
                             type="number" 
                             id="price" 
@@ -121,7 +157,7 @@
                         <% if (errors.price) { %>
                             <div class="error-message"><%= errors.price %></div>
                         <% } %>
-                        <div class="form-text">円（税込み価格）</div>
+                        <div class="form-text">円（実際の販売価格・税込）</div>
                     </div>
 
                     <div class="form-group <%= errors.displayOrder ? 'error' : '' %>">
@@ -154,21 +190,31 @@
     </div>
 
 <script>
-    function updateBookPreview() {
-        const select = document.getElementById('bookId');
-        const preview = document.getElementById('bookPreview');
+    function updateEditionPreview() {
+        const select = document.getElementById('editionId');
+        const preview = document.getElementById('editionPreview');
         const selectedOption = select.options[select.selectedIndex];
+        const priceInput = document.getElementById('price');
         
         if (selectedOption.value) {
             const title = selectedOption.dataset.title;
             const subtitle = selectedOption.dataset.subtitle;
+            const version = selectedOption.dataset.version;
+            const basePrice = selectedOption.dataset.price;
             const pages = selectedOption.dataset.pages;
             
-            let previewHtml = `<strong>${title}</strong>`;
+            let previewHtml = `<strong>${title}</strong> - ${version}`;
             if (subtitle) {
                 previewHtml += `<br><em>${subtitle}</em>`;
             }
-            previewHtml += `<br>ページ数: ${pages}`;
+            previewHtml += `<br>定価: ¥${parseInt(basePrice).toLocaleString('ja-JP')}`;
+            previewHtml += `<br>ページ数: ${pages}ページ`;
+            
+            // 定価を販売価格のデフォルト値として設定（新規作成時のみ）
+            if (!priceInput.value && basePrice) {
+                priceInput.value = basePrice;
+                updateRevenuePreview();
+            }
             
             preview.innerHTML = previewHtml;
             preview.style.display = 'block';
@@ -180,13 +226,20 @@
     function updateRevenuePreview() {
         const quantity = parseInt(document.getElementById('plannedQuantity').value) || 0;
         const price = parseInt(document.getElementById('price').value) || 0;
-        const revenue = quantity * price;
+        const soldQuantity = parseInt(document.getElementById('soldQuantity').value) || 0;
+        
+        const plannedRevenue = quantity * price;
+        const actualRevenue = soldQuantity * price;
         
         const revenuePreview = document.getElementById('revenuePreview');
         const revenueAmount = document.getElementById('revenueAmount');
         
         if (quantity > 0 && price > 0) {
-            revenueAmount.textContent = `¥${revenue.toLocaleString('ja-JP')}`;
+            let revenueText = `¥${plannedRevenue.toLocaleString('ja-JP')}`;
+            if (soldQuantity > 0) {
+                revenueText += ` (実売上: ¥${actualRevenue.toLocaleString('ja-JP')})`;
+            }
+            revenueAmount.innerHTML = revenueText;
             revenuePreview.style.display = 'block';
         } else {
             revenuePreview.style.display = 'none';
@@ -195,7 +248,7 @@
 
     // 初期表示時に実行
     document.addEventListener('DOMContentLoaded', function() {
-        updateBookPreview();
+        updateEditionPreview();
         updateRevenuePreview();
     });
 </script>

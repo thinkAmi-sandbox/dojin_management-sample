@@ -13,8 +13,10 @@ describe('Exhibit Books Integration Tests', () => {
   let app: INestApplication
   let drizzleService: DrizzleService
   let testExhibitId: number
-  let testBookId1: number
+  let _testBookId1: number
   let _testBookId2: number
+  let testEditionId1: number
+  let testEditionId2: number
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -95,17 +97,43 @@ describe('Exhibit Books Integration Tests', () => {
       })
       .returning()
 
-    testBookId1 = book1.id
+    _testBookId1 = book1.id
     _testBookId2 = book2.id
+
+    // テスト用の版を作成
+    const [edition1] = await drizzleService.db
+      .insert(schema.editions)
+      .values({
+        bookId: book1.id,
+        versionName: '初版',
+        versionNumber: 1,
+        basePrice: 1000,
+        isActive: true,
+      })
+      .returning()
+
+    const [edition2] = await drizzleService.db
+      .insert(schema.editions)
+      .values({
+        bookId: book2.id,
+        versionName: '初版',
+        versionNumber: 1,
+        basePrice: 1500,
+        isActive: true,
+      })
+      .returning()
+
+    testEditionId1 = edition1.id
+    testEditionId2 = edition2.id
   })
 
   // Phase 1: ミニマム実装テスト（1-2テスト）
   describe('GET /exhibits/:exhibitId/books', () => {
     it('出展の頒布書籍一覧が表示される', async () => {
-      // テスト用の出展書籍データを作成
+      // テスト用の出展書籍データを作成（版対応）
       await drizzleService.db.insert(schema.exhibitBooks).values({
         exhibitId: testExhibitId,
-        bookId: testBookId1,
+        editionId: testEditionId1,
         plannedQuantity: 50,
         price: 1000,
         displayOrder: 1,
@@ -117,6 +145,7 @@ describe('Exhibit Books Integration Tests', () => {
 
       expect(response.text).toContain('頒布書籍一覧')
       expect(response.text).toContain('テスト書籍1_')
+      expect(response.text).toContain('初版') // 版名が表示される
       expect(response.text).toContain('50冊')
       expect(response.text).toContain('1,000円')
     })
@@ -134,7 +163,7 @@ describe('Exhibit Books Integration Tests', () => {
   describe('POST /exhibits/:exhibitId/books', () => {
     it('新規頒布書籍が追加される', async () => {
       const exhibitBookData = {
-        bookId: testBookId1,
+        editionId: testEditionId1,
         plannedQuantity: 100,
         price: 1500,
         displayOrder: 1,
@@ -152,7 +181,7 @@ describe('Exhibit Books Integration Tests', () => {
         .where(eq(schema.exhibitBooks.exhibitId, testExhibitId))
 
       expect(exhibitBooks).toHaveLength(1)
-      expect(exhibitBooks[0].bookId).toBe(testBookId1)
+      expect(exhibitBooks[0].editionId).toBe(testEditionId1)
       expect(exhibitBooks[0].plannedQuantity).toBe(100)
       expect(exhibitBooks[0].price).toBe(1500)
     })
@@ -164,54 +193,91 @@ describe('Exhibit Books Integration Tests', () => {
       const response = await request(app.getHttpServer())
         .post(`/exhibits/${testExhibitId}/books`)
         .send({
-          // bookIdが不足
+          // editionIdが不足
           plannedQuantity: 100,
           price: 1500,
         })
         .expect(200) // ValidationExceptionFilterはHTMLで200を返す
 
-      expect(response.text).toContain('書籍は必須です')
+      expect(response.text).toContain('版を選択してください')
     })
 
-    it('重複する書籍を追加しようとすると400エラーになる', async () => {
-      // 既に書籍を追加
+    it('重複する版を追加しようとすると400エラーになる', async () => {
+      // 既に版を追加
       await drizzleService.db.insert(schema.exhibitBooks).values({
         exhibitId: testExhibitId,
-        bookId: testBookId1,
+        editionId: testEditionId1,
         plannedQuantity: 50,
         price: 1000,
         displayOrder: 1,
       })
 
-      // 同じ書籍を再追加しようとする
+      // 同じ版を再追加しようとする
       const response = await request(app.getHttpServer())
         .post(`/exhibits/${testExhibitId}/books`)
         .send({
-          bookId: testBookId1,
+          editionId: testEditionId1,
           plannedQuantity: 100,
           price: 1500,
           displayOrder: 1,
         })
         .expect(400)
 
-      expect(response.text).toContain('この書籍は既に追加されています')
+      expect(response.text).toContain('この版は既に追加されています')
     })
   })
 
-  // Phase 3: エッジケーステスト（残りテスト）
-  describe('DELETE /exhibits/:exhibitId/books/:bookId', () => {
-    it('頒布書籍が削除される', async () => {
+  // Phase 3: 版対応の数量管理テスト
+  describe('PUT /exhibits/:exhibitId/books/:editionId', () => {
+    it('出展書籍の数量情報が更新される', async () => {
       // テスト用の出展書籍データを作成
       await drizzleService.db.insert(schema.exhibitBooks).values({
         exhibitId: testExhibitId,
-        bookId: testBookId1,
+        editionId: testEditionId1,
+        plannedQuantity: 50,
+        price: 1000,
+        displayOrder: 1,
+      })
+
+      // 数量情報を更新
+      await request(app.getHttpServer())
+        .post(`/exhibits/${testExhibitId}/books/${testEditionId1}`)
+        .send({
+          _method: 'PUT',
+          plannedQuantity: 50,
+          actualQuantity: 45,
+          soldQuantity: 30,
+          price: 1000,
+          displayOrder: 1,
+        })
+        .expect(302)
+
+      // データベース確認
+      const [updated] = await drizzleService.db
+        .select()
+        .from(schema.exhibitBooks)
+        .where(eq(schema.exhibitBooks.exhibitId, testExhibitId))
+
+      expect(updated.actualQuantity).toBe(45)
+      expect(updated.soldQuantity).toBe(30)
+      expect(updated.remainingQuantity).toBe(15) // 45 - 30
+    })
+  })
+
+  // Phase 4: エッジケーステスト（残りテスト）
+  describe('DELETE /exhibits/:exhibitId/books/:editionId', () => {
+    it('頒布書籍が削除される', async () => {
+      // テスト用の出展書籍データを作成（版対応）
+      await drizzleService.db.insert(schema.exhibitBooks).values({
+        exhibitId: testExhibitId,
+        editionId: testEditionId1,
         plannedQuantity: 50,
         price: 1000,
         displayOrder: 1,
       })
 
       await request(app.getHttpServer())
-        .delete(`/exhibits/${testExhibitId}/books/${testBookId1}`)
+        .delete(`/exhibits/${testExhibitId}/books/${testEditionId1}`)
         .send({ _method: 'DELETE' })
         .expect(302) // リダイレクト
 
@@ -230,7 +296,76 @@ describe('Exhibit Books Integration Tests', () => {
         .send({ _method: 'DELETE' })
         .expect(404)
 
-      expect(response.text).toContain('頒布書籍が見つかりません')
+      expect(response.text).toContain('頒布版が見つかりませんでした')
+    })
+  })
+
+  // Phase 5: フォーム表示のテスト
+  describe('GET /exhibits/:exhibitId/books/add', () => {
+    it('書籍追加フォームが表示される', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/exhibits/${testExhibitId}/books/add`)
+        .expect(200)
+
+      expect(response.text).toContain('頒布書籍追加')
+      expect(response.text).toContain('版選択')
+      expect(response.text).toContain('テスト書籍1_')
+      expect(response.text).toContain('初版')
+      expect(response.text).toContain('定価: 1,000円')
+    })
+
+    it('追加可能な版がない場合は適切なメッセージが表示される', async () => {
+      // 全ての版を既に追加
+      await drizzleService.db.insert(schema.exhibitBooks).values([
+        {
+          exhibitId: testExhibitId,
+          editionId: testEditionId1,
+          plannedQuantity: 50,
+          price: 1000,
+          displayOrder: 1,
+        },
+        {
+          exhibitId: testExhibitId,
+          editionId: testEditionId2,
+          plannedQuantity: 30,
+          price: 1500,
+          displayOrder: 2,
+        },
+      ])
+
+      const response = await request(app.getHttpServer())
+        .get(`/exhibits/${testExhibitId}/books/add`)
+        .expect(200)
+
+      expect(response.text).toContain('追加可能な版がありません')
+    })
+  })
+
+  describe('GET /exhibits/:exhibitId/books/:editionId/edit', () => {
+    it('編集フォームが表示される', async () => {
+      // テスト用の出展書籍データを作成
+      await drizzleService.db.insert(schema.exhibitBooks).values({
+        exhibitId: testExhibitId,
+        editionId: testEditionId1,
+        plannedQuantity: 50,
+        actualQuantity: 45,
+        soldQuantity: 30,
+        remainingQuantity: 15,
+        price: 1000,
+        displayOrder: 1,
+      })
+
+      const response = await request(app.getHttpServer())
+        .get(`/exhibits/${testExhibitId}/books/${testEditionId1}/edit`)
+        .expect(200)
+
+      expect(response.text).toContain('頒布情報編集')
+      expect(response.text).toContain('初版')
+      expect(response.text).toContain('1,000円') // 定価表示（formattedBasePrice）
+      expect(response.text).toContain('value="50"') // plannedQuantity
+      expect(response.text).toContain('value="45"') // actualQuantity
+      expect(response.text).toContain('value="30"') // soldQuantity
+      expect(response.text).toContain('value="15"') // remainingQuantity
     })
   })
 })

@@ -14,7 +14,7 @@ describe('在庫移動機能基本テスト（Integration）', () => {
   let testEdition: schema.Edition
   let fromLocation: schema.StorageLocation
   let toLocation: schema.StorageLocation
-  let testStock: schema.Stock
+  let _testStock: schema.Stock
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -94,7 +94,7 @@ describe('在庫移動機能基本テスト（Integration）', () => {
         notes: '移動テスト用在庫',
       })
       .returning()
-    testStock = stockResult[0]
+    _testStock = stockResult[0]
   })
 
   // Step 1: 基本機能テスト（2テスト）

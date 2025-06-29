@@ -474,8 +474,8 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           path.match(/\/exhibits\/\d+\/books\/\d+$/)
         ) {
           // 編集フォーム用データ
-          const bookIdMatch = path.match(/\/exhibits\/\d+\/books\/(\d+)/)
-          const bookId = bookIdMatch ? parseInt(bookIdMatch[1], 10) : 1
+          const editionIdMatch = path.match(/\/exhibits\/\d+\/books\/(\d+)/)
+          const editionId = editionIdMatch ? parseInt(editionIdMatch[1], 10) : 1
 
           return {
             exhibit: {
@@ -484,9 +484,16 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               spaceNumber: '-',
               spaceType: '-',
             },
+            edition: {
+              id: editionId,
+              versionName: '初版',
+              basePrice: 1000,
+              formattedBasePrice: '1,000円',
+              pageCount: null,
+            },
             book: {
-              id: bookId,
-              title: `書籍 #${bookId}`,
+              id: 1,
+              title: `書籍 #1`,
               subtitle: '',
               formattedPageCount: '-',
             },
@@ -513,20 +520,30 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               spaceNumber: '-',
               spaceType: '-',
             },
-            books: [
+            editions: [
               {
                 id: 1,
-                title: 'ダミー書籍',
-                subtitle: '',
-                formattedPageCount: '-',
+                versionName: '初版',
+                basePrice: 1000,
+                formattedBasePrice: '1,000円',
+                book: {
+                  id: 1,
+                  title: 'ダミー書籍',
+                  subtitle: '',
+                },
+                displayText: 'ダミー書籍 - 初版 (定価: 1,000円)',
               },
             ],
             formData: {
-              bookId: formData.bookId || '',
+              editionId: formData.editionId || '',
               plannedQuantity: formData.plannedQuantity || '',
+              actualQuantity: formData.actualQuantity || '',
+              soldQuantity: formData.soldQuantity || '',
+              remainingQuantity: formData.remainingQuantity || '',
               price: formData.price || '',
               displayOrder: formData.displayOrder || '',
             },
+            errors: {},
             backUrl: `/exhibits/${exhibitId}/books`,
             breadcrumbs: [
               { name: '出展申込一覧', url: '/exhibits' },

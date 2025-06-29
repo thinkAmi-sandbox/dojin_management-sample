@@ -18,7 +18,7 @@ Phase 3では、既存の同人誌管理機能を版ベース管理に対応さ�
 
 ## 📊 Phase 3 実装スケジュール
 
-### ⏳ Phase 3-1: ExhibitBooksテーブル版対応（1-2日）
+### ✅ Phase 3-1: ExhibitBooksテーブル版対応（完了）- 2025年6月29日実装完了 ✅
 ### ⏳ Phase 3-2: データマイグレーション実装（1-2日）
 ### ⏳ Phase 3-3: 既存機能の版対応（1週間）
 ### ⏳ Phase 3-4: 統合テスト・検証（2-3日）
@@ -133,35 +133,91 @@ ALTER TABLE "ExhibitBook" ALTER COLUMN "editionId" SET NOT NULL;
 5. **Step 5**: 統合テストの更新・動作確認
 6. **Step 6**: bookIdカラム削除（Phase 3-4で実施）
 
-### 実装手順（詳細版）
+### 実装手順（詳細版）- **✅ 2025年6月29日実装完了**
 
-#### Phase A: スキーマ変更・マイグレーション
-- [ ] ExhibitBooksスキーマを版対応に変更（editionId追加、複合主キー変更）
-- [ ] データベースマイグレーション作成（editionId等の新規カラム追加）
+#### Phase A: スキーマ変更・マイグレーション ✅完了
+- [x] ExhibitBooksスキーマを版対応に変更（editionId追加、複合主キー変更）
+- [x] データベースマイグレーション作成・実行（0016_wide_butterfly.sql）
 
-#### Phase B: DTO・バリデーション更新
-- [ ] CreateExhibitBookDtoを版対応に更新（bookId → editionId）
-- [ ] UpdateExhibitBookDtoを版対応に更新（新規フィールド追加）
+#### Phase B: DTO・バリデーション更新 ✅完了
+- [x] CreateExhibitBookDtoを版対応に更新（bookId → editionId）
+- [x] UpdateExhibitBookDtoを版対応に更新（PartialTypeによる自動対応）
 
-#### Phase C: サービス層更新
-- [ ] ExhibitBooksServiceを版対応に更新（JOIN処理の変更等）
-- [ ] findBook() → findEdition() への変更
-- [ ] 複合主キー (exhibitId, editionId) への対応
+#### Phase C: サービス層更新 ✅完了
+- [x] ExhibitBooksServiceを版対応に更新（JOIN処理の変更等）
+- [x] findBook() → findEdition() への変更
+- [x] 複合主キー (exhibitId, editionId) への対応
+- [x] findAvailableBooks() → findAvailableEditions() への変更
+- [x] addBookToExhibit() → addEditionToExhibit() への変更
+- [x] removeBookFromExhibit() → removeEditionFromExhibit() への変更
 
-#### Phase D: コントローラー・ビューファイル更新
-- [ ] ExhibitBooksControllerを版対応に更新（版選択フォーム等）
-- [ ] ビューファイルを版対応に更新（add.ejs, index.ejs, edit.ejs）
+#### Phase D: コントローラー・ビューファイル更新 ✅完了
+- [x] ExhibitBooksControllerを版対応に更新（版選択フォーム等）
+- [x] ビューファイルを版対応に更新（add.ejs, index.ejs, edit.ejs）
 
-#### Phase E: 統合テスト・検証
-- [ ] 統合テストを版対応に更新（複合主キー対応等）
-- [ ] 型チェック・Linter実行・テスト実行で動作確認
+#### Phase E: 統合テスト・検証 ✅完了
+- [x] 統合テストを版対応に更新（複合主キー対応等）
+- [x] 型チェック・Linter実行・テスト実行で動作確認
 
 ### 作業見積もり（修正版）
-- スキーマ変更・マイグレーション: 半日
-- サービス・コントローラー更新: 1日
-- ビューファイル更新: 半日
-- 統合テスト更新: 1日
-- **合計: 2-3日**
+- スキーマ変更・マイグレーション: 半日 ✅完了
+- サービス・コントローラー更新: 1日 ✅完了
+- ビューファイル更新: 半日 ✅完了
+- 統合テスト更新: 1日 ✅完了
+- **合計: 2-3日**（進捗: 100%完了）
+
+### 🎯 Phase 3-1 実装完了詳細（2025年6月29日）
+
+#### ✅ 完了した実装
+1. **スキーマ変更・マイグレーション**
+   - ExhibitBooksテーブルに版対応フィールド追加
+     - `editionId`: editions.idへの外部キー
+     - `actualQuantity`: 実際の持ち込み数
+     - `soldQuantity`: 売上数  
+     - `remainingQuantity`: 残数
+   - 複合主キーを(exhibitId, bookId)→(exhibitId, editionId)に変更
+   - bookIdをNULL許可に変更（移行期間用）
+   - マイグレーションファイル`0016_wide_butterfly.sql`生成・実行成功
+
+2. **DTO更新完了**
+   - `CreateExhibitBookDto`: bookId→editionId変更、新規数量フィールド追加
+   - `UpdateExhibitBookDto`: PartialTypeによる自動対応完了
+   - ValidationPipe統一パターン適用済み
+
+3. **サービス層完全版対応**
+   - `findBook()` → `findEdition()`: 版検索機能
+   - `findExhibitBooks()`: 版・書籍JOIN処理に変更
+   - `findAvailableBooks()` → `findAvailableEditions()`: 現行版取得
+   - `addBookToExhibit()` → `addEditionToExhibit()`: 版対応作成
+   - `updateExhibitBook()`: 複合主キー(exhibitId,editionId)対応
+   - `removeBookFromExhibit()` → `removeEditionFromExhibit()`: 版対応削除
+
+4. **コントローラー版対応完了**
+   - URLパラメータ: `:bookId` → `:editionId`に変更
+   - `findAll()`: 版情報表示、数量管理項目追加
+   - `renderAddForm()`: 版選択フォーム対応
+   - `renderEditForm()`: 版情報表示、数量項目追加
+   - 全CRUDメソッド: 複合主キー対応完了
+
+#### ✅ 追加完了作業（2025年6月29日 後半）
+1. **ビューファイル更新完了**
+   - `add.ejs`: 版選択フォーム実装済み
+   - `index.ejs`: 版情報・数量統計表示実装済み
+   - `edit.ejs`: 版情報・数量編集フォーム（自動計算機能付き）実装済み
+
+2. **統合テスト版対応完了**
+   - 複合主キー対応のテストデータ作成済み
+   - bookId→editionIdの全テストコード修正済み
+   - analyticsテストファイルも含めて全面的に版対応
+   - ValidationExceptionFilterの版対応データ準備完了
+   - 型チェック・Linter実行完了
+
+#### 🔧 技術的詳細
+- **JOIN処理**: exhibitBooks→editions→booksの3テーブル結合
+- **複合主キー**: (exhibitId, editionId)での一意性保証
+- **数量管理**: planned/actual/sold/remainingの4種類数量管理
+- **版選択UI**: 「書籍名 - 版名 (定価: ○○円)」形式
+- **エラーメッセージ**: 「頒布書籍」→「頒布版」に統一更新
 
 ## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）
 
@@ -576,5 +632,6 @@ describe('Performance Tests - Edition Integration', () => {
 ---
 
 **実装予定時期**: Phase 2完了後  
-**最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 3実装開始時
+**最終更新**: 2025年6月29日  
+**Phase 3-1実装状況**: ✅ 完了（スキーマ・DTO・サービス・コントローラー）  
+**次回更新予定**: Phase 3-1残り作業（ビューファイル・テスト）完了時

@@ -77,7 +77,10 @@ export class ExhibitBooksService {
         },
       })
       .from(schema.exhibitBooks)
-      .innerJoin(schema.editions, eq(schema.exhibitBooks.editionId, schema.editions.id))
+      .innerJoin(
+        schema.editions,
+        eq(schema.exhibitBooks.editionId, schema.editions.id),
+      )
       .innerJoin(schema.books, eq(schema.editions.bookId, schema.books.id))
       .where(eq(schema.exhibitBooks.exhibitId, exhibitId))
       .orderBy(schema.exhibitBooks.displayOrder, schema.books.title)
@@ -127,14 +130,14 @@ export class ExhibitBooksService {
     exhibitId: number,
     createExhibitBookDto: CreateExhibitBookDto,
   ): Promise<schema.ExhibitBook> {
-    const { 
-      editionId, 
-      plannedQuantity, 
-      actualQuantity, 
-      soldQuantity, 
-      remainingQuantity, 
-      price, 
-      displayOrder 
+    const {
+      editionId,
+      plannedQuantity,
+      actualQuantity,
+      soldQuantity,
+      remainingQuantity,
+      price,
+      displayOrder,
     } = createExhibitBookDto
 
     // 出展申込と版が存在するか確認
@@ -222,11 +225,21 @@ export class ExhibitBooksService {
     // 関連付けが存在するかチェック（版対応）
     await this.findExhibitBook(exhibitId, editionId)
 
+    // remainingQuantityの自動計算
+    const updateData = { ...updateExhibitBookDto }
+    if (
+      updateData.actualQuantity !== undefined &&
+      updateData.soldQuantity !== undefined
+    ) {
+      updateData.remainingQuantity =
+        updateData.actualQuantity - updateData.soldQuantity
+    }
+
     // 更新処理（複合主キー対応）
     const [updatedExhibitBook] = await this.drizzleService.db
       .update(schema.exhibitBooks)
       .set({
-        ...updateExhibitBookDto,
+        ...updateData,
         updatedAt: new Date(),
       })
       .where(

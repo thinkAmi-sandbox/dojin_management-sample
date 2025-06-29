@@ -31,7 +31,7 @@ export class ExhibitBooksController {
 
     // 価格と数量をフォーマット
     const formatCurrency = (amount: number) => amount.toLocaleString('ja-JP')
-    const formatQuantity = (quantity: number | null) => 
+    const formatQuantity = (quantity: number | null) =>
       quantity !== null ? `${quantity.toLocaleString('ja-JP')}冊` : '-'
 
     return {
@@ -62,6 +62,7 @@ export class ExhibitBooksController {
           versionName: eb.edition.versionName,
           basePrice: eb.edition.basePrice,
           formattedBasePrice: `${formatCurrency(eb.edition.basePrice)}円`,
+          pageCount: eb.edition.pageCount,
         },
         // 書籍情報
         book: {
@@ -126,6 +127,7 @@ export class ExhibitBooksController {
         versionName: edition.versionName,
         basePrice: edition.basePrice,
         formattedBasePrice: formatCurrency(edition.basePrice),
+        pageCount: edition.pageCount,
         book: {
           id: edition.book.id,
           title: edition.book.title,
@@ -196,6 +198,7 @@ export class ExhibitBooksController {
         versionName: edition.versionName,
         basePrice: edition.basePrice,
         formattedBasePrice: formatCurrency(edition.basePrice),
+        pageCount: edition.pageCount,
       },
       formData: {
         plannedQuantity: exhibitBook.plannedQuantity.toString(),
@@ -265,7 +268,10 @@ export class ExhibitBooksController {
     @Res() res: Response,
   ) {
     try {
-      await this.exhibitBooksService.removeEditionFromExhibit(exhibitId, editionId)
+      await this.exhibitBooksService.removeEditionFromExhibit(
+        exhibitId,
+        editionId,
+      )
       res.redirect(`/exhibits/${exhibitId}/books`)
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {

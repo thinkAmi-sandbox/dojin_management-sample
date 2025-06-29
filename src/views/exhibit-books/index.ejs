@@ -61,19 +61,27 @@
             </div>
 
             <% if (exhibitBooks.length > 0) { %>
-                <!-- 統計情報 -->
+                <!-- 統計情報（版対応） -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value"><%= stats.totalBooks %></div>
-                        <div class="stat-label">書籍数</div>
+                        <div class="stat-value"><%= stats.totalEditions %></div>
+                        <div class="stat-label">版数</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value"><%= stats.totalQuantity.toLocaleString('ja-JP') %></div>
-                        <div class="stat-label">総頒布予定数</div>
+                        <div class="stat-value"><%= stats.totalPlannedQuantity.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">頒布予定数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= stats.totalActualQuantity.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">実際持込数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= stats.totalSoldQuantity.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">売上数</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">¥<%= stats.totalRevenue.toLocaleString('ja-JP') %></div>
-                        <div class="stat-label">予想売上</div>
+                        <div class="stat-label">売上金額</div>
                     </div>
                 </div>
             <% } %>
@@ -100,7 +108,10 @@
                         <div class="book-card">
                             <div class="book-header">
                                 <div class="book-info">
-                                    <h4 class="book-title"><%= exhibitBook.book.title %></h4>
+                                    <h4 class="book-title">
+                                        <%= exhibitBook.book.title %>
+                                        <span style="font-size: 16px; color: #666;">（<%= exhibitBook.edition.versionName %>）</span>
+                                    </h4>
                                     <% if (exhibitBook.book.subtitle) { %>
                                         <p class="book-subtitle"><%= exhibitBook.book.subtitle %></p>
                                     <% } %>
@@ -113,12 +124,28 @@
                                     <div class="detail-value"><%= exhibitBook.formattedPlannedQuantity %></div>
                                 </div>
                                 <div class="detail-item">
-                                    <div class="detail-label">価格</div>
+                                    <div class="detail-label">実際持込数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedActualQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">売上数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedSoldQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">残数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedRemainingQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">定価</div>
+                                    <div class="detail-value"><%= exhibitBook.edition.formattedBasePrice %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">販売価格</div>
                                     <div class="detail-value"><%= exhibitBook.formattedPrice %></div>
                                 </div>
                                 <div class="detail-item">
                                     <div class="detail-label">ページ数</div>
-                                    <div class="detail-value"><%= exhibitBook.book.formattedPageCount %></div>
+                                    <div class="detail-value"><%= exhibitBook.edition.pageCount ? `${exhibitBook.edition.pageCount}ページ` : '-' %></div>
                                 </div>
                                 <div class="detail-item">
                                     <div class="detail-label">表示順序</div>
