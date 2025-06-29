@@ -61,6 +61,25 @@ export class StocksController {
     }
   }
 
+  @Get('new')
+  @Render('stocks/new')
+  async renderNewForm() {
+    // 版一覧と保管場所一覧を取得
+    const editions = await this.stocksService.getEditionsForForm()
+    const storageLocations =
+      await this.stocksService.getStorageLocationsForForm()
+
+    return {
+      title: '新規在庫登録',
+      breadcrumbs: [
+        { name: '在庫一覧', url: '/stocks' },
+        { name: '新規登録', url: null },
+      ],
+      editions,
+      storageLocations,
+    }
+  }
+
   @Post()
   async create(@Body() createStockDto: CreateStockDto, @Res() res: Response) {
     try {
@@ -109,6 +128,27 @@ export class StocksController {
         reservedQuantity: stock.reservedQuantity,
         availableQuantity: stock.availableQuantity,
       })),
+    }
+  }
+
+  @Get(':id/edit')
+  @Render('stocks/edit')
+  async renderEditForm(@Param('id', ParseIntPipe) id: number) {
+    const stock = await this.stocksService.findOne(id)
+    const editions = await this.stocksService.getEditionsForForm()
+    const storageLocations =
+      await this.stocksService.getStorageLocationsForForm()
+
+    return {
+      title: '在庫編集',
+      stock,
+      editions,
+      storageLocations,
+      breadcrumbs: [
+        { name: '在庫一覧', url: '/stocks' },
+        { name: '在庫詳細', url: `/stocks/${id}` },
+        { name: '編集', url: null },
+      ],
     }
   }
 

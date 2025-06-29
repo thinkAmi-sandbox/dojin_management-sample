@@ -113,7 +113,7 @@ export class EditionDetailController {
         versionNumber: editionWithStock.versionNumber,
         isbn: editionWithStock.isbn || '-',
         pageCount: editionWithStock.pageCount || '-',
-        basePrice: editionWithStock.basePrice 
+        basePrice: editionWithStock.basePrice
           ? editionWithStock.basePrice.toLocaleString('ja-JP') + '円'
           : '-',
         basePriceRaw: editionWithStock.basePrice,
@@ -127,15 +127,20 @@ export class EditionDetailController {
         isActiveText: editionWithStock.isActive ? '現行版' : '旧版',
         isSoldOut: editionWithStock.isSoldOut,
         isSoldOutText: editionWithStock.isSoldOut ? '完売' : '販売中',
-        createdAt: new Date(editionWithStock.createdAt).toLocaleDateString('ja-JP'),
-        updatedAt: new Date(editionWithStock.updatedAt).toLocaleDateString('ja-JP'),
+        createdAt: new Date(editionWithStock.createdAt).toLocaleDateString(
+          'ja-JP',
+        ),
+        updatedAt: new Date(editionWithStock.updatedAt).toLocaleDateString(
+          'ja-JP',
+        ),
         // 在庫情報追加
         totalStock: editionWithStock.totalStock,
         totalReserved: editionWithStock.totalReserved,
         totalAvailable: editionWithStock.totalAvailable,
         stocksByLocation: editionWithStock.stocksByLocation.map((stock) => ({
           ...stock,
-          locationTypeText: locationTypeMap[stock.locationType] || stock.locationType,
+          locationTypeText:
+            locationTypeMap[stock.locationType] || stock.locationType,
         })),
       },
       // URL生成

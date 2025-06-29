@@ -43,7 +43,10 @@ export class BooksService {
       .values(newBook)
       .returning()
 
-    this.logger.log('書籍が正常に作成されました', { bookId: result[0].id, title: result[0].title })
+    this.logger.log('書籍が正常に作成されました', {
+      bookId: result[0].id,
+      title: result[0].title,
+    })
 
     return result[0]
   }

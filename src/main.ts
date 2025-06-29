@@ -52,7 +52,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000
   await app.listen(port)
-  
+
   // 起動ログ
   const logger = app.get(Logger)
   logger.log(`🚀 Application is running on: http://localhost:${port}`)

@@ -27,7 +27,8 @@ import { SubmissionsModule } from './submissions/submissions.module'
         name: 'dojin-management',
         level: process.env.LOG_LEVEL || 'info',
         transport:
-          process.env.NODE_ENV !== 'production' && process.env.LOG_PRETTY_PRINT === 'true'
+          process.env.NODE_ENV !== 'production' &&
+          process.env.LOG_PRETTY_PRINT === 'true'
             ? {
                 targets: [
                   {

@@ -108,9 +108,18 @@ export class EditionsService {
       .where(eq(stocks.editionId, id))
 
     // 在庫集計
-    const totalStock = stockResults.reduce((sum, stock) => sum + stock.quantity, 0)
-    const totalReserved = stockResults.reduce((sum, stock) => sum + stock.reservedQuantity, 0)
-    const totalAvailable = stockResults.reduce((sum, stock) => sum + stock.availableQuantity, 0)
+    const totalStock = stockResults.reduce(
+      (sum, stock) => sum + stock.quantity,
+      0,
+    )
+    const totalReserved = stockResults.reduce(
+      (sum, stock) => sum + stock.reservedQuantity,
+      0,
+    )
+    const totalAvailable = stockResults.reduce(
+      (sum, stock) => sum + stock.availableQuantity,
+      0,
+    )
 
     return {
       ...edition,

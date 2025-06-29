@@ -5,6 +5,19 @@ import { DrizzleService } from '../drizzle/drizzle.service'
 import { CreateStockDto } from './dto/create-stock.dto'
 import { UpdateStockDto } from './dto/update-stock.dto'
 
+// フォーム用の版情報型
+export interface EditionForForm {
+  id: number
+  displayName: string
+}
+
+// フォーム用の保管場所情報型
+export interface StorageLocationForForm {
+  id: number
+  name: string
+  type: string
+}
+
 // 関連情報込みの在庫型定義
 export interface StockWithRelations {
   id: number
@@ -236,5 +249,37 @@ export class StocksService {
     )
 
     return summary
+  }
+
+  // フォーム用の版一覧取得
+  async getEditionsForForm(): Promise<EditionForForm[]> {
+    const result = await this.drizzleService.db
+      .select({
+        id: editions.id,
+        versionName: editions.versionName,
+        bookTitle: books.title,
+      })
+      .from(editions)
+      .innerJoin(books, eq(books.id, editions.bookId))
+      .orderBy(desc(editions.createdAt))
+
+    return result.map((edition) => ({
+      id: edition.id,
+      displayName: `${edition.bookTitle}（${edition.versionName}）`,
+    }))
+  }
+
+  // フォーム用の保管場所一覧取得
+  async getStorageLocationsForForm(): Promise<StorageLocationForForm[]> {
+    const result = await this.drizzleService.db
+      .select({
+        id: storageLocations.id,
+        name: storageLocations.name,
+        type: storageLocations.type,
+      })
+      .from(storageLocations)
+      .orderBy(storageLocations.name)
+
+    return result
   }
 }
