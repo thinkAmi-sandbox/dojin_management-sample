@@ -894,9 +894,159 @@ async moveStock(moveStockDto: MoveStockDto): Promise<void> {
 
 ---
 
+## 🔧 Phase 2-2 追加実装: 新規在庫登録フォーム機能（2025年6月29日予定）
+
+### 問題発見
+Phase 2-2完了時に見落とされていた機能を発見：
+- **❌ 未実装**: `GET /stocks/new` エンドポイント - 新規在庫登録フォーム表示
+- **❌ 未実装**: `GET /stocks/:id/edit` エンドポイント - 在庫編集フォーム表示  
+- **❌ 未実装**: `src/views/stocks/new.ejs` ビューファイル
+- **❌ 未実装**: `src/views/stocks/edit.ejs` ビューファイル
+
+### ✅ Phase 2-2 追加実装計画: 新規登録・編集フォーム機能
+
+#### TDD統合テスト駆動実装計画
+
+**Step 1: 新規フォーム表示テスト作成（基本機能テスト）**
+- `test/integration/stocks/stocks-new-form.integration.spec.ts` 作成
+- `GET /stocks/new` の正常系テスト1件を先行実装
+- フォーム要素（版選択、保管場所選択、数量入力等）の存在確認
+
+**Step 2: バリデーションテスト追加**
+- Step 1のテスト成功確認後、フォーム表示のエラーケーステストを追加
+- 必要な関連データが存在しない場合のハンドリング
+
+**Step 3: 編集フォーム機能テスト追加**
+- `GET /stocks/:id/edit` の編集フォーム表示テスト
+- 既存データのフォーム表示・初期値設定確認
+
+#### プロダクションコード実装計画
+
+**Step 1: StocksServiceメソッド追加**
+- `getFormData()` メソッド実装（版一覧、保管場所一覧の取得）
+- 既存の版管理・保管場所機能のサービスメソッド活用
+
+**Step 2: StocksControllerエンドポイント追加**
+- `renderNewForm()` メソッド実装（`GET /stocks/new`）
+- `renderEditForm()` メソッド実装（`GET /stocks/:id/edit`）
+- 既存の印刷所・保管場所機能のパターンを踏襲
+
+**Step 3: ビューファイル作成**
+- `src/views/stocks/new.ejs` 新規作成
+- `src/views/stocks/edit.ejs` 新規作成
+- ValidationExceptionFilter対応のエラー表示実装
+
+#### 参考実装パターン
+- **印刷所機能**: 新規・編集フォームの完全な実装パターン
+- **保管場所機能**: 最新の統一パターン
+- **既存在庫機能**: POST処理・バリデーション統一パターン
+
+#### 完了基準
+- **統合テスト**: 新規・編集フォーム表示の全テストケース通過
+- **型チェック**: TypeScriptエラー0件
+- **ビルド**: 新規ビューファイルのdist/へのコピー確認
+- **全機能テスト**: 新規作成→編集→削除の一連フロー確認
+
+### 技術的実装ポイント
+- **ValidationExceptionFilter統合済み**: バリデーションエラー処理は統一パターン使用
+- **複合主キー対応**: 版ID + 保管場所IDの重複チェック既存実装を活用
+- **フォームデータ復元**: エラー時のユーザビリティ確保
+
+### 実装完了予定
+- **2025年6月29日**: TDD統合テスト実装→プロダクションコード実装→品質確認
+
+### 実装前チェックリスト詳細
+
+#### Phase 1: スキーマ・データ構造の確認
+- **✅ スキーマ定義確認済み**: `src/db/schema.ts`のStocksテーブル定義を確認
+- **✅ フィールド名確認済み**: `editionId`, `locationId`, `quantity`, `reservedQuantity`, `availableQuantity`, `notes`
+- **✅ データ型確認済み**: 全て`integer`型（editionId, locationId, quantity等）、notes は`text`型
+
+#### Phase 2: 既存実装パターンの徹底分析
+- **✅ 参考実装特定**:
+  - **保管場所機能**: `src/storage-locations/storage-locations.controller.ts` の `renderNewForm()` メソッド（最新パターン）
+  - **印刷所機能**: 完全なCRUD実装の模範例
+  - **既存在庫機能**: POST処理・バリデーション統一パターン
+- **✅ import文統一確認**:
+  ```typescript
+  import type { Response } from 'express'
+  import { @Controller, @Get, @Post, @Render, @UsePipes, ValidationPipe }
+  ```
+
+#### Phase 3: 依存関係・技術要件の確認
+- **✅ 必要なサービス確認**:
+  - **EditionsService**: 版一覧取得（`findAll()`）
+  - **StorageLocationsService**: 保管場所一覧取得（`findAll()`）
+  - **StocksService**: 在庫取得・作成・更新（既存実装済み）
+- **✅ ValidationExceptionFilter対応**: `/stocks` パス既に対応済み
+- **✅ HTTPメソッドオーバーライド**: 既存`updateViaPost()`メソッド実装済み
+
+#### Phase 4: URLパスとコントローラーの対応確認
+- **✅ 新規エンドポイント**: `GET /stocks/new` → StocksController.renderNewForm()
+- **✅ 編集エンドポイント**: `GET /stocks/:id/edit` → StocksController.renderEditForm()
+- **✅ 既存エンドポイント**: POST /stocks, PUT /stocks/:id, DELETE /stocks/:id 実装済み
+
+#### Phase 5: ビューファイル設計確認
+- **✅ 新規ビューファイル**: `src/views/stocks/new.ejs`
+- **✅ 編集ビューファイル**: `src/views/stocks/edit.ejs`
+- **✅ 参考テンプレート**: `src/views/storage-locations/new.ejs` の構造を参考
+- **✅ エラー表示対応**: ValidationExceptionFilter統合済みパターン使用
+
+### 実装時の技術詳細
+
+#### StocksController追加メソッド設計
+```typescript
+@Get('new')
+@Render('stocks/new')
+renderNewForm() {
+  return {
+    title: '新規在庫登録',
+    breadcrumbs: [
+      { name: '在庫一覧', url: '/stocks' },
+      { name: '新規登録', url: null },
+    ],
+    // EditionsService, StorageLocationsServiceから取得
+    editions: [], // 版一覧
+    storageLocations: [], // 保管場所一覧
+  }
+}
+
+@Get(':id/edit')  
+@Render('stocks/edit')
+async renderEditForm(@Param('id', ParseIntPipe) id: number) {
+  const stock = await this.stocksService.findOne(id)
+  return {
+    title: '在庫編集',
+    stock,
+    editions: [], // 版一覧
+    storageLocations: [], // 保管場所一覧
+  }
+}
+```
+
+#### 段階的統合テスト設計
+```typescript
+// Step 1: 基本機能テスト（1-2テスト）
+it('新規在庫登録フォームを表示する', async () => {
+  const response = await request(app.getHttpServer())
+    .get('/stocks/new')
+    .expect(200)
+  
+  expect(response.text).toContain('<title>新規在庫登録</title>')
+  expect(response.text).toContain('版を選択')
+  expect(response.text).toContain('保管場所を選択')
+  expect(response.text).toContain('在庫数')
+})
+
+// Step 2: バリデーションテスト（必要に応じて）
+// Step 3: 編集フォームテスト
+```
+
+---
+
 ## 🎉 Phase 2 全体完了記録（最終更新: 2025年6月29日）
 
-### ✅ Phase 2 完全実装完了 - **全機能完了**
+### ✅ Phase 2 ほぼ完全実装完了 - **基本機能完了・フォーム表示機能追加実装中**
 
 **Phase 2の全ステップ完了状況**:
 - **✅ Phase 2-1**: 保管場所管理実装（StorageLocationsテーブル・CRUD機能）- 2025年6月28日完了
