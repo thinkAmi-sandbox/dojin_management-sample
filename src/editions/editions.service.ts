@@ -1,10 +1,43 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { eq } from 'drizzle-orm'
+import { eq, sum } from 'drizzle-orm'
 import type { NewEdition } from '../db/schema'
-import { editions } from '../db/schema'
+import { editions, stocks, storageLocations } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import type { CreateEditionDto } from './dto/create-edition.dto'
 import type { UpdateEditionDto } from './dto/update-edition.dto'
+
+// 在庫サマリー型定義
+export interface StockSummary {
+  locationId: number
+  locationName: string
+  locationType: string
+  quantity: number
+  reservedQuantity: number
+  availableQuantity: number
+}
+
+// 在庫情報付き版型定義
+export interface EditionWithStock {
+  id: number
+  bookId: number
+  versionName: string
+  versionNumber: number
+  isbn: string | null
+  pageCount: number | null
+  basePrice: number | null
+  printingCost: number | null
+  publishDate: string | null
+  editionNotes: string | null
+  coverImageUrl: string | null
+  isActive: boolean
+  isSoldOut: boolean
+  createdAt: Date
+  updatedAt: Date
+  totalStock: number
+  totalReserved: number
+  totalAvailable: number
+  stocksByLocation: StockSummary[]
+}
 
 @Injectable()
 export class EditionsService {
@@ -54,6 +87,38 @@ export class EditionsService {
     }
 
     return result[0]
+  }
+
+  async findOneWithStock(id: number): Promise<EditionWithStock> {
+    // 基本の版情報を取得
+    const edition = await this.findOne(id)
+
+    // 在庫情報を取得
+    const stockResults = await this.drizzleService.db
+      .select({
+        locationId: stocks.locationId,
+        locationName: storageLocations.name,
+        locationType: storageLocations.type,
+        quantity: stocks.quantity,
+        reservedQuantity: stocks.reservedQuantity,
+        availableQuantity: stocks.availableQuantity,
+      })
+      .from(stocks)
+      .innerJoin(storageLocations, eq(stocks.locationId, storageLocations.id))
+      .where(eq(stocks.editionId, id))
+
+    // 在庫集計
+    const totalStock = stockResults.reduce((sum, stock) => sum + stock.quantity, 0)
+    const totalReserved = stockResults.reduce((sum, stock) => sum + stock.reservedQuantity, 0)
+    const totalAvailable = stockResults.reduce((sum, stock) => sum + stock.availableQuantity, 0)
+
+    return {
+      ...edition,
+      totalStock,
+      totalReserved,
+      totalAvailable,
+      stocksByLocation: stockResults,
+    }
   }
 
   async update(id: number, updateEditionDto: UpdateEditionDto) {

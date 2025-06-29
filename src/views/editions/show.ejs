@@ -188,6 +188,69 @@
         </div>
     </div>
 
+    <!-- 在庫状況セクション -->
+    <div class="detail-section">
+        <div class="section-title">📦 在庫状況</div>
+        <% if (edition.stocksByLocation && edition.stocksByLocation.length > 0) { %>
+            <div class="stock-summary">
+                <div class="stock-total">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">総在庫数:</div>
+                            <div class="detail-value"><strong><%= edition.totalStock %>冊</strong></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">販売可能数:</div>
+                            <div class="detail-value"><strong><%= edition.totalAvailable %>冊</strong></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">予約済み数:</div>
+                            <div class="detail-value"><%= edition.totalReserved %>冊</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stock-by-location" style="margin-top: 20px;">
+                    <h4>場所別在庫</h4>
+                    <div class="stock-locations">
+                        <% edition.stocksByLocation.forEach(stock => { %>
+                            <div class="stock-location-item" style="background: white; padding: 10px; margin: 8px 0; border-radius: 4px; border-left: 4px solid #007bff;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong><%= stock.locationName %></strong>
+                                        <span style="color: #666; font-size: 0.9em;">（<%= stock.locationTypeText %>）</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div><strong><%= stock.quantity %>冊</strong></div>
+                                        <div style="font-size: 0.9em; color: #666;">
+                                            販売可能: <%= stock.availableQuantity %>冊
+                                            <% if (stock.reservedQuantity > 0) { %>
+                                                / 予約済み: <%= stock.reservedQuantity %>冊
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 在庫管理ボタン -->
+            <div class="actions" style="margin-top: 20px;">
+                <a href="<%= stockDetailUrl %>" class="btn">📊 在庫詳細</a>
+                <a href="<%= stockMovementUrl %>" class="btn btn-secondary">📋 移動履歴</a>
+            </div>
+        <% } else { %>
+            <div class="no-stock" style="text-align: center; padding: 20px; background: white; border-radius: 4px;">
+                <p style="color: #666; margin: 0;">まだ在庫が登録されていません</p>
+                <div style="margin-top: 10px;">
+                    <a href="/stocks" class="btn">📦 在庫管理へ</a>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
     <!-- システム情報セクション -->
     <div class="detail-section">
         <div class="section-title">⚙️ システム情報</div>

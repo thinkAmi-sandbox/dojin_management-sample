@@ -295,4 +295,122 @@ describe('Editions（版管理）統合テスト', () => {
       expect(deletedEditions).toHaveLength(0)
     })
   })
+
+  describe('GET /editions/:id - 版詳細（在庫表示機能）', () => {
+    it('在庫データを含む版詳細を表示する', async () => {
+      // テスト用書籍データを作成
+      const [book] = await drizzleService.db
+        .insert(testDbUtils.schema.books)
+        .values({
+          title: 'テスト書籍',
+          subtitle: 'サブタイトル',
+          status: 'completed',
+        })
+        .returning()
+
+      // テスト用版データを作成
+      const [edition] = await drizzleService.db
+        .insert(testDbUtils.schema.editions)
+        .values({
+          bookId: book.id,
+          versionName: '初版',
+          versionNumber: 1,
+          basePrice: 1000,
+          pageCount: 80,
+          publishDate: '2024-01-01',
+          editionNotes: '初回発行版です',
+          isActive: true,
+        })
+        .returning()
+
+      // テスト用保管場所データを作成
+      const [location1] = await drizzleService.db
+        .insert(testDbUtils.schema.storageLocations)
+        .values({
+          name: '自宅倉庫',
+          type: 'home',
+          isConsignment: false,
+        })
+        .returning()
+
+      const [location2] = await drizzleService.db
+        .insert(testDbUtils.schema.storageLocations)
+        .values({
+          name: 'イベント会場',
+          type: 'event',
+          isConsignment: false,
+        })
+        .returning()
+
+      // テスト用在庫データを作成
+      await drizzleService.db.insert(testDbUtils.schema.stocks).values([
+        {
+          editionId: edition.id,
+          locationId: location1.id,
+          quantity: 50,
+          reservedQuantity: 10,
+          availableQuantity: 40,
+        },
+        {
+          editionId: edition.id,
+          locationId: location2.id,
+          quantity: 30,
+          reservedQuantity: 5,
+          availableQuantity: 25,
+        },
+      ])
+
+      const response = await request(app.getHttpServer())
+        .get(`/editions/${edition.id}`)
+        .expect(200)
+
+      // HTMLに在庫情報が含まれていることを確認
+      expect(response.text).toContain('📦 在庫状況')
+      expect(response.text).toContain('総在庫数')
+      expect(response.text).toContain('80冊') // 総在庫数 (50 + 30)
+      expect(response.text).toContain('販売可能数')
+      expect(response.text).toContain('65冊') // 販売可能数 (40 + 25)
+      expect(response.text).toContain('場所別在庫')
+      expect(response.text).toContain('自宅倉庫')
+      expect(response.text).toContain('イベント会場')
+      expect(response.text).toContain('📊 在庫詳細')
+      expect(response.text).toContain('📋 移動履歴')
+    })
+
+    it('在庫がない場合は適切なメッセージを表示する', async () => {
+      // テスト用書籍データを作成
+      const [book] = await drizzleService.db
+        .insert(testDbUtils.schema.books)
+        .values({
+          title: 'テスト書籍',
+          subtitle: 'サブタイトル',
+          status: 'completed',
+        })
+        .returning()
+
+      // テスト用版データを作成（在庫なし）
+      const [edition] = await drizzleService.db
+        .insert(testDbUtils.schema.editions)
+        .values({
+          bookId: book.id,
+          versionName: '初版',
+          versionNumber: 1,
+          basePrice: 1000,
+          pageCount: 80,
+          publishDate: '2024-01-01',
+          editionNotes: '初回発行版です',
+          isActive: true,
+        })
+        .returning()
+
+      const response = await request(app.getHttpServer())
+        .get(`/editions/${edition.id}`)
+        .expect(200)
+
+      // HTMLに在庫なしメッセージが含まれていることを確認
+      expect(response.text).toContain('📦 在庫状況')
+      expect(response.text).toContain('まだ在庫が登録されていません')
+      expect(response.text).toContain('📦 在庫管理へ')
+    })
+  })
 })

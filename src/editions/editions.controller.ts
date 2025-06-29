@@ -93,38 +93,59 @@ export class EditionDetailController {
   @Get(':id')
   @Render('editions/show')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    const edition = await this.editionsService.findOne(id)
-    const book = await this.booksService.findOne(edition.bookId)
+    const editionWithStock = await this.editionsService.findOneWithStock(id)
+    const book = await this.booksService.findOne(editionWithStock.bookId)
+
+    // 保管場所タイプの日本語変換
+    const locationTypeMap: Record<string, string> = {
+      home: '自宅',
+      warehouse: '倉庫',
+      consignment: '委託先',
+      event: 'イベント会場',
+    }
 
     return {
-      title: `${book.title} - ${edition.versionName}`,
+      title: `${book.title} - ${editionWithStock.versionName}`,
       book,
       edition: {
-        id: edition.id,
-        versionName: edition.versionName,
-        versionNumber: edition.versionNumber,
-        isbn: edition.isbn || '-',
-        pageCount: edition.pageCount || '-',
-        basePrice: edition.basePrice.toLocaleString('ja-JP') + '円',
-        basePriceRaw: edition.basePrice,
-        printingCost: edition.printingCost
-          ? edition.printingCost.toLocaleString('ja-JP') + '円'
+        id: editionWithStock.id,
+        versionName: editionWithStock.versionName,
+        versionNumber: editionWithStock.versionNumber,
+        isbn: editionWithStock.isbn || '-',
+        pageCount: editionWithStock.pageCount || '-',
+        basePrice: editionWithStock.basePrice 
+          ? editionWithStock.basePrice.toLocaleString('ja-JP') + '円'
           : '-',
-        publishDate: edition.publishDate || '-',
-        editionNotes: edition.editionNotes || '-',
-        coverImageUrl: edition.coverImageUrl || '',
-        isActive: edition.isActive,
-        isActiveText: edition.isActive ? '現行版' : '旧版',
-        isSoldOut: edition.isSoldOut,
-        isSoldOutText: edition.isSoldOut ? '完売' : '販売中',
-        createdAt: new Date(edition.createdAt).toLocaleDateString('ja-JP'),
-        updatedAt: new Date(edition.updatedAt).toLocaleDateString('ja-JP'),
+        basePriceRaw: editionWithStock.basePrice,
+        printingCost: editionWithStock.printingCost
+          ? editionWithStock.printingCost.toLocaleString('ja-JP') + '円'
+          : '-',
+        publishDate: editionWithStock.publishDate || '-',
+        editionNotes: editionWithStock.editionNotes || '-',
+        coverImageUrl: editionWithStock.coverImageUrl || '',
+        isActive: editionWithStock.isActive,
+        isActiveText: editionWithStock.isActive ? '現行版' : '旧版',
+        isSoldOut: editionWithStock.isSoldOut,
+        isSoldOutText: editionWithStock.isSoldOut ? '完売' : '販売中',
+        createdAt: new Date(editionWithStock.createdAt).toLocaleDateString('ja-JP'),
+        updatedAt: new Date(editionWithStock.updatedAt).toLocaleDateString('ja-JP'),
+        // 在庫情報追加
+        totalStock: editionWithStock.totalStock,
+        totalReserved: editionWithStock.totalReserved,
+        totalAvailable: editionWithStock.totalAvailable,
+        stocksByLocation: editionWithStock.stocksByLocation.map((stock) => ({
+          ...stock,
+          locationTypeText: locationTypeMap[stock.locationType] || stock.locationType,
+        })),
       },
       // URL生成
-      editUrl: `/editions/${edition.id}/edit`,
-      deleteUrl: `/editions/${edition.id}`,
-      listUrl: `/books/${edition.bookId}/editions`,
-      bookDetailUrl: `/books/${edition.bookId}`,
+      editUrl: `/editions/${editionWithStock.id}/edit`,
+      deleteUrl: `/editions/${editionWithStock.id}`,
+      listUrl: `/books/${editionWithStock.bookId}/editions`,
+      bookDetailUrl: `/books/${editionWithStock.bookId}`,
+      // 在庫管理関連URL
+      stockDetailUrl: `/stocks?editionId=${editionWithStock.id}`,
+      stockMovementUrl: `/stock-movements?editionId=${editionWithStock.id}`,
     }
   }
 
