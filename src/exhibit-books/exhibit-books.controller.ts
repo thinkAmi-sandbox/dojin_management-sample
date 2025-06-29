@@ -126,7 +126,7 @@ export class ExhibitBooksController {
         id: edition.id,
         versionName: edition.versionName,
         basePrice: edition.basePrice,
-        formattedBasePrice: formatCurrency(edition.basePrice),
+        formattedBasePrice: formatCurrency(edition.basePrice) + '円',
         pageCount: edition.pageCount,
         book: {
           id: edition.book.id,
@@ -197,7 +197,7 @@ export class ExhibitBooksController {
         id: edition.id,
         versionName: edition.versionName,
         basePrice: edition.basePrice,
-        formattedBasePrice: formatCurrency(edition.basePrice),
+        formattedBasePrice: formatCurrency(edition.basePrice) + '円',
         pageCount: edition.pageCount,
       },
       formData: {
