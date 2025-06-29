@@ -111,6 +111,31 @@ export class EventsController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const event = await this.eventsService.findOne(id)
 
+    // Phase 3-3 版対応: 版情報と統計情報を取得
+    const editionData = await this.eventsService.findEventWithEditions(id)
+    const stats = await this.eventsService.getEventEditionStats(id)
+
+    // 版別データをフォーマット
+    const editions = editionData.map((item) => ({
+      bookTitle: item.bookTitle,
+      versionName: item.versionName,
+      versionNumber: item.versionNumber,
+      basePrice: item.basePrice,
+      plannedQuantity: item.plannedQuantity || 0,
+      actualQuantity: item.actualQuantity || 0,
+      soldQuantity: item.soldQuantity || 0,
+      remainingQuantity: item.remainingQuantity || 0,
+      price: item.price || 0,
+      circleName: item.circleName,
+      spaceNumber: item.spaceNumber || '-',
+      salesAmount: (item.soldQuantity || 0) * (item.price || 0),
+      formattedBasePrice: item.basePrice?.toLocaleString('ja-JP') + '円' || '-',
+      formattedPrice: item.price?.toLocaleString('ja-JP') + '円' || '-',
+      formattedSalesAmount:
+        ((item.soldQuantity || 0) * (item.price || 0)).toLocaleString('ja-JP') +
+        '円',
+    }))
+
     return {
       title: 'イベント詳細',
       event: {
@@ -133,6 +158,18 @@ export class EventsController {
         formattedCreatedAt: event.createdAt.toLocaleDateString('ja-JP'),
         formattedUpdatedAt: event.updatedAt.toLocaleDateString('ja-JP'),
         editUrl: `/events/${event.id}/edit`,
+      },
+      // Phase 3-3 版対応: 版情報を追加
+      editions: editions,
+      editionStats: {
+        totalEditions: stats.totalEditions,
+        totalPlannedQuantity: stats.totalPlannedQuantity,
+        totalActualQuantity: stats.totalActualQuantity,
+        totalSoldQuantity: stats.totalSoldQuantity,
+        totalRemainingQuantity: stats.totalRemainingQuantity,
+        totalSalesAmount: stats.totalSalesAmount,
+        formattedTotalSalesAmount:
+          stats.totalSalesAmount.toLocaleString('ja-JP') + '円',
       },
       breadcrumbs: [
         { name: 'イベント一覧', url: '/events' },
@@ -198,6 +235,9 @@ export class EventsController {
     const event = await this.eventsService.findOne(eventId)
     const exhibits = await this.exhibitsService.findByEventId(eventId)
 
+    // Phase 3-3 版対応: 版情報を取得
+    const editionData = await this.eventsService.findEventWithEditions(eventId)
+
     // ステータス日本語変換
     const statusMap = {
       applied: '申込中',
@@ -206,17 +246,14 @@ export class EventsController {
       cancelled: 'キャンセル',
     }
 
-    return {
-      title: `${event.name} - 出展申込一覧`,
-      event: {
-        id: event.id,
-        name: event.name,
-        formattedEventDate: new Date(event.eventDate).toLocaleDateString(
-          'ja-JP',
-        ),
-        venue: event.venue,
-      },
-      exhibits: exhibits.map((exhibit) => ({
+    // 出展申込に版情報を組み合わせ
+    const exhibitsWithEditions = exhibits.map((exhibit) => {
+      // この出展に関連する版情報を取得
+      const exhibitEditions = editionData.filter(
+        (ed) => ed.exhibitId === exhibit.id,
+      )
+
+      return {
         id: exhibit.id,
         status: exhibit.status,
         statusLabel: statusMap[exhibit.status],
@@ -234,7 +271,36 @@ export class EventsController {
           name: exhibit.circle.name,
           representativeName: exhibit.circle.representativeName,
         },
-      })),
+        // Phase 3-3 版対応: 版情報を追加
+        editions: exhibitEditions.map((ed) => ({
+          bookTitle: ed.bookTitle,
+          versionName: ed.versionName,
+          basePrice: ed.basePrice,
+          price: ed.price,
+          plannedQuantity: ed.plannedQuantity || 0,
+          formattedBasePrice:
+            ed.basePrice?.toLocaleString('ja-JP') + '円' || '-',
+          formattedPrice: ed.price?.toLocaleString('ja-JP') + '円' || '-',
+        })),
+        editionCount: exhibitEditions.length,
+        totalPlannedQuantity: exhibitEditions.reduce(
+          (sum, ed) => sum + (ed.plannedQuantity || 0),
+          0,
+        ),
+      }
+    })
+
+    return {
+      title: `${event.name} - 出展申込一覧`,
+      event: {
+        id: event.id,
+        name: event.name,
+        formattedEventDate: new Date(event.eventDate).toLocaleDateString(
+          'ja-JP',
+        ),
+        venue: event.venue,
+      },
+      exhibits: exhibitsWithEditions,
       // 申込状況集計
       stats: {
         total: exhibits.length,

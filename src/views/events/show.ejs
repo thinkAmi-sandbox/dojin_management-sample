@@ -81,10 +81,117 @@
         </tr>
     </table>
 
-    <!-- 将来的に出展申込履歴をここに表示 -->
+    <!-- Phase 3-3 版対応: 版情報表示セクション -->
     <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 4px;">
-        <h3>出展申込履歴</h3>
-        <p style="color: #666;">出展管理機能の実装後に履歴が表示されます。</p>
+        <h3>出展予定書籍（版別）</h3>
+        
+        <% if (editions && editions.length > 0) { %>
+            <!-- 統計情報 -->
+            <div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 4px;">
+                <h4 style="margin: 0 0 10px 0; color: #1565c0;">📊 統計情報</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    <div><strong>総版数:</strong> <%= editionStats.totalEditions %>版</div>
+                    <div><strong>予定数量:</strong> <%= editionStats.totalPlannedQuantity %>冊</div>
+                    <div><strong>実際数量:</strong> <%= editionStats.totalActualQuantity %>冊</div>
+                    <div><strong>売上数量:</strong> <%= editionStats.totalSoldQuantity %>冊</div>
+                    <div><strong>残数:</strong> <%= editionStats.totalRemainingQuantity %>冊</div>
+                    <div><strong>売上金額:</strong> <%= editionStats.formattedTotalSalesAmount %></div>
+                </div>
+            </div>
+
+            <!-- 版別詳細リスト -->
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background-color: #e3f2fd;">
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">書籍名</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">版</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">サークル</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">スペース</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">定価</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">販売価格</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">予定数量</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">実際数量</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">売上数量</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">残数</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">売上金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% editions.forEach(edition => { %>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;"><%= edition.bookTitle %></td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">
+                                    <%= edition.versionName %>
+                                    <% if (edition.versionNumber > 1) { %>
+                                        <span style="color: #666;">(第<%= edition.versionNumber %>版)</span>
+                                    <% } %>
+                                </td>
+                                <td style="border: 1px solid #ddd; padding: 8px;"><%= edition.circleName %></td>
+                                <td style="border: 1px solid #ddd; padding: 8px;"><%= edition.spaceNumber %></td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;"><%= edition.formattedBasePrice %></td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                    <% if (edition.price !== edition.basePrice) { %>
+                                        <span style="color: #d32f2f; font-weight: bold;"><%= edition.formattedPrice %></span>
+                                    <% } else { %>
+                                        <%= edition.formattedPrice %>
+                                    <% } %>
+                                </td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;"><%= edition.plannedQuantity %>冊</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                    <% if (edition.actualQuantity > 0) { %>
+                                        <%= edition.actualQuantity %>冊
+                                    <% } else { %>
+                                        <span style="color: #666;">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                    <% if (edition.soldQuantity > 0) { %>
+                                        <%= edition.soldQuantity %>冊
+                                    <% } else { %>
+                                        <span style="color: #666;">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                    <% if (edition.remainingQuantity > 0) { %>
+                                        <%= edition.remainingQuantity %>冊
+                                    <% } else { %>
+                                        <span style="color: #666;">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">
+                                    <% if (edition.salesAmount > 0) { %>
+                                        <span style="color: #2e7d32; font-weight: bold;"><%= edition.formattedSalesAmount %></span>
+                                    <% } else { %>
+                                        <span style="color: #666;">-</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p style="color: #666; text-align: center; padding: 20px;">
+                📚 このイベントに出展予定の書籍はまだ登録されていません。
+            </p>
+        <% } %>
     </div>
+
+    <!-- レスポンシブ対応 -->
+    <style>
+        @media (max-width: 768px) {
+            .detail-table, table {
+                font-size: 14px;
+            }
+            .detail-table th, .detail-table td, 
+            table th, table td {
+                padding: 6px;
+            }
+            div[style*="grid-template-columns"] {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+            }
+        }
+    </style>
 </body>
 </html>

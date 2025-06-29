@@ -255,6 +255,8 @@
                             <th>代表者</th>
                             <th>ステータス</th>
                             <th>スペース</th>
+                            <!-- Phase 3-3 版対応: 版情報カラム追加 -->
+                            <th>頒布予定書籍</th>
                             <th>申込日</th>
                             <th>結果日</th>
                             <th>操作</th>
@@ -279,6 +281,33 @@
                                         <%= exhibit.spaceType %>-<%= exhibit.spaceNumber %>
                                     <% } else { %>
                                         -
+                                    <% } %>
+                                </td>
+                                <!-- Phase 3-3 版対応: 版情報表示 -->
+                                <td style="max-width: 300px;">
+                                    <% if (exhibit.editions && exhibit.editions.length > 0) { %>
+                                        <div style="font-size: 0.9em;">
+                                            <div style="color: #666; margin-bottom: 4px;">
+                                                📚 <%= exhibit.editionCount %>版 / 総<%= exhibit.totalPlannedQuantity %>冊予定
+                                            </div>
+                                            <% exhibit.editions.slice(0, 3).forEach((edition, index) => { %>
+                                                <div style="margin-bottom: 3px; padding: 2px 6px; background: #f8f9fa; border-radius: 3px; border-left: 3px solid #007bff;">
+                                                    <div style="font-weight: bold; color: #333;"><%= edition.bookTitle %></div>
+                                                    <div style="color: #666; font-size: 0.85em;">
+                                                        <%= edition.versionName %> | 
+                                                        <%= edition.formattedPrice %> | 
+                                                        <%= edition.plannedQuantity %>冊予定
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                            <% if (exhibit.editions.length > 3) { %>
+                                                <div style="color: #666; font-size: 0.8em; text-align: center;">
+                                                    ...他<%= exhibit.editions.length - 3 %>版
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    <% } else { %>
+                                        <span style="color: #999; font-size: 0.9em;">📚 未登録</span>
                                     <% } %>
                                 </td>
                                 <td><%= exhibit.formattedApplicationDate %></td>
