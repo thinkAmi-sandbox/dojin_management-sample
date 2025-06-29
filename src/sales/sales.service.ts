@@ -208,6 +208,22 @@ export class SalesService {
     }
   }
 
+  async update(id: number, updateSalesTransactionDto: any): Promise<void> {
+    // 存在確認
+    await this.findOneWithDetails(id)
+
+    // 基本情報のみ更新（詳細は別途実装予定）
+    await this.drizzleService.db
+      .update(salesTransactions)
+      .set({
+        customerName: updateSalesTransactionDto.customerName,
+        customerEmail: updateSalesTransactionDto.customerEmail,
+        paymentMethod: updateSalesTransactionDto.paymentMethod,
+        notes: updateSalesTransactionDto.notes,
+      })
+      .where(eq(salesTransactions.id, id))
+  }
+
   async remove(id: number): Promise<void> {
     // 存在確認
     await this.findOneWithDetails(id)

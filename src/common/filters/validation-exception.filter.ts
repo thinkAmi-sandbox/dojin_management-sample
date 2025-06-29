@@ -172,6 +172,30 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.reason = error
         } else if (error.includes('作成者')) {
           errors.createdBy = error
+        } else if (error.includes('販売タイプ')) {
+          errors.transactionType = error
+        } else if (error.includes('イベントID')) {
+          errors.eventId = error
+        } else if (error.includes('出展ID')) {
+          errors.exhibitId = error
+        } else if (error.includes('顧客名')) {
+          errors.customerName = error
+        } else if (error.includes('顧客メールアドレス')) {
+          errors.customerEmail = error
+        } else if (error.includes('合計金額')) {
+          errors.totalAmount = error
+        } else if (error.includes('割引金額')) {
+          errors.discountAmount = error
+        } else if (error.includes('最終金額')) {
+          errors.finalAmount = error
+        } else if (error.includes('支払方法')) {
+          errors.paymentMethod = error
+        } else if (error.includes('単価')) {
+          errors.unitPrice = error
+        } else if (error.includes('数量')) {
+          errors.quantity = error
+        } else if (error.includes('販売明細')) {
+          errors.details = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -434,6 +458,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         if (path.endsWith('/stock-movements')) {
           templatePath = 'stock-movements/index'
           title = '在庫移動履歴'
+        }
+      } else if (path.includes('/sales')) {
+        if (path.includes('/edit')) {
+          templatePath = 'sales/edit'
+          title = '販売記録編集'
+        } else if (path.endsWith('/sales')) {
+          templatePath = 'sales/new'
+          title = '新規販売登録'
+        } else if (path.match(/\/sales\/\d+$/)) {
+          // POST /sales/:id (PUT via _method)
+          templatePath = 'sales/edit'
+          title = '販売記録編集'
         }
       }
 
@@ -1295,6 +1331,74 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           ],
           locations: [{ id: 1, name: 'ダミー保管場所', type: 'home' }],
         }
+      }
+    } else if (path.includes('/sales')) {
+      // 販売記録関連パス
+      const idMatch = path.match(/\/sales\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      if (path === '/sales') {
+        // 新規販売登録
+        return {
+          formData: {
+            transactionType: formData.transactionType || '',
+            eventId: formData.eventId || '',
+            exhibitId: formData.exhibitId || '',
+            locationId: formData.locationId || '',
+            customerName: formData.customerName || '',
+            customerEmail: formData.customerEmail || '',
+            totalAmount: formData.totalAmount || '',
+            discountAmount: formData.discountAmount || '',
+            finalAmount: formData.finalAmount || '',
+            paymentMethod: formData.paymentMethod || '',
+            notes: formData.notes || '',
+            details: formData.details || [],
+          },
+          availableEditions: [
+            { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+          ],
+          events: [
+            { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
+          ],
+          locations: [
+            { id: 1, name: 'ダミー保管場所', type: 'event' },
+          ],
+        }
+      }
+
+      // 編集の場合
+      return {
+        salesTransaction: {
+          id,
+          transactionType: formData.transactionType || 'event',
+          eventId: formData.eventId || '',
+          exhibitId: formData.exhibitId || '',
+          locationId: formData.locationId || '',
+          customerName: formData.customerName || '',
+          customerEmail: formData.customerEmail || '',
+          totalAmount: formData.totalAmount || '',
+          discountAmount: formData.discountAmount || '',
+          finalAmount: formData.finalAmount || '',
+          paymentMethod: formData.paymentMethod || '',
+          notes: formData.notes || '',
+        },
+        formData,
+        availableEditions: [
+          { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+        ],
+        events: [
+          { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
+        ],
+        locations: [
+          { id: 1, name: 'ダミー保管場所', type: 'event' },
+        ],
+        breadcrumbs: id
+          ? [
+              { name: '販売記録一覧', url: '/sales' },
+              { name: `販売記録 #${id}`, url: `/sales/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
       }
     }
 
