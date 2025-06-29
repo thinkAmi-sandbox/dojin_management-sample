@@ -269,11 +269,16 @@ export const exhibitBooks = pgTable(
     exhibitId: integer('exhibitId')
       .notNull()
       .references(() => exhibits.id, { onDelete: 'cascade' }),
-    bookId: integer('bookId')
+    editionId: integer('editionId')
       .notNull()
-      .references(() => books.id, { onDelete: 'cascade' }),
+      .references(() => editions.id, { onDelete: 'cascade' }), // 新規追加
+    bookId: integer('bookId')
+      .references(() => books.id, { onDelete: 'cascade' }), // 移行期間中は残す（NULL許可）
     plannedQuantity: integer('plannedQuantity').notNull().default(0),
-    price: integer('price').notNull().default(0),
+    actualQuantity: integer('actualQuantity'), // 新規追加：実際の持ち込み数
+    soldQuantity: integer('soldQuantity'), // 新規追加：売上数
+    remainingQuantity: integer('remainingQuantity'), // 新規追加：残数
+    price: integer('price').notNull().default(0), // 既存フィールド名を維持
     displayOrder: integer('displayOrder').notNull().default(0),
     createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
       .notNull()
@@ -284,7 +289,7 @@ export const exhibitBooks = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.exhibitId, table.bookId] }),
+    pk: primaryKey({ columns: [table.exhibitId, table.editionId] }), // 複合主キー変更
   }),
 )
 

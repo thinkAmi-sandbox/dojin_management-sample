@@ -29,8 +29,10 @@ export class ExhibitBooksController {
     const exhibitBooks =
       await this.exhibitBooksService.findExhibitBooks(exhibitId)
 
-    // 価格と頒布予定数をフォーマット
+    // 価格と数量をフォーマット
     const formatCurrency = (amount: number) => amount.toLocaleString('ja-JP')
+    const formatQuantity = (quantity: number | null) => 
+      quantity !== null ? `${quantity.toLocaleString('ja-JP')}冊` : '-'
 
     return {
       title: '頒布書籍一覧',
@@ -42,29 +44,51 @@ export class ExhibitBooksController {
       },
       exhibitBooks: exhibitBooks.map((eb) => ({
         exhibitId: eb.exhibitId,
-        bookId: eb.bookId,
+        editionId: eb.editionId, // 版対応
         plannedQuantity: eb.plannedQuantity,
-        formattedPlannedQuantity: `${eb.plannedQuantity.toLocaleString('ja-JP')}冊`,
+        actualQuantity: eb.actualQuantity,
+        soldQuantity: eb.soldQuantity,
+        remainingQuantity: eb.remainingQuantity,
+        formattedPlannedQuantity: formatQuantity(eb.plannedQuantity),
+        formattedActualQuantity: formatQuantity(eb.actualQuantity),
+        formattedSoldQuantity: formatQuantity(eb.soldQuantity),
+        formattedRemainingQuantity: formatQuantity(eb.remainingQuantity),
         price: eb.price,
         formattedPrice: `${formatCurrency(eb.price)}円`,
         displayOrder: eb.displayOrder,
+        // 版情報
+        edition: {
+          id: eb.edition.id,
+          versionName: eb.edition.versionName,
+          basePrice: eb.edition.basePrice,
+          formattedBasePrice: `${formatCurrency(eb.edition.basePrice)}円`,
+        },
+        // 書籍情報
         book: {
           id: eb.book.id,
           title: eb.book.title,
           subtitle: eb.book.subtitle || '',
         },
-        editUrl: `/exhibits/${exhibitId}/books/${eb.bookId}/edit`,
-        deleteUrl: `/exhibits/${exhibitId}/books/${eb.bookId}`,
+        editUrl: `/exhibits/${exhibitId}/books/${eb.editionId}/edit`,
+        deleteUrl: `/exhibits/${exhibitId}/books/${eb.editionId}`,
       })),
-      // 統計情報
+      // 統計情報（版対応）
       stats: {
-        totalBooks: exhibitBooks.length,
-        totalQuantity: exhibitBooks.reduce(
+        totalEditions: exhibitBooks.length,
+        totalPlannedQuantity: exhibitBooks.reduce(
           (sum, eb) => sum + eb.plannedQuantity,
           0,
         ),
+        totalActualQuantity: exhibitBooks.reduce(
+          (sum, eb) => sum + (eb.actualQuantity || 0),
+          0,
+        ),
+        totalSoldQuantity: exhibitBooks.reduce(
+          (sum, eb) => sum + (eb.soldQuantity || 0),
+          0,
+        ),
         totalRevenue: exhibitBooks.reduce(
-          (sum, eb) => sum + eb.plannedQuantity * eb.price,
+          (sum, eb) => sum + (eb.soldQuantity || 0) * eb.price,
           0,
         ),
       },
@@ -83,8 +107,11 @@ export class ExhibitBooksController {
   @Render('exhibit-books/add')
   async renderAddForm(@Param('exhibitId', ParseIntPipe) exhibitId: number) {
     const exhibit = await this.exhibitBooksService.findExhibit(exhibitId)
-    const availableBooks =
-      await this.exhibitBooksService.findAvailableBooks(exhibitId)
+    const availableEditions =
+      await this.exhibitBooksService.findAvailableEditions(exhibitId)
+
+    // 価格フォーマット
+    const formatCurrency = (amount: number) => amount.toLocaleString('ja-JP')
 
     return {
       title: '頒布書籍追加',
@@ -94,14 +121,24 @@ export class ExhibitBooksController {
         spaceNumber: exhibit.spaceNumber || '-',
         spaceType: exhibit.spaceType || '-',
       },
-      books: availableBooks.map((book) => ({
-        id: book.id,
-        title: book.title,
-        subtitle: book.subtitle || '',
+      editions: availableEditions.map((edition) => ({
+        id: edition.id,
+        versionName: edition.versionName,
+        basePrice: edition.basePrice,
+        formattedBasePrice: formatCurrency(edition.basePrice),
+        book: {
+          id: edition.book.id,
+          title: edition.book.title,
+          subtitle: edition.book.subtitle || '',
+        },
+        displayText: `${edition.book.title} - ${edition.versionName} (定価: ${formatCurrency(edition.basePrice)}円)`,
       })),
       formData: {
-        bookId: '',
+        editionId: '',
         plannedQuantity: '',
+        actualQuantity: '',
+        soldQuantity: '',
+        remainingQuantity: '',
         price: '',
         displayOrder: '',
       },
@@ -123,25 +160,28 @@ export class ExhibitBooksController {
     @Body() createExhibitBookDto: CreateExhibitBookDto,
     @Res() res: Response,
   ) {
-    await this.exhibitBooksService.addBookToExhibit(
+    await this.exhibitBooksService.addEditionToExhibit(
       exhibitId,
       createExhibitBookDto,
     )
     res.redirect(`/exhibits/${exhibitId}/books`)
   }
 
-  @Get(':bookId/edit')
+  @Get(':editionId/edit')
   @Render('exhibit-books/edit')
   async renderEditForm(
     @Param('exhibitId', ParseIntPipe) exhibitId: number,
-    @Param('bookId', ParseIntPipe) bookId: number,
+    @Param('editionId', ParseIntPipe) editionId: number,
   ) {
     const exhibit = await this.exhibitBooksService.findExhibit(exhibitId)
     const exhibitBook = await this.exhibitBooksService.findExhibitBook(
       exhibitId,
-      bookId,
+      editionId,
     )
-    const book = await this.exhibitBooksService.findBook(bookId)
+    const edition = await this.exhibitBooksService.findEdition(editionId)
+
+    // フォーマット関数
+    const formatCurrency = (amount: number) => amount.toLocaleString('ja-JP')
 
     return {
       title: '頒布情報編集',
@@ -151,18 +191,22 @@ export class ExhibitBooksController {
         spaceNumber: exhibit.spaceNumber || '-',
         spaceType: exhibit.spaceType || '-',
       },
-      book: {
-        id: book.id,
-        title: book.title,
-        subtitle: book.subtitle || '',
+      edition: {
+        id: edition.id,
+        versionName: edition.versionName,
+        basePrice: edition.basePrice,
+        formattedBasePrice: formatCurrency(edition.basePrice),
       },
       formData: {
         plannedQuantity: exhibitBook.plannedQuantity.toString(),
+        actualQuantity: exhibitBook.actualQuantity?.toString() || '',
+        soldQuantity: exhibitBook.soldQuantity?.toString() || '',
+        remainingQuantity: exhibitBook.remainingQuantity?.toString() || '',
         price: exhibitBook.price.toString(),
         displayOrder: exhibitBook.displayOrder.toString(),
       },
       errors: {},
-      updateUrl: `/exhibits/${exhibitId}/books/${bookId}`,
+      updateUrl: `/exhibits/${exhibitId}/books/${editionId}`,
       backUrl: `/exhibits/${exhibitId}/books`,
       breadcrumbs: [
         { name: '出展申込一覧', url: '/exhibits' },
@@ -173,25 +217,25 @@ export class ExhibitBooksController {
     }
   }
 
-  @Put(':bookId')
+  @Put(':editionId')
   async update(
     @Param('exhibitId', ParseIntPipe) exhibitId: number,
-    @Param('bookId', ParseIntPipe) bookId: number,
+    @Param('editionId', ParseIntPipe) editionId: number,
     @Body() updateExhibitBookDto: UpdateExhibitBookDto,
     @Res() res: Response,
   ) {
     await this.exhibitBooksService.updateExhibitBook(
       exhibitId,
-      bookId,
+      editionId,
       updateExhibitBookDto,
     )
     res.redirect(`/exhibits/${exhibitId}/books`)
   }
 
-  @Post(':bookId')
+  @Post(':editionId')
   async updateViaPost(
     @Param('exhibitId', ParseIntPipe) exhibitId: number,
-    @Param('bookId', ParseIntPipe) bookId: number,
+    @Param('editionId', ParseIntPipe) editionId: number,
     @Body() body: Record<string, unknown>,
     @Res() res: Response,
   ) {
@@ -203,29 +247,29 @@ export class ExhibitBooksController {
       })
       await this.exhibitBooksService.updateExhibitBook(
         exhibitId,
-        bookId,
+        editionId,
         validatedDto,
       )
       res.redirect(`/exhibits/${exhibitId}/books`)
     } else if (body._method === 'DELETE') {
-      return this.remove(exhibitId, bookId, res)
+      return this.remove(exhibitId, editionId, res)
     } else {
       res.status(400).send('無効なリクエストです')
     }
   }
 
-  @Delete(':bookId')
+  @Delete(':editionId')
   async remove(
     @Param('exhibitId', ParseIntPipe) exhibitId: number,
-    @Param('bookId', ParseIntPipe) bookId: number,
+    @Param('editionId', ParseIntPipe) editionId: number,
     @Res() res: Response,
   ) {
     try {
-      await this.exhibitBooksService.removeBookFromExhibit(exhibitId, bookId)
+      await this.exhibitBooksService.removeEditionFromExhibit(exhibitId, editionId)
       res.redirect(`/exhibits/${exhibitId}/books`)
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        return res.status(404).send('頒布書籍が見つかりませんでした')
+        return res.status(404).send('頒布版が見つかりませんでした')
       }
       throw error
     }

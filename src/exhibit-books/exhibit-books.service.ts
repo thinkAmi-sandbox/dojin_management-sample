@@ -27,34 +27,46 @@ export class ExhibitBooksService {
     return exhibit
   }
 
-  async findBook(bookId: number): Promise<schema.Book> {
-    const [book] = await this.drizzleService.db
+  async findEdition(editionId: number): Promise<schema.Edition> {
+    const [edition] = await this.drizzleService.db
       .select()
-      .from(schema.books)
-      .where(eq(schema.books.id, bookId))
+      .from(schema.editions)
+      .where(eq(schema.editions.id, editionId))
       .limit(1)
 
-    if (!book) {
-      throw new NotFoundException(`書籍ID ${bookId} が見つかりません`)
+    if (!edition) {
+      throw new NotFoundException(`版ID ${editionId} が見つかりません`)
     }
 
-    return book
+    return edition
   }
 
   async findExhibitBooks(exhibitId: number) {
     // 出展申込が存在するか確認
     await this.findExhibit(exhibitId)
 
-    // 出展申込に関連付けられた書籍を取得（JOIN処理）
+    // 出展申込に関連付けられた版を取得（版対応JOIN処理）
     const result = await this.drizzleService.db
       .select({
         exhibitId: schema.exhibitBooks.exhibitId,
-        bookId: schema.exhibitBooks.bookId,
+        editionId: schema.exhibitBooks.editionId,
         plannedQuantity: schema.exhibitBooks.plannedQuantity,
+        actualQuantity: schema.exhibitBooks.actualQuantity,
+        soldQuantity: schema.exhibitBooks.soldQuantity,
+        remainingQuantity: schema.exhibitBooks.remainingQuantity,
         price: schema.exhibitBooks.price,
         displayOrder: schema.exhibitBooks.displayOrder,
         createdAt: schema.exhibitBooks.createdAt,
         updatedAt: schema.exhibitBooks.updatedAt,
+        // 版情報をJOIN
+        edition: {
+          id: schema.editions.id,
+          versionName: schema.editions.versionName,
+          versionNumber: schema.editions.versionNumber,
+          basePrice: schema.editions.basePrice,
+          pageCount: schema.editions.pageCount,
+          isActive: schema.editions.isActive,
+        },
         // 書籍情報をJOIN
         book: {
           id: schema.books.id,
@@ -65,60 +77,84 @@ export class ExhibitBooksService {
         },
       })
       .from(schema.exhibitBooks)
-      .innerJoin(schema.books, eq(schema.exhibitBooks.bookId, schema.books.id))
+      .innerJoin(schema.editions, eq(schema.exhibitBooks.editionId, schema.editions.id))
+      .innerJoin(schema.books, eq(schema.editions.bookId, schema.books.id))
       .where(eq(schema.exhibitBooks.exhibitId, exhibitId))
       .orderBy(schema.exhibitBooks.displayOrder, schema.books.title)
 
     return result
   }
 
-  async findAvailableBooks(exhibitId: number): Promise<schema.Book[]> {
+  async findAvailableEditions(exhibitId: number) {
     // 出展申込が存在するか確認
     await this.findExhibit(exhibitId)
 
-    // 既に関連付けられている書籍のIDを取得
-    const associatedBookIds = await this.drizzleService.db
-      .select({ bookId: schema.exhibitBooks.bookId })
+    // 既に関連付けられている版のIDを取得
+    const associatedEditionIds = await this.drizzleService.db
+      .select({ editionId: schema.exhibitBooks.editionId })
       .from(schema.exhibitBooks)
       .where(eq(schema.exhibitBooks.exhibitId, exhibitId))
 
-    const excludeIds = associatedBookIds.map((row) => row.bookId)
+    const excludeIds = associatedEditionIds.map((row) => row.editionId)
 
-    // まだ関連付けられていない書籍を取得
-    const allBooks = await this.drizzleService.db
-      .select()
-      .from(schema.books)
-      .orderBy(schema.books.title)
+    // まだ関連付けられていない現行版を取得（書籍情報含む）
+    const allEditions = await this.drizzleService.db
+      .select({
+        id: schema.editions.id,
+        versionName: schema.editions.versionName,
+        versionNumber: schema.editions.versionNumber,
+        basePrice: schema.editions.basePrice,
+        pageCount: schema.editions.pageCount,
+        isActive: schema.editions.isActive,
+        // 書籍情報をJOIN
+        book: {
+          id: schema.books.id,
+          title: schema.books.title,
+          subtitle: schema.books.subtitle,
+          status: schema.books.status,
+        },
+      })
+      .from(schema.editions)
+      .innerJoin(schema.books, eq(schema.editions.bookId, schema.books.id))
+      .where(eq(schema.editions.isActive, true)) // 現行版のみ
+      .orderBy(schema.books.title, schema.editions.versionNumber)
 
-    // JavaScriptでフィルタリング（除外IDに含まれない書籍のみ）
-    return allBooks.filter((book) => !excludeIds.includes(book.id))
+    // JavaScriptでフィルタリング（除外IDに含まれない版のみ）
+    return allEditions.filter((edition) => !excludeIds.includes(edition.id))
   }
 
-  async addBookToExhibit(
+  async addEditionToExhibit(
     exhibitId: number,
     createExhibitBookDto: CreateExhibitBookDto,
   ): Promise<schema.ExhibitBook> {
-    const { bookId, plannedQuantity, price, displayOrder } =
-      createExhibitBookDto
+    const { 
+      editionId, 
+      plannedQuantity, 
+      actualQuantity, 
+      soldQuantity, 
+      remainingQuantity, 
+      price, 
+      displayOrder 
+    } = createExhibitBookDto
 
-    // 出展申込と書籍が存在するか確認
+    // 出展申込と版が存在するか確認
     await this.findExhibit(exhibitId)
-    await this.findBook(bookId)
+    await this.findEdition(editionId)
 
-    // 既に関連付けられているかチェック
+    // 既に関連付けられているかチェック（複合主キー対応）
     const existingAssociation = await this.drizzleService.db
       .select()
       .from(schema.exhibitBooks)
       .where(
         and(
           eq(schema.exhibitBooks.exhibitId, exhibitId),
-          eq(schema.exhibitBooks.bookId, bookId),
+          eq(schema.exhibitBooks.editionId, editionId),
         ),
       )
       .limit(1)
 
     if (existingAssociation.length > 0) {
-      throw new BadRequestException('この書籍は既に追加されています')
+      throw new BadRequestException('この版は既に追加されています')
     }
 
     // 表示順序が指定されていない場合は最大値+1を設定
@@ -136,13 +172,16 @@ export class ExhibitBooksService {
       }
     }
 
-    // 関連付けを作成
+    // 関連付けを作成（版対応）
     const [exhibitBook] = await this.drizzleService.db
       .insert(schema.exhibitBooks)
       .values({
         exhibitId,
-        bookId,
+        editionId,
         plannedQuantity,
+        actualQuantity,
+        soldQuantity,
+        remainingQuantity,
         price,
         displayOrder: finalDisplayOrder,
       })
@@ -153,7 +192,7 @@ export class ExhibitBooksService {
 
   async findExhibitBook(
     exhibitId: number,
-    bookId: number,
+    editionId: number,
   ): Promise<schema.ExhibitBook> {
     const [exhibitBook] = await this.drizzleService.db
       .select()
@@ -161,14 +200,14 @@ export class ExhibitBooksService {
       .where(
         and(
           eq(schema.exhibitBooks.exhibitId, exhibitId),
-          eq(schema.exhibitBooks.bookId, bookId),
+          eq(schema.exhibitBooks.editionId, editionId),
         ),
       )
       .limit(1)
 
     if (!exhibitBook) {
       throw new NotFoundException(
-        `出展申込ID ${exhibitId} と書籍ID ${bookId} の関連付けが見つかりません`,
+        `出展申込ID ${exhibitId} と版ID ${editionId} の関連付けが見つかりません`,
       )
     }
 
@@ -177,13 +216,13 @@ export class ExhibitBooksService {
 
   async updateExhibitBook(
     exhibitId: number,
-    bookId: number,
+    editionId: number,
     updateExhibitBookDto: UpdateExhibitBookDto,
   ): Promise<schema.ExhibitBook> {
-    // 関連付けが存在するかチェック
-    await this.findExhibitBook(exhibitId, bookId)
+    // 関連付けが存在するかチェック（版対応）
+    await this.findExhibitBook(exhibitId, editionId)
 
-    // 更新処理
+    // 更新処理（複合主キー対応）
     const [updatedExhibitBook] = await this.drizzleService.db
       .update(schema.exhibitBooks)
       .set({
@@ -193,7 +232,7 @@ export class ExhibitBooksService {
       .where(
         and(
           eq(schema.exhibitBooks.exhibitId, exhibitId),
-          eq(schema.exhibitBooks.bookId, bookId),
+          eq(schema.exhibitBooks.editionId, editionId),
         ),
       )
       .returning()
@@ -201,37 +240,37 @@ export class ExhibitBooksService {
     return updatedExhibitBook
   }
 
-  async removeBookFromExhibit(
+  async removeEditionFromExhibit(
     exhibitId: number,
-    bookId: number,
+    editionId: number,
   ): Promise<void> {
-    // 出展申込と書籍が存在するか確認
+    // 出展申込と版が存在するか確認
     await this.findExhibit(exhibitId)
-    await this.findBook(bookId)
+    await this.findEdition(editionId)
 
-    // 関連付けが存在するかチェック
+    // 関連付けが存在するかチェック（複合主キー対応）
     const existingAssociation = await this.drizzleService.db
       .select()
       .from(schema.exhibitBooks)
       .where(
         and(
           eq(schema.exhibitBooks.exhibitId, exhibitId),
-          eq(schema.exhibitBooks.bookId, bookId),
+          eq(schema.exhibitBooks.editionId, editionId),
         ),
       )
       .limit(1)
 
     if (existingAssociation.length === 0) {
-      throw new NotFoundException('頒布書籍が見つかりません')
+      throw new NotFoundException('頒布版が見つかりません')
     }
 
-    // 関連付けを削除
+    // 関連付けを削除（複合主キー対応）
     await this.drizzleService.db
       .delete(schema.exhibitBooks)
       .where(
         and(
           eq(schema.exhibitBooks.exhibitId, exhibitId),
-          eq(schema.exhibitBooks.bookId, bookId),
+          eq(schema.exhibitBooks.editionId, editionId),
         ),
       )
   }
