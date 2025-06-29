@@ -23,49 +23,78 @@ Phase 3では、既存の同人誌管理機能を版ベース管理に対応さ�
 ### ⏳ Phase 3-3: 既存機能の版対応（1週間）
 ### ⏳ Phase 3-4: 統合テスト・検証（2-3日）
 
-## 🗂️ Phase 3-1: ExhibitBooksテーブル版対応（1-2日）
+## 🗂️ Phase 3-1: ExhibitBooksテーブル版対応（2-3日）
 
-### 現在のExhibitBooksテーブル
+### 現在のExhibitBooksテーブル（実装状況分析結果）
 ```typescript
-// 現在の実装
-export const exhibitBooks = pgTable('ExhibitBook', {
-  id: serial('id').primaryKey(),
-  exhibitId: integer('exhibitId').notNull().references(() => exhibits.id, { onDelete: 'cascade' }),
-  bookId: integer('bookId').notNull().references(() => books.id, { onDelete: 'cascade' }), // 変更対象
-  plannedQuantity: integer('plannedQuantity').notNull(),
-  actualPrice: integer('actualPrice'),
-  notes: text('notes'),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
-})
+// 実際の現在の実装 (schema.ts:266-289)
+export const exhibitBooks = pgTable(
+  'ExhibitBook',
+  {
+    exhibitId: integer('exhibitId').notNull().references(() => exhibits.id, { onDelete: 'cascade' }),
+    bookId: integer('bookId').notNull().references(() => books.id, { onDelete: 'cascade' }),
+    plannedQuantity: integer('plannedQuantity').notNull().default(0),
+    price: integer('price').notNull().default(0), // actualPriceではなくprice
+    displayOrder: integer('displayOrder').notNull().default(0),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.exhibitId, table.bookId] }), // 複合主キー
+  }),
+)
 ```
 
-### 版対応後のExhibitBooksテーブル
+### 版対応後のExhibitBooksテーブル（修正版）
 ```typescript
-// 版対応後の実装
-export const exhibitBooks = pgTable('ExhibitBook', {
-  id: serial('id').primaryKey(),
-  exhibitId: integer('exhibitId').notNull().references(() => exhibits.id, { onDelete: 'cascade' }),
-  editionId: integer('editionId').notNull().references(() => editions.id, { onDelete: 'cascade' }), // 変更
-  plannedQuantity: integer('plannedQuantity').notNull(),
-  actualQuantity: integer('actualQuantity'), // 新規追加
-  soldQuantity: integer('soldQuantity'), // 新規追加
-  remainingQuantity: integer('remainingQuantity'), // 新規追加
-  actualPrice: integer('actualPrice'),
-  notes: text('notes'),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
-})
+// 版対応後の実装（実際の構造に基づく修正版）
+export const exhibitBooks = pgTable(
+  'ExhibitBook',
+  {
+    exhibitId: integer('exhibitId').notNull().references(() => exhibits.id, { onDelete: 'cascade' }),
+    editionId: integer('editionId').notNull().references(() => editions.id, { onDelete: 'cascade' }), // 新規追加
+    bookId: integer('bookId').references(() => books.id, { onDelete: 'cascade' }), // 移行期間中は残す
+    plannedQuantity: integer('plannedQuantity').notNull().default(0),
+    actualQuantity: integer('actualQuantity'), // 新規追加：実際の持ち込み数
+    soldQuantity: integer('soldQuantity'), // 新規追加：売上数
+    remainingQuantity: integer('remainingQuantity'), // 新規追加：残数
+    price: integer('price').notNull().default(0), // 既存フィールド名を維持
+    displayOrder: integer('displayOrder').notNull().default(0),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt').notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.exhibitId, table.editionId] }), // 複合主キー変更
+  }),
+)
 ```
+
+### 修正が必要な計画項目（実装分析結果）
+
+#### 1. スキーマ構造の相違点
+**計画書の想定**: serial主キー + 単一制約  
+**実際の構造**: 複合主キー (exhibitId, bookId)  
+**対応方針**: 複合主キーを (exhibitId, editionId) に変更
+
+#### 2. フィールド名の相違点
+**計画書**: `actualPrice`  
+**実際**: `price`  
+**対応方針**: 既存の`price`フィールドを維持
+
+#### 3. 新規フィールドの追加
+- `editionId`: integer型（editionsテーブルへの外部キー）
+- `actualQuantity`: integer型（実際の持ち込み数）
+- `soldQuantity`: integer型（売上数）  
+- `remainingQuantity`: integer型（残数）
 
 ### 追加フィールドの説明
 - **actualQuantity**: 実際の持ち込み数（イベント当日の実数）
 - **soldQuantity**: 売上数（販売実績）
 - **remainingQuantity**: 残数（actualQuantity - soldQuantity）
 
-### マイグレーション戦略
+### マイグレーション戦略（修正版）
 
-#### Step 1: テーブル構造変更
+#### Step 1: テーブル構造変更（複合主キー対応）
 ```sql
 -- 1. 新しいカラムを追加
 ALTER TABLE "ExhibitBook" ADD COLUMN "editionId" INTEGER;
@@ -84,18 +113,55 @@ ALTER TABLE "ExhibitBook"
 ADD CONSTRAINT "fk_exhibit_book_edition" 
 FOREIGN KEY ("editionId") REFERENCES "Edition"("id") ON DELETE CASCADE;
 
--- 4. NOT NULL制約を追加
+-- 4. 複合主キー制約を変更
+ALTER TABLE "ExhibitBook" DROP CONSTRAINT IF EXISTS "ExhibitBook_pkey";
+ALTER TABLE "ExhibitBook" ADD CONSTRAINT "ExhibitBook_pkey" 
+PRIMARY KEY ("exhibitId", "editionId");
+
+-- 5. NOT NULL制約を追加
 ALTER TABLE "ExhibitBook" ALTER COLUMN "editionId" SET NOT NULL;
 
--- 5. 旧bookIdカラムを削除（最終段階）
+-- 6. 旧bookIdカラムを削除（最終段階）
 -- ALTER TABLE "ExhibitBook" DROP COLUMN "bookId";
 ```
 
-#### Step 2: 段階的移行手順
-1. **Phase 1**: editionIdカラム追加、データ移行
-2. **Phase 2**: アプリケーションコードの版対応
-3. **Phase 3**: 動作確認・検証
-4. **Phase 4**: bookIdカラム削除
+#### Step 2: 段階的移行手順（修正版）
+1. **Step 1**: editionIdカラム追加、初版データ移行
+2. **Step 2**: 複合主キー制約変更 (exhibitId, bookId) → (exhibitId, editionId)
+3. **Step 3**: アプリケーションコードの版対応（サービス、DTO、コントローラー）
+4. **Step 4**: ビューファイルの版対応
+5. **Step 5**: 統合テストの更新・動作確認
+6. **Step 6**: bookIdカラム削除（Phase 3-4で実施）
+
+### 実装手順（詳細版）
+
+#### Phase A: スキーマ変更・マイグレーション
+- [ ] ExhibitBooksスキーマを版対応に変更（editionId追加、複合主キー変更）
+- [ ] データベースマイグレーション作成（editionId等の新規カラム追加）
+
+#### Phase B: DTO・バリデーション更新
+- [ ] CreateExhibitBookDtoを版対応に更新（bookId → editionId）
+- [ ] UpdateExhibitBookDtoを版対応に更新（新規フィールド追加）
+
+#### Phase C: サービス層更新
+- [ ] ExhibitBooksServiceを版対応に更新（JOIN処理の変更等）
+- [ ] findBook() → findEdition() への変更
+- [ ] 複合主キー (exhibitId, editionId) への対応
+
+#### Phase D: コントローラー・ビューファイル更新
+- [ ] ExhibitBooksControllerを版対応に更新（版選択フォーム等）
+- [ ] ビューファイルを版対応に更新（add.ejs, index.ejs, edit.ejs）
+
+#### Phase E: 統合テスト・検証
+- [ ] 統合テストを版対応に更新（複合主キー対応等）
+- [ ] 型チェック・Linter実行・テスト実行で動作確認
+
+### 作業見積もり（修正版）
+- スキーマ変更・マイグレーション: 半日
+- サービス・コントローラー更新: 1日
+- ビューファイル更新: 半日
+- 統合テスト更新: 1日
+- **合計: 2-3日**
 
 ## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）
 
