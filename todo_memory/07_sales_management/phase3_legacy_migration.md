@@ -19,7 +19,7 @@ Phase 3では、既存の同人誌管理機能を版ベース管理に対応さ�
 ## 📊 Phase 3 実装スケジュール
 
 ### ✅ Phase 3-1: ExhibitBooksテーブル版対応（完全完了）- 2025年6月29日実装完了 ✅
-### ⏳ Phase 3-2: データマイグレーション実装（1-2日）
+### ✅ Phase 3-2: データマイグレーション実装（完了）- 2025年6月29日実装完了 ✅
 ### ⏳ Phase 3-3: 既存機能の版対応（1週間）
 ### ⏳ Phase 3-4: 統合テスト・検証（2-3日）
 
@@ -257,7 +257,58 @@ ALTER TABLE "ExhibitBook" ALTER COLUMN "editionId" SET NOT NULL;
 4. **在庫連携**: 将来的な在庫管理との連携基盤
 5. **レスポンシブUI**: モバイル対応の版選択・編集インターフェース
 
-## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）
+## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）✅ 2025年6月29日完了
+
+### 実装完了内容
+
+#### ✅ マイグレーションスクリプト作成完了
+1. **`scripts/migration/phase3/`ディレクトリ作成**
+   - 01_create_initial_editions.sql - 初版Editionレコード生成SQL
+   - 02_migrate_exhibit_books.sql - ExhibitBook版対応SQL
+   - 03_verify_data_integrity.sql - データ整合性確認SQL
+   - run_migration.sh - 本番環境用実行スクリプト
+   - run_migration_test.sh - テスト環境用実行スクリプト
+   - README.md - 詳細な実行手順ドキュメント
+
+#### ✅ SQLスクリプトの特徴
+1. **初版Edition生成（01_create_initial_editions.sql）**
+   - 既存Bookに初版を自動生成
+   - 価格は最新Submissionデータから取得
+   - 重複チェック（既存Edition存在時はスキップ）
+
+2. **ExhibitBook移行（02_migrate_exhibit_books.sql）**
+   - editionIdに初版IDを設定
+   - 移行前後の状態確認クエリ付き
+   - bookIdは移行期間中保持
+
+3. **データ整合性確認（03_verify_data_integrity.sql）**
+   - 初版存在確認
+   - 複合主キー整合性確認
+   - 数量計算整合性確認
+   - 詳細な統計レポート生成
+
+#### ✅ 実行手順ドキュメント整備
+- バックアップ手順明記
+- ロールバック手順記載
+- トラブルシューティングガイド
+- Drizzle Studio利用方法追記（psql非対応環境向け）
+
+#### ✅ テスト環境での実行検証完了
+1. **マイグレーションSQL修正**
+   - SubmissionテーブルにactualPriceカラムが存在しないことを発見
+   - totalCostと数量から単価を計算するロジックに変更
+   - デフォルト価格500円設定
+
+2. **テスト環境実行結果**
+   - 32冊の書籍すべてに初版Edition作成成功
+   - 入稿データがある本: 実際の価格反映（570円、460円等）
+   - 入稿データがない本: デフォルト価格（500円）適用
+   - データ整合性チェック: 全項目クリア
+
+3. **動作確認結果**
+   - 統合テスト: 331テスト全件パス
+   - 型チェック: エラー0件
+   - ExhibitBook機能: 正常動作確認
 
 ### 既存データの移行手順
 
@@ -279,7 +330,20 @@ SELECT
   '初版',
   1,
   NULL, -- pageCountは既にEditionsテーブルに移行済み
-  COALESCE(s.actualPrice, 0), -- 入稿データから実際の価格を取得
+  COALESCE(
+    -- 最新の入稿データから価格を算出（totalCostを数量で割る）
+    (SELECT 
+       CASE 
+         WHEN s."totalCost" IS NOT NULL AND s.quantity > 0 
+         THEN (s."totalCost" / s.quantity)
+         ELSE 0
+       END
+     FROM "Submission" s 
+     WHERE s."bookId" = b.id 
+     ORDER BY s."createdAt" DESC 
+     LIMIT 1), 
+    500  -- デフォルト価格500円
+  ),
   true,
   b."createdAt",
   b."updatedAt"
@@ -670,10 +734,13 @@ describe('Performance Tests - Edition Integration', () => {
 ---
 
 **実装予定時期**: Phase 2完了後  
-**最終更新**: 2025年6月29日（Phase 3-1完全完了・ドキュメント最終反映済み）  
+**最終更新**: 2025年6月29日（Phase 3-2完全完了・テスト環境検証済み）  
 **Phase 3-1実装状況**: ✅ **完全完了**（全機能実装済み・品質改善・ドキュメント完了）  
-**実装済み内容**: スキーマ変更・DTO・サービス・コントローラー・ビューファイル・統合テスト・ValidationExceptionFilter対応・価格表示修正・テスト環境改善  
-**技術実装詳細**: 複合主キー・3テーブルJOIN・数量自動計算・版選択UI・レスポンシブデザイン・通貨フォーマット・ログ抑制  
-**テスト状況**: 統合テスト・ユニットテスト全件パス、型チェック・Linter実行完了、テスト出力クリーン化完了  
-**ドキュメント状況**: 実装詳細・教訓・技術仕様の完全記録済み  
-**次回更新予定**: Phase 3-2（データマイグレーション実装）開始時
+**Phase 3-2実装状況**: ✅ **完全完了**（マイグレーションスクリプト作成・テスト環境検証成功）  
+**実装済み内容**: 
+- Phase 3-1: スキーマ変更・DTO・サービス・コントローラー・ビューファイル・統合テスト・ValidationExceptionFilter対応
+- Phase 3-2: 初版生成SQL・ExhibitBook移行SQL・整合性確認SQL・実行スクリプト・ドキュメント・テスト環境検証
+**技術実装詳細**: 複合主キー・3テーブルJOIN・数量自動計算・版選択UI・レスポンシブデザイン・価格算出ロジック  
+**テスト状況**: 統合テスト331件全パス、型チェック・Linter実行完了、マイグレーション検証成功  
+**ドキュメント状況**: 実装詳細・教訓・技術仕様・マイグレーション手順・実行結果の完全記録済み  
+**次回更新予定**: Phase 3-3（既存機能の版対応）開始時

@@ -118,6 +118,38 @@
 
 詳細は `todo_memory/07_sales_management/phase3_legacy_migration.md` を参照。
 
+### 🎉 Phase 3-2: データマイグレーション実装 - 完全完了 (2025年6月29日) 🎉
+
+**レガシーデータの版対応マイグレーションが完全成功しました！**
+
+#### 主要成果
+- **マイグレーションSQLスクリプト作成完了**: 初版生成・ExhibitBook対応・整合性確認
+- **実行スクリプト整備**: 本番環境用・テスト環境用の自動実行スクリプト
+- **テスト環境検証成功**: 32冊の書籍に初版Edition作成、整合性確認
+- **実行手順書完備**: README.md、トラブルシューティングガイド作成
+
+#### 技術的成果
+- **価格算出ロジック実装**: totalCost÷quantityでの単価計算
+- **デフォルト価格設定**: 入稿データなし書籍に500円設定
+- **バックアップ自動化**: タイムスタンプ付きバックアップスクリプト
+- **整合性チェッククエリ**: 初版存在確認・複合主キー整合性・数量計算
+
+#### マイグレーション結果
+- **初版Edition作成**: 32/32冊成功（100%）
+- **価格設定**: 入稿データあり9冊（570円、460円等）、なし23冊（500円）
+- **ExhibitBook対応**: 該当データなし（テスト環境）
+- **動作確認**: 統合テスト331件全パス、型チェックエラー0件
+
+#### 実装ファイル
+- `scripts/migration/phase3/01_create_initial_editions.sql`
+- `scripts/migration/phase3/02_migrate_exhibit_books.sql`
+- `scripts/migration/phase3/03_verify_data_integrity.sql`
+- `scripts/migration/phase3/run_migration.sh`
+- `scripts/migration/phase3/run_migration_test.sh`
+- `scripts/migration/phase3/README.md`
+
+詳細は `todo_memory/07_sales_management/phase3_legacy_migration.md` を参照。
+
 ---
 
 **更新履歴**:
@@ -125,3 +157,4 @@
 - 2025-06-28: Phase 2-1完了記録追加
 - 2025-06-29: Phase 2全体完了記録追加
 - 2025-06-29: Phase 3-1（ExhibitBooks版対応）完了記録追加
+- 2025-06-29: Phase 3-2（データマイグレーション）完了記録追加
