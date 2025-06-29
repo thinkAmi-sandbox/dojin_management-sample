@@ -16,7 +16,7 @@ allowed-tools: ["Bash"]
   - 前回のコミット以降のすべてのプロンプトを日本語で完全記載
     - プロンプトには `[Request interrupted by user for tool use]` は不要 
   - 実施した作業の概要を記載
-- **ファイルパス**: ユーザー環境情報保護のため `/path/to` に変換
+- **ファイルパス**: ユーザー環境情報保護のため、プロジェクトルート以下のパスを `/path/to` に変換
 - **署名**: 以下を必ず含める
   🤖 Generated with https://claude.ai/code
 
@@ -28,7 +28,7 @@ Co-Authored-By: Claude mailto:noreply@anthropic.com
 - **完全記載**: プロンプトは一字一句そのまま記載（省略・要約は絶対禁止）
 - **長文対応**: 長いエラーメッセージや複雑なプロンプトも含めて完全に記載
 - **時系列保持**: 実際のプロンプト順序を正確に保持
-- **唯一の例外**: ファイルパスのみ `/path/to` に変換（他は一切変更しない）
+- **唯一の例外**: プロジェクトルート以下のファイルパスのみ `/path/to` に変換（ルートディレクトリのファイル名は変換しない、他は一切変更しない）
 - **技術対応**: 長いコミットメッセージはHEREDOCで適切に分割
 
 ### 実行手順
@@ -41,15 +41,17 @@ Co-Authored-By: Claude mailto:noreply@anthropic.com
 ### 必須チェック項目
 実行前に以下を確認：
 - [ ] プロンプト履歴が**完全に**記載されている（省略・要約なし）
-- [ ] ファイルパスが `/path/to` に適切変換されている
+- [ ] プロジェクトルート以下のファイルパスが `/path/to` に適切変換されている（ルートファイル名は保持）
 - [ ] 日本語で記載されている
 - [ ] 署名が含まれている
 - [ ] 実際のプロンプト順序が保持されている
 - [ ] `[Request interrupted by user for tool use]` という記載がない 
 
 ### ファイルパス変換例
-変換前: /Users/thinkami/project/nestjs/dojin_management-sample
-変換後: /path/to
+変換前: /Users/thinkami/project/nestjs/dojin_management-sample/src/controllers/books.controller.ts
+変換後: /path/to/src/controllers/books.controller.ts
+
+変換しない例: package.json → package.json（ルートディレクトリのファイル名はそのまま）
 
 ## 重要な注意事項
 - プロンプトの省略・要約は絶対に行わない
