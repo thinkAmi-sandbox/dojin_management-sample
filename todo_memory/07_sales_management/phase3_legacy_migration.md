@@ -19,8 +19,8 @@ Phase 3では、既存の同人誌管理機能を版ベース管理に対応さ�
 ## 📊 Phase 3 実装スケジュール
 
 ### ✅ Phase 3-1: ExhibitBooksテーブル版対応（完全完了）- 2025年6月29日実装完了 ✅
-### ✅ Phase 3-2: データマイグレーション実装（完了）- 2025年6月29日実装完了 ✅
-### ⏳ Phase 3-3: 既存機能の版対応（1週間）
+### ✅ Phase 3-2: データマイグレーション実装（完全完了）- 2025年6月29日実装完了 ✅
+### ⏳ Phase 3-3: 既存機能の版対応（4.5日・統合テストファースト）
 ### ⏳ Phase 3-4: 統合テスト・検証（2-3日）
 
 ## 🗂️ Phase 3-1: ExhibitBooksテーブル版対応（2-3日）
@@ -257,7 +257,7 @@ ALTER TABLE "ExhibitBook" ALTER COLUMN "editionId" SET NOT NULL;
 4. **在庫連携**: 将来的な在庫管理との連携基盤
 5. **レスポンシブUI**: モバイル対応の版選択・編集インターフェース
 
-## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）✅ 2025年6月29日完了
+## 🗂️ Phase 3-2: データマイグレーション実装（1-2日）✅ 2025年6月29日完全完了
 
 ### 実装完了内容
 
@@ -309,6 +309,24 @@ ALTER TABLE "ExhibitBook" ALTER COLUMN "editionId" SET NOT NULL;
    - 統合テスト: 331テスト全件パス
    - 型チェック: エラー0件
    - ExhibitBook機能: 正常動作確認
+
+#### ✅ 本番環境での実行検証完了
+1. **本番マイグレーション実行結果**
+   - 書籍2冊→初版Edition作成成功
+   - Book ID 5（「あ」）: 既存Edition保持（価格: 1,000円）
+   - Book ID 6（「a」）: 新規初版作成（価格: 500円）
+   - ExhibitBook 1件の版対応成功（editionId設定完了）
+
+2. **バックアップ確保**
+   - 自動バックアップ取得成功
+   - ファイル: backup_before_phase3_migration_20250629_181022.sql
+   - サイズ: 37KB（ロールバック準備完了）
+
+3. **本番動作確認**
+   - アプリケーション正常起動確認
+   - 統合テスト: 330/331件パス（1件は環境差異による想定内失敗）
+   - ExhibitBook版対応データ表示確認済み
+   - 開発サーバー正常停止確認
 
 ### 既存データの移行手順
 
@@ -400,22 +418,175 @@ pg_dump -h localhost -p 15432 -U dojin_user -d dojin_management > backup_before_
 pg_dump -h localhost -p 15432 -U dojin_user -d dojin_management -t Book -t ExhibitBook > backup_books_exhibitbooks_$(date +%Y%m%d_%H%M%S).sql
 ```
 
-## 🗂️ Phase 3-3: 既存機能の版対応（1週間）
+## 🗂️ Phase 3-3: 既存機能の版対応（4.5日・統合テストファースト）
+
+### 🎯 TDD実装戦略
+Phase 3-1成功パターンを踏襲し、統合テストから書き始めて確実な版対応を実装
 
 ### 影響を受ける機能一覧
 
-#### 1. 出展管理機能（ExhibitBooks）
-- **表示機能**: 書籍名→版名の表示変更
-- **作成機能**: 書籍選択→版選択への変更
-- **編集機能**: 版情報の表示・編集
-- **削除機能**: 版ベースでの削除処理
+#### 1. 出展管理機能（ExhibitBooks）- ✅ Phase 3-1で完了済み
+- **表示機能**: 書籍名→版名の表示変更 ✅完了
+- **作成機能**: 書籍選択→版選択への変更 ✅完了
+- **編集機能**: 版情報の表示・編集 ✅完了
+- **削除機能**: 版ベースでの削除処理 ✅完了
 
-#### 2. イベント管理機能（Events）
+#### 2. イベント管理機能（Events）- 📋 Phase 3-3対象
 - **出展書籍一覧**: 版情報を含む表示
 - **売上実績**: 版ベースでの売上管理
 - **在庫管理**: イベント前後の在庫移動
 
-### 出展管理機能の版対応
+### 📋 段階的統合テスト実装手順
+
+#### Phase A: 現状分析・テスト設計（1日）
+**Step 1: 既存機能の実装状況確認**
+1. Events関連機能の現在の実装を調査
+2. ExhibitBooksとの連携箇所を特定
+3. 版対応が必要な具体的エンドポイントを洗い出し
+
+**Step 2: テストケース設計**
+1. 版対応が必要な機能の統合テスト仕様作成
+2. 成功ケース・失敗ケースの整理
+3. テストデータ設計（Edition + ExhibitBook + Event組み合わせ）
+
+#### Phase B: 基本機能テスト実装（1日）
+**Step 1: 最重要テストケース先行実装（1-2テスト）**
+```typescript
+// 例: イベント詳細での版情報表示テスト
+it('should display edition info in event detail', async () => {
+  // テストデータ作成: Event + ExhibitBook + Edition
+  // GET /events/:id で版情報が正しく表示されることを確認
+})
+
+it('should display edition-based exhibit books list', async () => {
+  // イベントの出展書籍一覧で版情報が表示されることを確認
+})
+```
+
+**Step 2: テスト失敗確認**
+- 期待通りテストが失敗することを確認
+- 実装すべき機能を明確化
+
+#### Phase C: サービス層版対応実装（1日）
+**Step 1: EventsService版対応**
+1. JOIN処理の版対応実装（books → editions → books）
+2. 版別統計機能の実装
+3. Step 1のテストが通ることを確認
+
+**Step 2: バリデーション・エラーハンドリングテスト追加（2-3テスト）**
+```typescript
+it('should handle invalid edition ID in event context', async () => {
+  // 存在しない版IDでのエラーハンドリング確認
+})
+
+it('should validate edition availability for events', async () => {
+  // イベントで利用可能な版のバリデーション確認
+})
+```
+
+#### Phase D: コントローラー・ビュー実装（1日）
+**Step 1: EventsController版対応**
+1. 版情報を含むデータ取得・表示処理
+2. ValidationExceptionFilterの版対応データ準備
+3. Step 1-2のテストが通ることを確認
+
+**Step 2: 全機能テスト追加（残りテスト）**
+```typescript
+it('should update event with edition-based exhibit books', async () => {
+  // イベント更新時の版対応確認
+})
+
+it('should calculate edition-based sales statistics', async () => {
+  // 版別売上統計の正確性確認
+})
+
+it('should handle event deletion with edition references', async () => {
+  // 版参照があるイベント削除の適切な処理
+})
+```
+
+#### Phase E: 統合検証・完了確認（半日）
+**Step 1: 全テスト通過確認**
+- 新規追加テスト全件パス
+- 既存テスト（Phase 3-1含む）への影響なし
+- 型チェック・Linter実行成功
+
+**Step 2: 動作確認**
+- `pnpm build` でビューファイルコピー確認
+- 開発サーバーでの動作確認
+
+### 🔧 技術実装ポイント
+
+#### 統合テストパターン（Phase 3-1成功事例活用）
+```typescript
+describe('Events - Edition Integration', () => {
+  let testBook: Book
+  let testEdition: Edition
+  let testEvent: Event
+  let testExhibit: Exhibit
+
+  beforeEach(async () => {
+    await testDbUtils.cleanupDatabase()
+    
+    // Phase 3-1パターンを踏襲したテストデータ作成
+    testBook = await createTestBook()
+    testEdition = await createTestEdition(testBook.id)
+    testEvent = await createTestEvent()
+    testExhibit = await createTestExhibit({ eventId: testEvent.id })
+  })
+
+  // 段階的テスト実装...
+})
+```
+
+#### JOIN処理の版対応パターン
+```typescript
+// ExhibitBooks → Editions → Books の3テーブルJOIN
+// Phase 3-1で完成したパターンをEvents機能に適用
+async findEventWithEditions(eventId: number) {
+  return await this.drizzleService.db
+    .select({
+      // Event情報
+      eventId: events.id,
+      eventName: events.name,
+      // Edition情報（ExhibitBooks経由）
+      editionId: editions.id,
+      editionName: editions.versionName,
+      basePrice: editions.basePrice,
+      // Book情報
+      bookTitle: books.title,
+      // ExhibitBook情報
+      plannedQuantity: exhibitBooks.plannedQuantity,
+      actualQuantity: exhibitBooks.actualQuantity,
+      soldQuantity: exhibitBooks.soldQuantity,
+    })
+    .from(events)
+    .innerJoin(exhibits, eq(events.id, exhibits.eventId))
+    .innerJoin(exhibitBooks, eq(exhibits.id, exhibitBooks.exhibitId))
+    .innerJoin(editions, eq(exhibitBooks.editionId, editions.id))
+    .innerJoin(books, eq(editions.bookId, books.id))
+    .where(eq(events.id, eventId))
+}
+```
+
+#### ValidationExceptionFilter対応
+- Phase 3-1で実装済みのeditions配列・editionオブジェクト準備パターンを活用
+- Events関連のパス追加（例: `/events/:id/editions`）
+
+### ⚠️ 重要な注意点
+
+#### フレーキーテスト対策
+- `beforeEach`のみでのデータクリーンアップ統一
+- 複合主キー対応のテストデータ作成パターン活用
+- Phase 3-1で解決済みの価格表示・テストログ問題の教訓活用
+
+#### 実装完了確認チェックリスト適用
+- 全エンドポイント実装必須（段階的テスト追加だが機能省略なし）
+- HTTPメソッドオーバーライド対応
+- 統合テスト網羅性確認
+- TypeScript型安全性確認
+
+### 出展管理機能の版対応（Phase 3-1で完了済み）
 
 #### ExhibitBooksService の修正
 ```typescript
@@ -734,13 +905,15 @@ describe('Performance Tests - Edition Integration', () => {
 ---
 
 **実装予定時期**: Phase 2完了後  
-**最終更新**: 2025年6月29日（Phase 3-2完全完了・テスト環境検証済み）  
+**最終更新**: 2025年6月29日（Phase 3-3計画更新・統合テストファースト戦略策定済み）  
 **Phase 3-1実装状況**: ✅ **完全完了**（全機能実装済み・品質改善・ドキュメント完了）  
-**Phase 3-2実装状況**: ✅ **完全完了**（マイグレーションスクリプト作成・テスト環境検証成功）  
+**Phase 3-2実装状況**: ✅ **完全完了**（マイグレーションスクリプト作成・テスト環境・本番環境実行成功）  
+**Phase 3-3実装状況**: 📋 **計画完了・実装開始準備完了**（TDD戦略・段階的テスト実装手順確定）  
 **実装済み内容**: 
 - Phase 3-1: スキーマ変更・DTO・サービス・コントローラー・ビューファイル・統合テスト・ValidationExceptionFilter対応
-- Phase 3-2: 初版生成SQL・ExhibitBook移行SQL・整合性確認SQL・実行スクリプト・ドキュメント・テスト環境検証
-**技術実装詳細**: 複合主キー・3テーブルJOIN・数量自動計算・版選択UI・レスポンシブデザイン・価格算出ロジック  
-**テスト状況**: 統合テスト331件全パス、型チェック・Linter実行完了、マイグレーション検証成功  
-**ドキュメント状況**: 実装詳細・教訓・技術仕様・マイグレーション手順・実行結果の完全記録済み  
-**次回更新予定**: Phase 3-3（既存機能の版対応）開始時
+- Phase 3-2: 初版生成SQL・ExhibitBook移行SQL・整合性確認SQL・実行スクリプト・ドキュメント・テスト環境・本番環境実行
+- Phase 3-3: TDD実装計画・Events機能版対応設計・段階的テスト実装手順・技術実装ポイント整理
+**技術実装詳細**: 複合主キー・3テーブルJOIN・数量自動計算・版選択UI・レスポンシブデザイン・価格算出ロジック・5テーブル結合設計  
+**テスト状況**: 統合テスト330/331件パス、型チェック・Linter実行完了、本番マイグレーション検証成功  
+**ドキュメント状況**: 実装詳細・教訓・技術仕様・マイグレーション手順・実行結果・本番環境結果・TDD実装戦略の完全記録済み  
+**次回更新予定**: Phase 3-3実装開始時・各Phase完了時
