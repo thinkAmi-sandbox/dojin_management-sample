@@ -77,7 +77,7 @@ export class AnalyticsService {
     const eventBookStats = await this.drizzleService.db
       .select({
         eventId: events.id,
-        totalBooks: count(exhibitBooks.bookId),
+        totalBooks: count(exhibitBooks.editionId),
         totalPlannedQuantity: sum(exhibitBooks.plannedQuantity),
         expectedRevenue: sum(
           sql`${exhibitBooks.plannedQuantity} * ${exhibitBooks.price}`,
@@ -233,14 +233,14 @@ export class AnalyticsService {
     const circleBookStats = await this.drizzleService.db
       .select({
         circleId: circles.id,
-        totalBooks: count(exhibitBooks.bookId),
+        totalBooks: count(exhibitBooks.editionId),
         totalPlannedQuantity: sum(exhibitBooks.plannedQuantity),
         expectedRevenue: sum(
           sql`${exhibitBooks.plannedQuantity} * ${exhibitBooks.price}`,
         ),
         averageBookPrice: sql`ROUND(
           CASE 
-            WHEN COUNT(${exhibitBooks.bookId}) > 0 
+            WHEN COUNT(${exhibitBooks.editionId}) > 0 
             THEN AVG(${exhibitBooks.price})
             ELSE 0 
           END, 0
@@ -263,7 +263,7 @@ export class AnalyticsService {
         status: exhibits.status,
         spaceNumber: exhibits.spaceNumber,
         spaceType: exhibits.spaceType,
-        bookCount: count(exhibitBooks.bookId),
+        bookCount: count(exhibitBooks.editionId),
         totalPlannedQuantity: sum(exhibitBooks.plannedQuantity),
         eventRevenue: sum(
           sql`${exhibitBooks.plannedQuantity} * ${exhibitBooks.price}`,

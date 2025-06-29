@@ -120,6 +120,13 @@
       "when": 1751165313937,
       "tag": "0016_wide_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1751194027393,
+      "tag": "0017_curious_karnak",
+      "breakpoints": true
     }
   ]
 }

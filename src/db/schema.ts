@@ -271,10 +271,7 @@ export const exhibitBooks = pgTable(
       .references(() => exhibits.id, { onDelete: 'cascade' }),
     editionId: integer('editionId')
       .notNull()
-      .references(() => editions.id, { onDelete: 'cascade' }), // 新規追加
-    bookId: integer('bookId').references(() => books.id, {
-      onDelete: 'cascade',
-    }), // 移行期間中は残す（NULL許可）
+      .references(() => editions.id, { onDelete: 'cascade' }),
     plannedQuantity: integer('plannedQuantity').notNull().default(0),
     actualQuantity: integer('actualQuantity'), // 新規追加：実際の持ち込み数
     soldQuantity: integer('soldQuantity'), // 新規追加：売上数
