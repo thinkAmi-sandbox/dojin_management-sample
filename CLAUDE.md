@@ -17,7 +17,7 @@
 - **コード品質**: Biome（リンティング/フォーマット）
 - **ビューテンプレート**: EJS（MPA構成）
 - **HTTPメソッドオーバーライド**: @nest-middlewares/method-override
-- **ロギング**: NestJS-Pino（JSON構造化ログ）※2025年6月29日追加予定
+- **ロギング**: NestJS-Pino（JSON構造化ログ）
 
 ## 必須コマンド
 

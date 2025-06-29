@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { eq } from 'drizzle-orm'
 import { Book, NewBook, books } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
@@ -8,6 +8,8 @@ import { UpdateBookDto } from './dto/update-book.dto'
 
 @Injectable()
 export class BooksService {
+  private readonly logger = new Logger(BooksService.name)
+
   constructor(private readonly drizzleService: DrizzleService) {}
 
   async findAll(): Promise<Book[]> {
@@ -34,10 +36,14 @@ export class BooksService {
       description: createBookDto.description || null,
     }
 
+    this.logger.log('新規書籍を作成します', { title: createBookDto.title })
+
     const result = await this.drizzleService.db
       .insert(books)
       .values(newBook)
       .returning()
+
+    this.logger.log('書籍が正常に作成されました', { bookId: result[0].id, title: result[0].title })
 
     return result[0]
   }
@@ -67,7 +73,11 @@ export class BooksService {
   async remove(id: number): Promise<void> {
     await this.findOne(id)
 
+    this.logger.warn('書籍を削除します', { bookId: id })
+
     await this.drizzleService.db.delete(books).where(eq(books.id, id))
+
+    this.logger.warn('書籍が削除されました', { bookId: id })
   }
 
   async updateStatus(

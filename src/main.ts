@@ -5,6 +5,7 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import * as dotenv from 'dotenv'
 import * as expressLayouts from 'express-ejs-layouts'
 import * as methodOverride from 'method-override'
+import { Logger } from 'nestjs-pino'
 import { AppModule } from './app.module'
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter'
 
@@ -12,7 +13,12 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
 dotenv.config()
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  })
+
+  // Pinoロガーの設定
+  app.useLogger(app.get(Logger))
 
   // グローバルバリデーション設定
   app.useGlobalPipes(
@@ -44,6 +50,11 @@ async function bootstrap() {
   app.use(expressLayouts)
   app.set('layout', 'layouts/main')
 
-  await app.listen(process.env.PORT ?? 3000)
+  const port = process.env.PORT ?? 3000
+  await app.listen(port)
+  
+  // 起動ログ
+  const logger = app.get(Logger)
+  logger.log(`🚀 Application is running on: http://localhost:${port}`)
 }
 bootstrap()
