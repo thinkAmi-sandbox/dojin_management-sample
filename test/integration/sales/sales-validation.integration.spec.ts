@@ -12,7 +12,7 @@ describe('販売管理バリデーション（Integration）', () => {
   let app: INestApplication
   let drizzleService: DrizzleService
   let testEdition: schema.Edition
-  let testEvent: schema.Event
+  let _testEvent: schema.Event
   let testLocation: schema.StorageLocation
 
   beforeAll(async () => {
@@ -67,7 +67,7 @@ describe('販売管理バリデーション（Integration）', () => {
         applicationEndDate: '2024-09-30',
       })
       .returning()
-    testEvent = eventResult[0]
+    _testEvent = eventResult[0]
 
     const locationResult = await drizzleService.db
       .insert(schema.storageLocations)
@@ -79,15 +79,13 @@ describe('販売管理バリデーション（Integration）', () => {
       .returning()
     testLocation = locationResult[0]
 
-    await drizzleService.db
-      .insert(schema.stocks)
-      .values({
-        editionId: testEdition.id,
-        locationId: testLocation.id,
-        quantity: 100,
-        reservedQuantity: 0,
-        availableQuantity: 100,
-      })
+    await drizzleService.db.insert(schema.stocks).values({
+      editionId: testEdition.id,
+      locationId: testLocation.id,
+      quantity: 100,
+      reservedQuantity: 0,
+      availableQuantity: 100,
+    })
   })
 
   // Step 2: バリデーションテスト（3テスト）
@@ -101,7 +99,7 @@ describe('販売管理バリデーション（Integration）', () => {
 
       // ValidationExceptionFilterにより200でエラーページが返される
       expect(response.status).toBe(200)
-      
+
       const html = response.text
       expect(html).toContain('販売タイプを選択してください')
       expect(html).toContain('合計金額は必須です')
@@ -114,7 +112,7 @@ describe('販売管理バリデーション（Integration）', () => {
         transactionType: 'invalid_type',
         totalAmount: 1000,
         finalAmount: 1000,
-        details: []
+        details: [],
       }
 
       const response = await request(app.getHttpServer())
@@ -122,7 +120,7 @@ describe('販売管理バリデーション（Integration）', () => {
         .send(invalidSalesData)
 
       expect(response.status).toBe(200)
-      
+
       const html = response.text
       expect(html).toContain('販売タイプを選択してください')
     })
@@ -137,8 +135,8 @@ describe('販売管理バリデーション（Integration）', () => {
             editionId: testEdition.id,
             quantity: -1, // 負の値
             unitPrice: 0, // ゼロ
-          }
-        ]
+          },
+        ],
       }
 
       const response = await request(app.getHttpServer())
@@ -146,7 +144,7 @@ describe('販売管理バリデーション（Integration）', () => {
         .send(invalidSalesData)
 
       expect(response.status).toBe(200)
-      
+
       const html = response.text
       expect(html).toContain('合計金額は正の数で入力してください')
       expect(html).toContain('最終金額は必須です') // 0が変換されるため必須エラーになる

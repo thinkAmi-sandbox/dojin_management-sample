@@ -5,23 +5,30 @@ import {
 } from '@nestjs/common'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
-import { DrizzleService } from '../drizzle/drizzle.service'
+import type { PgTransaction } from 'drizzle-orm/pg-core'
 import {
-  salesDetails,
-  salesTransactions,
-  stocks,
-  stockMovements,
   events,
-  storageLocations,
   books,
   editions,
+  salesDetails,
+  salesTransactions,
+  stockMovements,
+  stocks,
+  storageLocations,
 } from '../db/schema'
+import { DrizzleService } from '../drizzle/drizzle.service'
+import type {
+  CreateSalesTransactionDto,
+  UpdateSalesTransactionDto,
+} from './dto'
 
 @Injectable()
 export class SalesService {
   constructor(private readonly drizzleService: DrizzleService) {}
 
-  async createSalesTransaction(createSalesTransactionDto: any) {
+  async createSalesTransaction(
+    createSalesTransactionDto: CreateSalesTransactionDto,
+  ) {
     return await this.drizzleService.db.transaction(async (tx) => {
       // 1. 販売取引レコード作成
       const [transaction] = await tx
@@ -65,7 +72,7 @@ export class SalesService {
   }
 
   private async updateStockForSale(
-    tx: any,
+    tx: Parameters<Parameters<DrizzleService['db']['transaction']>[0]>[0],
     editionId: number,
     locationId: number,
     quantity: number,
@@ -91,7 +98,11 @@ export class SalesService {
     }
   }
 
-  async findAllSalesTransactions(filters?: any) {
+  async findAllSalesTransactions(filters?: {
+    startDate?: string
+    endDate?: string
+    transactionType?: 'event' | 'consignment' | 'online' | 'direct'
+  }) {
     // ベースクエリを構築
     const baseQuery = this.drizzleService.db
       .select({
@@ -121,7 +132,7 @@ export class SalesService {
     // フィルタリング条件を構築
     const conditions = []
 
-    if (filters.startDate && filters.endDate) {
+    if (filters?.startDate && filters?.endDate) {
       conditions.push(
         and(
           gte(salesTransactions.transactionDate, new Date(filters.startDate)),
@@ -130,7 +141,7 @@ export class SalesService {
       )
     }
 
-    if (filters.transactionType) {
+    if (filters?.transactionType) {
       conditions.push(
         eq(salesTransactions.transactionType, filters.transactionType),
       )
@@ -226,7 +237,10 @@ export class SalesService {
     }
   }
 
-  async update(id: number, updateSalesTransactionDto: any): Promise<void> {
+  async update(
+    id: number,
+    updateSalesTransactionDto: UpdateSalesTransactionDto,
+  ): Promise<void> {
     // 存在確認
     await this.findOneWithDetails(id)
 

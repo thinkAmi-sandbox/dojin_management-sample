@@ -83,15 +83,13 @@ describe('販売管理基本機能（Integration）', () => {
     testLocation = locationResult[0]
 
     // 5. 在庫作成（将来の在庫連携機能用）
-    await drizzleService.db
-      .insert(schema.stocks)
-      .values({
-        editionId: testEdition.id,
-        locationId: testLocation.id,
-        quantity: 100,
-        reservedQuantity: 0,
-        availableQuantity: 100,
-      })
+    await drizzleService.db.insert(schema.stocks).values({
+      editionId: testEdition.id,
+      locationId: testLocation.id,
+      quantity: 100,
+      reservedQuantity: 0,
+      availableQuantity: 100,
+    })
   })
 
   // Step 1: 基本機能テスト（2テスト）

@@ -117,8 +117,6 @@ export class StocksService {
   }
 
   async create(createStockDto: CreateStockDto): Promise<Stock> {
-    const { editionId, locationId } = createStockDto
-
     // 同一版・場所の重複チェック
     const existingStock = await this.drizzleService.db
       .select()
@@ -138,13 +136,13 @@ export class StocksService {
     }
 
     // 数量バランスチェック
-    const quantity = createStockDto.quantity || 0
-    const reservedQuantity = createStockDto.reservedQuantity || 0
-    const availableQuantity = createStockDto.availableQuantity || 0
+    const totalQuantity = createStockDto.quantity || 0
+    const reservedQty = createStockDto.reservedQuantity || 0
+    const availableQty = createStockDto.availableQuantity || totalQuantity
 
-    if (quantity !== reservedQuantity + availableQuantity) {
+    if (totalQuantity !== reservedQty + availableQty) {
       throw new Error(
-        `在庫数量が不整合です。総数量(${quantity}) = 予約済み(${reservedQuantity}) + 販売可能(${availableQuantity})`,
+        `在庫数量が不整合です。総数量(${totalQuantity}) = 予約済み(${reservedQty}) + 販売可能(${availableQty})`,
       )
     }
 
@@ -153,9 +151,9 @@ export class StocksService {
       .values({
         editionId: createStockDto.editionId,
         locationId: createStockDto.locationId,
-        quantity,
-        reservedQuantity,
-        availableQuantity,
+        quantity: totalQuantity,
+        reservedQuantity: reservedQty,
+        availableQuantity: availableQty,
         notes: createStockDto.notes || null,
         lastCheckedAt: new Date(),
       })

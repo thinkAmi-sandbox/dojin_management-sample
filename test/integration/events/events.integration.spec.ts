@@ -99,12 +99,12 @@ describe('Events Integration Tests', () => {
 
   // Phase 3-3 Phase B: 版対応テスト（最重要テストケース先行実装）
   describe('Events Edition Integration Tests', () => {
-    let testEvent: any
-    let testBook: any
-    let testEdition: any
-    let testCircle: any
-    let testExhibit: any
-    let testExhibitBook: any
+    let testEvent: schema.Event
+    let _testBook: schema.Book
+    let _testEdition: schema.Edition
+    let _testCircle: schema.Circle
+    let _testExhibit: schema.Exhibit
+    let _testExhibitBook: schema.ExhibitBook
 
     beforeEach(async () => {
       // 5テーブル連携のテストデータ作成
@@ -121,7 +121,7 @@ describe('Events Integration Tests', () => {
           status: 'completed',
         })
         .returning()
-      testBook = book
+      _testBook = book
 
       // Edition作成
       const [edition] = await drizzleService.db
@@ -134,7 +134,7 @@ describe('Events Integration Tests', () => {
           isActive: true,
         })
         .returning()
-      testEdition = edition
+      _testEdition = edition
 
       // Event作成
       const [event] = await drizzleService.db
@@ -160,7 +160,7 @@ describe('Events Integration Tests', () => {
           description: 'プログラミング系サークル',
         })
         .returning()
-      testCircle = circle
+      _testCircle = circle
 
       // Exhibit作成
       const [exhibit] = await drizzleService.db
@@ -176,7 +176,7 @@ describe('Events Integration Tests', () => {
           resultDate: new Date('2024-10-01'),
         })
         .returning()
-      testExhibit = exhibit
+      _testExhibit = exhibit
 
       // ExhibitBook作成（版対応）
       const [exhibitBook] = await drizzleService.db
@@ -192,7 +192,7 @@ describe('Events Integration Tests', () => {
           displayOrder: 1,
         })
         .returning()
-      testExhibitBook = exhibitBook
+      _testExhibitBook = exhibitBook
     })
 
     // 最重要テストケース 1: イベント詳細での版情報表示テスト
@@ -237,7 +237,7 @@ describe('Events Integration Tests', () => {
     // テストケース 3: 存在しない版IDでのエラーハンドリング
     it('should handle invalid edition ID in event context', async () => {
       // 存在しないイベントIDでアクセス
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .get('/events/99999')
         .expect(404)
 

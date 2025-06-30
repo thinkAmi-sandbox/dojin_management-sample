@@ -55,6 +55,13 @@ export const salesTransactionTypeEnum = pgEnum('sales_transaction_type', [
   'direct', // 個人間直接販売
 ])
 
+export const pricingRuleTypeEnum = pgEnum('pricing_rule_type', [
+  'event_discount', // イベント割引
+  'bulk_discount', // まとめ買い割引
+  'early_bird', // 早期割引
+  'consignment', // 委託販売価格
+])
+
 export const books = pgTable('Book', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -486,3 +493,30 @@ export const salesDetails = pgTable('SalesDetail', {
 
 export type SalesDetail = typeof salesDetails.$inferSelect
 export type NewSalesDetail = typeof salesDetails.$inferInsert
+
+export const pricingRules = pgTable('PricingRule', {
+  id: serial('id').primaryKey(),
+  editionId: integer('editionId')
+    .notNull()
+    .references(() => editions.id, { onDelete: 'cascade' }),
+  ruleType: pricingRuleTypeEnum('ruleType').notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  price: integer('price'), // 固定価格の場合
+  discountRate: integer('discountRate'), // 割引率（%）の場合
+  minQuantity: integer('minQuantity'), // 最小購入数（まとめ買い用）
+  eventId: integer('eventId').references(() => events.id), // イベント限定価格
+  validFrom: date('validFrom'),
+  validUntil: date('validUntil'),
+  priority: integer('priority').notNull().default(0), // 優先順位
+  isActive: boolean('isActive').notNull().default(true),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type PricingRule = typeof pricingRules.$inferSelect
+export type NewPricingRule = typeof pricingRules.$inferInsert

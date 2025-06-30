@@ -22,10 +22,9 @@ export class SalesController {
 
   @Get()
   @Render('sales/index')
-  async findAll(@Query() filters: any) {
-    const salesTransactions = await this.salesService.findAllSalesTransactions(
-      filters,
-    )
+  async findAll(@Query() filters: Record<string, unknown>) {
+    const salesTransactions =
+      await this.salesService.findAllSalesTransactions(filters)
 
     return {
       title: '販売記録一覧',
@@ -36,7 +35,7 @@ export class SalesController {
 
   @Get('new')
   @Render('sales/new')
-  async renderNewForm() {
+  renderNewForm() {
     // TODO: editionsService, eventsService, storageLocationsService の実装後に追加
 
     return {

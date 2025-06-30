@@ -1355,14 +1355,15 @@ export class ValidationExceptionFilter implements ExceptionFilter {
             details: formData.details || [],
           },
           availableEditions: [
-            { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+            {
+              id: 1,
+              versionName: 'ダミー版',
+              bookTitle: 'ダミー書籍',
+              basePrice: 1000,
+            },
           ],
-          events: [
-            { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
-          ],
-          locations: [
-            { id: 1, name: 'ダミー保管場所', type: 'event' },
-          ],
+          events: [{ id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' }],
+          locations: [{ id: 1, name: 'ダミー保管場所', type: 'event' }],
         }
       }
 
@@ -1384,14 +1385,15 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         },
         formData,
         availableEditions: [
-          { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+          {
+            id: 1,
+            versionName: 'ダミー版',
+            bookTitle: 'ダミー書籍',
+            basePrice: 1000,
+          },
         ],
-        events: [
-          { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
-        ],
-        locations: [
-          { id: 1, name: 'ダミー保管場所', type: 'event' },
-        ],
+        events: [{ id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' }],
+        locations: [{ id: 1, name: 'ダミー保管場所', type: 'event' }],
         breadcrumbs: id
           ? [
               { name: '販売記録一覧', url: '/sales' },

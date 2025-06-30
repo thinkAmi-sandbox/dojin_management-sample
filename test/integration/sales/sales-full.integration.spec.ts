@@ -1,22 +1,35 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { eq } from 'drizzle-orm'
 import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
+import {
+  events,
+  type Author,
+  type Book,
+  type Edition,
+  type Event,
+  type StorageLocation,
+  authors,
+  books,
+  editions,
+  salesDetails,
+  salesTransactions,
+  storageLocations,
+} from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
 import { setupTestApp } from '../setup-test-app'
-import { books, editions, authors, events, storageLocations, salesTransactions, salesDetails } from '../../../src/db/schema'
-import { eq } from 'drizzle-orm'
 
 describe('販売管理全機能（Integration）', () => {
   let app: INestApplication
   let drizzleService: DrizzleService
-  let testBook: any
-  let testEdition: any
-  let testAuthor: any
-  let testEvent: any
-  let testLocation: any
+  let testBook: Book
+  let testEdition: Edition
+  let testAuthor: Author
+  let testEvent: Event
+  let testLocation: StorageLocation
   let createdSalesId: number
 
   beforeAll(async () => {
@@ -37,14 +50,13 @@ describe('販売管理全機能（Integration）', () => {
 
   beforeEach(async () => {
     await testDbUtils.cleanupDatabase()
-    
+
     // テスト用データの作成
     const [newAuthor] = await drizzleService.db
       .insert(authors)
       .values({
         name: 'テスト執筆者',
         email: 'author@test.com',
-        websiteUrl: 'https://test.com',
         bio: 'テスト用の執筆者です',
       })
       .returning()
@@ -81,10 +93,10 @@ describe('販売管理全機能（Integration）', () => {
       .insert(events)
       .values({
         name: 'テストイベント',
-        eventDate: new Date('2024-12-15'),
+        eventDate: '2024-12-15',
         venue: 'テスト会場',
-        applicationStartDate: new Date('2024-11-01'),
-        applicationEndDate: new Date('2024-11-30'),
+        applicationStartDate: '2024-11-01',
+        applicationEndDate: '2024-11-30',
         description: 'テスト用のイベントです',
       })
       .returning()
@@ -121,19 +133,16 @@ describe('販売管理全機能（Integration）', () => {
         })
         .returning()
 
-      await drizzleService.db
-        .insert(salesDetails)
-        .values({
-          transactionId: salesTransaction.id,
-          editionId: testEdition.id,
-          quantity: 1,
-          unitPrice: 1000,
-          discountAmount: 0,
-          subtotal: 1000,
-        })
+      await drizzleService.db.insert(salesDetails).values({
+        transactionId: salesTransaction.id,
+        editionId: testEdition.id,
+        quantity: 1,
+        unitPrice: 1000,
+        discountAmount: 0,
+        subtotal: 1000,
+      })
 
-      const response = await request(app.getHttpServer())
-        .get('/sales')
+      const response = await request(app.getHttpServer()).get('/sales')
 
       expect(response.status).toBe(200)
       expect(response.text).toContain('販売記録一覧')
@@ -143,8 +152,7 @@ describe('販売管理全機能（Integration）', () => {
     })
 
     it('販売記録がない場合でも正常に表示される', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/sales')
+      const response = await request(app.getHttpServer()).get('/sales')
 
       expect(response.status).toBe(200)
       expect(response.text).toContain('販売記録一覧')
@@ -171,8 +179,8 @@ describe('販売管理全機能（Integration）', () => {
             quantity: 2,
             unitPrice: 1000,
             discountAmount: 100,
-          }
-        ]
+          },
+        ],
       }
 
       const response = await request(app.getHttpServer())
@@ -228,23 +236,22 @@ describe('販売管理全機能（Integration）', () => {
         })
         .returning()
 
-      await drizzleService.db
-        .insert(salesDetails)
-        .values({
-          transactionId: salesTransaction.id,
-          editionId: testEdition.id,
-          quantity: 3,
-          unitPrice: 1000,
-          discountAmount: 200,
-          subtotal: 2800,
-        })
+      await drizzleService.db.insert(salesDetails).values({
+        transactionId: salesTransaction.id,
+        editionId: testEdition.id,
+        quantity: 3,
+        unitPrice: 1000,
+        discountAmount: 200,
+        subtotal: 2800,
+      })
 
       createdSalesId = salesTransaction.id
     })
 
     it('販売記録詳細が正常に表示される', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/sales/${createdSalesId}`)
+      const response = await request(app.getHttpServer()).get(
+        `/sales/${createdSalesId}`,
+      )
 
       expect(response.status).toBe(200)
       expect(response.text).toContain('販売記録詳細')
@@ -259,8 +266,7 @@ describe('販売管理全機能（Integration）', () => {
     })
 
     it('存在しない販売記録にアクセスすると404エラーが返される', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/sales/99999')
+      const response = await request(app.getHttpServer()).get('/sales/99999')
 
       expect(response.status).toBe(404)
     })
@@ -289,8 +295,9 @@ describe('販売管理全機能（Integration）', () => {
     })
 
     it('販売記録編集フォームが正常に表示される', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/sales/${createdSalesId}/edit`)
+      const response = await request(app.getHttpServer()).get(
+        `/sales/${createdSalesId}/edit`,
+      )
 
       expect(response.status).toBe(200)
       expect(response.text).toContain('販売記録編集')
@@ -302,8 +309,9 @@ describe('販売管理全機能（Integration）', () => {
     })
 
     it('存在しない販売記録の編集ページにアクセスすると404エラーが返される', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/sales/99999/edit')
+      const response = await request(app.getHttpServer()).get(
+        '/sales/99999/edit',
+      )
 
       expect(response.status).toBe(404)
     })
@@ -395,16 +403,14 @@ describe('販売管理全機能（Integration）', () => {
         })
         .returning()
 
-      await drizzleService.db
-        .insert(salesDetails)
-        .values({
-          transactionId: salesTransaction.id,
-          editionId: testEdition.id,
-          quantity: 1,
-          unitPrice: 1200,
-          discountAmount: 0,
-          subtotal: 1200,
-        })
+      await drizzleService.db.insert(salesDetails).values({
+        transactionId: salesTransaction.id,
+        editionId: testEdition.id,
+        quantity: 1,
+        unitPrice: 1200,
+        discountAmount: 0,
+        subtotal: 1200,
+      })
 
       createdSalesId = salesTransaction.id
     })
@@ -453,22 +459,21 @@ describe('販売管理全機能（Integration）', () => {
 
   describe('エッジケースのテスト', () => {
     it('無効なIDでアクセスすると400エラーが返される', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/sales/invalid-id')
+      const response = await request(app.getHttpServer()).get(
+        '/sales/invalid-id',
+      )
 
       expect(response.status).toBe(400)
     })
 
     it('負の数のIDでアクセスすると404エラーが返される', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/sales/-1')
+      const response = await request(app.getHttpServer()).get('/sales/-1')
 
       expect(response.status).toBe(404)
     })
 
     it('ゼロのIDでアクセスすると404エラーが返される', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/sales/0')
+      const response = await request(app.getHttpServer()).get('/sales/0')
 
       expect(response.status).toBe(404)
     })
@@ -499,13 +504,12 @@ describe('販売管理全機能（Integration）', () => {
         .where(eq(salesTransactions.eventId, testEvent.id))
 
       // イベントを削除
-      await drizzleService.db
-        .delete(events)
-        .where(eq(events.id, testEvent.id))
+      await drizzleService.db.delete(events).where(eq(events.id, testEvent.id))
 
       // 販売記録は残っているが、イベント情報はnullになる
-      const response = await request(app.getHttpServer())
-        .get(`/sales/${salesTransaction.id}`)
+      const response = await request(app.getHttpServer()).get(
+        `/sales/${salesTransaction.id}`,
+      )
 
       expect(response.status).toBe(200)
       expect(response.text).toContain('データ整合性テスト')

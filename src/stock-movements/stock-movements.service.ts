@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { and, desc, eq } from 'drizzle-orm'
+import { type SQL, and, desc, eq } from 'drizzle-orm'
 import {
   StockMovement,
   books,
@@ -64,7 +64,7 @@ export class StockMovementsService {
       .orderBy(desc(stockMovements.movedAt))
 
     // フィルタ条件の適用
-    const conditions: any[] = []
+    const conditions: SQL[] = []
 
     if (filters?.editionId) {
       conditions.push(eq(stockMovements.editionId, filters.editionId))
@@ -72,7 +72,17 @@ export class StockMovementsService {
 
     if (filters?.movementType) {
       conditions.push(
-        eq(stockMovements.movementType, filters.movementType as any),
+        eq(
+          stockMovements.movementType,
+          filters.movementType as
+            | 'inbound'
+            | 'outbound'
+            | 'transfer'
+            | 'sale'
+            | 'return'
+            | 'adjustment'
+            | 'disposal',
+        ),
       )
     }
 
@@ -181,9 +191,7 @@ export class StockMovementsService {
     return result.length > 0 ? result[0].name : null
   }
 
-  async findByEdition(
-    editionId: number,
-  ): Promise<StockMovementWithRelations[]> {
+  findByEdition(editionId: number): Promise<StockMovementWithRelations[]> {
     return this.findAll({ editionId })
   }
 }
