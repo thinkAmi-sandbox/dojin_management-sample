@@ -21,28 +21,28 @@
             font-size: 14px;
             font-weight: bold;
             color: white;
-            <% if (transaction.transactionType === 'event') { %>
+            <% if (salesTransaction.transactionType === 'event') { %>
               background-color: #3498db;
-            <% } else if (transaction.transactionType === 'online') { %>
+            <% } else if (salesTransaction.transactionType === 'online') { %>
               background-color: #e74c3c;
-            <% } else if (transaction.transactionType === 'consignment') { %>
+            <% } else if (salesTransaction.transactionType === 'consignment') { %>
               background-color: #f39c12;
-            <% } else if (transaction.transactionType === 'direct') { %>
+            <% } else if (salesTransaction.transactionType === 'direct') { %>
               background-color: #27ae60;
             <% } %>
           ">
-            <%= transaction.transactionTypeLabel %>
+            <%= salesTransaction.transactionTypeLabel %>
           </span>
         </div>
 
         <div style="font-weight: bold;">取引日時:</div>
-        <div><%= transaction.formattedCreatedAt %></div>
+        <div><%= new Date(salesTransaction.createdAt).toLocaleDateString('ja-JP') %></div>
 
         <div style="font-weight: bold;">イベント:</div>
         <div>
-          <% if (transaction.event) { %>
-            <a href="/events/<%= transaction.event.id %>" style="color: #007bff; text-decoration: none;">
-              <%= transaction.event.name %>
+          <% if (salesTransaction.event) { %>
+            <a href="/events/<%= salesTransaction.event.id %>" style="color: #007bff; text-decoration: none;">
+              <%= salesTransaction.event.name %>
             </a>
           <% } else { %>
             <span style="color: #999;">-</span>
@@ -51,8 +51,8 @@
 
         <div style="font-weight: bold;">販売場所:</div>
         <div>
-          <% if (transaction.location) { %>
-            <%= transaction.location.name %>
+          <% if (salesTransaction.location) { %>
+            <%= salesTransaction.location.name %>
           <% } else { %>
             <span style="color: #999;">-</span>
           <% } %>
@@ -60,8 +60,8 @@
 
         <div style="font-weight: bold;">顧客名:</div>
         <div>
-          <% if (transaction.customerName) { %>
-            <%= transaction.customerName %>
+          <% if (salesTransaction.customerName) { %>
+            <%= salesTransaction.customerName %>
           <% } else { %>
             <span style="color: #999;">-</span>
           <% } %>
@@ -69,9 +69,9 @@
 
         <div style="font-weight: bold;">顧客メール:</div>
         <div>
-          <% if (transaction.customerEmail) { %>
-            <a href="mailto:<%= transaction.customerEmail %>" style="color: #007bff;">
-              <%= transaction.customerEmail %>
+          <% if (salesTransaction.customerEmail) { %>
+            <a href="mailto:<%= salesTransaction.customerEmail %>" style="color: #007bff;">
+              <%= salesTransaction.customerEmail %>
             </a>
           <% } else { %>
             <span style="color: #999;">-</span>
@@ -89,13 +89,13 @@
       <div style="display: grid; grid-template-columns: 150px 1fr; gap: 15px; max-width: 400px;">
         <div style="font-weight: bold;">合計金額:</div>
         <div style="font-size: 18px; color: #333;">
-          <span style="font-weight: bold;"><%= transaction.formattedTotalAmount %></span>
+          <span style="font-weight: bold;">¥<%= salesTransaction.totalAmount.toLocaleString() %></span>
         </div>
 
         <div style="font-weight: bold;">割引金額:</div>
         <div style="color: #e74c3c;">
-          <% if (transaction.discountAmount && transaction.discountAmount > 0) { %>
-            -<%= transaction.formattedDiscountAmount %>
+          <% if (salesTransaction.discountAmount && salesTransaction.discountAmount > 0) { %>
+            -¥<%= salesTransaction.discountAmount.toLocaleString() %>
           <% } else { %>
             <span style="color: #999;">割引なし</span>
           <% } %>
@@ -103,12 +103,12 @@
 
         <div style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px;">最終金額:</div>
         <div style="font-size: 20px; font-weight: bold; color: #27ae60; border-top: 1px solid #ddd; padding-top: 10px;">
-          <%= transaction.formattedFinalAmount %>
+          ¥<%= salesTransaction.finalAmount.toLocaleString() %>
         </div>
 
         <div style="font-weight: bold;">支払方法:</div>
         <div>
-          <% if (transaction.paymentMethod) { %>
+          <% if (salesTransaction.paymentMethod) { %>
             <span style="
               padding: 2px 8px; 
               border-radius: 3px; 
@@ -116,7 +116,7 @@
               color: #495057;
               font-size: 14px;
             ">
-              <%= transaction.formattedPaymentMethod %>
+              <%= salesTransaction.paymentMethod %>
             </span>
           <% } else { %>
             <span style="color: #999;">-</span>
@@ -143,15 +143,15 @@
             </tr>
           </thead>
           <tbody>
-            <% if (transaction.details && transaction.details.length > 0) { %>
-              <% transaction.details.forEach((detail, index) => { %>
+            <% if (salesTransaction.details && salesTransaction.details.length > 0) { %>
+              <% salesTransaction.details.forEach((detail, index) => { %>
                 <tr style="<%= index % 2 === 0 ? 'background-color: white;' : 'background-color: #f8f9fa;' %>">
                   <td style="padding: 12px; border-bottom: 1px solid #dee2e6;">
                     <div style="font-weight: bold; color: #333;">
-                      <%= detail.edition?.book?.title || 'Unknown Book' %>
+                      <%= detail.bookTitle || 'Unknown Book' %>
                     </div>
                     <div style="font-size: 14px; color: #666;">
-                      <%= detail.edition?.versionName || 'Unknown Edition' %>
+                      <%= detail.editionVersionName || 'Unknown Edition' %>
                     </div>
                   </td>
                   <td style="padding: 12px; text-align: center; border-bottom: 1px solid #dee2e6;">
@@ -166,17 +166,17 @@
                     </span>
                   </td>
                   <td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">
-                    <%= detail.formattedUnitPrice %>
+                    ¥<%= detail.unitPrice.toLocaleString() %>
                   </td>
                   <td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6; color: #e74c3c;">
                     <% if (detail.discountAmount && detail.discountAmount > 0) { %>
-                      -<%= detail.formattedDiscountAmount %>
+                      -¥<%= detail.discountAmount.toLocaleString() %>
                     <% } else { %>
                       -
                     <% } %>
                   </td>
                   <td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: bold;">
-                    <%= detail.formattedSubtotal %>
+                    ¥<%= detail.subtotal.toLocaleString() %>
                   </td>
                 </tr>
               <% }) %>
@@ -193,7 +193,7 @@
     </div>
 
     <!-- 備考 -->
-    <% if (transaction.notes) { %>
+    <% if (salesTransaction.notes) { %>
       <div class="notes-section" style="margin-bottom: 30px;">
         <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
           📝 備考
@@ -206,7 +206,7 @@
           color: #495057;
           line-height: 1.6;
         ">
-          <%= transaction.notes %>
+          <%= salesTransaction.notes %>
         </div>
       </div>
     <% } %>
@@ -223,7 +223,7 @@
       </a>
       
       <a 
-        href="/sales/<%= transaction.id %>/edit"
+        href="/sales/<%= salesTransaction.id %>/edit"
         style="display: inline-block; padding: 10px 20px; background-color: #ffc107; color: #212529; text-decoration: none; border-radius: 4px; transition: background-color 0.2s; font-weight: bold;"
         onmouseover="this.style.backgroundColor='#e0a800'"
         onmouseout="this.style.backgroundColor='#ffc107'"
@@ -233,7 +233,7 @@
 
       <form 
         method="POST" 
-        action="/sales/<%= transaction.id %>" 
+        action="/sales/<%= salesTransaction.id %>" 
         style="display: inline;"
         onsubmit="return confirm('この販売記録を削除してもよろしいですか？\\n\\n削除すると復元できません。')"
       >

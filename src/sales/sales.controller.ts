@@ -63,6 +63,30 @@ export class SalesController {
     return {
       title: '販売記録詳細',
       salesTransaction,
+      breadcrumbs: [
+        { label: 'ホーム', url: '/' },
+        { label: '販売記録一覧', url: '/sales' },
+        { label: '詳細', url: null },
+      ],
+    }
+  }
+
+  @Get(':id/edit')
+  @Render('sales/edit')
+  async renderEditForm(@Param('id', ParseIntPipe) id: number) {
+    const salesTransaction = await this.salesService.findOneWithDetails(id)
+
+    return {
+      title: '販売記録編集',
+      salesTransaction,
+      events: [], // TODO: eventsService実装後に取得
+      locations: [], // TODO: storageLocationsService実装後に取得
+      breadcrumbs: [
+        { label: 'ホーム', url: '/' },
+        { label: '販売記録一覧', url: '/sales' },
+        { label: '詳細', url: `/sales/${id}` },
+        { label: '編集', url: null },
+      ],
     }
   }
 

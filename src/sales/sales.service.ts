@@ -13,6 +13,8 @@ import {
   stockMovements,
   events,
   storageLocations,
+  books,
+  editions,
 } from '../db/schema'
 
 @Injectable()
@@ -196,10 +198,26 @@ export class SalesService {
       throw new NotFoundException('販売記録が見つかりません')
     }
 
-    // 販売明細も取得
+    // 販売明細も取得（書籍・版情報含む）
     const details = await this.drizzleService.db
-      .select()
+      .select({
+        id: salesDetails.id,
+        transactionId: salesDetails.transactionId,
+        editionId: salesDetails.editionId,
+        quantity: salesDetails.quantity,
+        unitPrice: salesDetails.unitPrice,
+        discountAmount: salesDetails.discountAmount,
+        subtotal: salesDetails.subtotal,
+        notes: salesDetails.notes,
+        createdAt: salesDetails.createdAt,
+        // Edition info
+        editionVersionName: editions.versionName,
+        // Book info
+        bookTitle: books.title,
+      })
       .from(salesDetails)
+      .innerJoin(editions, eq(salesDetails.editionId, editions.id))
+      .innerJoin(books, eq(editions.bookId, books.id))
       .where(eq(salesDetails.transactionId, id))
 
     return {
