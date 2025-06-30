@@ -1,0 +1,305 @@
+<div class="page-header">
+  <h1><%= title %></h1>
+  <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs }) %>
+</div>
+
+<div class="sales-detail" style="max-width: 1000px;">
+  <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    
+    <!-- 販売取引基本情報 -->
+    <div class="transaction-info" style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+        🛒 販売取引情報
+      </h2>
+
+      <div class="detail-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px; color: #666;">
+        <div style="font-weight: bold;">販売タイプ:</div>
+        <div>
+          <span style="
+            padding: 4px 12px; 
+            border-radius: 4px; 
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            <% if (transaction.transactionType === 'event') { %>
+              background-color: #3498db;
+            <% } else if (transaction.transactionType === 'online') { %>
+              background-color: #e74c3c;
+            <% } else if (transaction.transactionType === 'consignment') { %>
+              background-color: #f39c12;
+            <% } else if (transaction.transactionType === 'direct') { %>
+              background-color: #27ae60;
+            <% } %>
+          ">
+            <%= transaction.transactionTypeLabel %>
+          </span>
+        </div>
+
+        <div style="font-weight: bold;">取引日時:</div>
+        <div><%= transaction.formattedCreatedAt %></div>
+
+        <div style="font-weight: bold;">イベント:</div>
+        <div>
+          <% if (transaction.event) { %>
+            <a href="/events/<%= transaction.event.id %>" style="color: #007bff; text-decoration: none;">
+              <%= transaction.event.name %>
+            </a>
+          <% } else { %>
+            <span style="color: #999;">-</span>
+          <% } %>
+        </div>
+
+        <div style="font-weight: bold;">販売場所:</div>
+        <div>
+          <% if (transaction.location) { %>
+            <%= transaction.location.name %>
+          <% } else { %>
+            <span style="color: #999;">-</span>
+          <% } %>
+        </div>
+
+        <div style="font-weight: bold;">顧客名:</div>
+        <div>
+          <% if (transaction.customerName) { %>
+            <%= transaction.customerName %>
+          <% } else { %>
+            <span style="color: #999;">-</span>
+          <% } %>
+        </div>
+
+        <div style="font-weight: bold;">顧客メール:</div>
+        <div>
+          <% if (transaction.customerEmail) { %>
+            <a href="mailto:<%= transaction.customerEmail %>" style="color: #007bff;">
+              <%= transaction.customerEmail %>
+            </a>
+          <% } else { %>
+            <span style="color: #999;">-</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 金額情報 -->
+    <div class="amount-info" style="margin-bottom: 30px;">
+      <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+        💰 金額情報
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 150px 1fr; gap: 15px; max-width: 400px;">
+        <div style="font-weight: bold;">合計金額:</div>
+        <div style="font-size: 18px; color: #333;">
+          <span style="font-weight: bold;"><%= transaction.formattedTotalAmount %></span>
+        </div>
+
+        <div style="font-weight: bold;">割引金額:</div>
+        <div style="color: #e74c3c;">
+          <% if (transaction.discountAmount && transaction.discountAmount > 0) { %>
+            -<%= transaction.formattedDiscountAmount %>
+          <% } else { %>
+            <span style="color: #999;">割引なし</span>
+          <% } %>
+        </div>
+
+        <div style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px;">最終金額:</div>
+        <div style="font-size: 20px; font-weight: bold; color: #27ae60; border-top: 1px solid #ddd; padding-top: 10px;">
+          <%= transaction.formattedFinalAmount %>
+        </div>
+
+        <div style="font-weight: bold;">支払方法:</div>
+        <div>
+          <% if (transaction.paymentMethod) { %>
+            <span style="
+              padding: 2px 8px; 
+              border-radius: 3px; 
+              background-color: #f8f9fa; 
+              color: #495057;
+              font-size: 14px;
+            ">
+              <%= transaction.formattedPaymentMethod %>
+            </span>
+          <% } else { %>
+            <span style="color: #999;">-</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 販売明細 -->
+    <div class="sales-details" style="margin-bottom: 30px;">
+      <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+        📚 販売明細
+      </h3>
+
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; background: #f8f9fa; border-radius: 6px; overflow: hidden;">
+          <thead>
+            <tr style="background-color: #6c757d; color: white;">
+              <th style="padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6;">書籍・版</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 1px solid #dee2e6;">数量</th>
+              <th style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">単価</th>
+              <th style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">割引</th>
+              <th style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">小計</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (transaction.details && transaction.details.length > 0) { %>
+              <% transaction.details.forEach((detail, index) => { %>
+                <tr style="<%= index % 2 === 0 ? 'background-color: white;' : 'background-color: #f8f9fa;' %>">
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6;">
+                    <div style="font-weight: bold; color: #333;">
+                      <%= detail.edition?.book?.title || 'Unknown Book' %>
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                      <%= detail.edition?.versionName || 'Unknown Edition' %>
+                    </div>
+                  </td>
+                  <td style="padding: 12px; text-align: center; border-bottom: 1px solid #dee2e6;">
+                    <span style="
+                      padding: 4px 8px; 
+                      background-color: #007bff; 
+                      color: white; 
+                      border-radius: 4px; 
+                      font-weight: bold;
+                    ">
+                      <%= detail.quantity %>
+                    </span>
+                  </td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">
+                    <%= detail.formattedUnitPrice %>
+                  </td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6; color: #e74c3c;">
+                    <% if (detail.discountAmount && detail.discountAmount > 0) { %>
+                      -<%= detail.formattedDiscountAmount %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: bold;">
+                    <%= detail.formattedSubtotal %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" style="padding: 20px; text-align: center; color: #999; font-style: italic;">
+                  販売明細がありません
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 備考 -->
+    <% if (transaction.notes) { %>
+      <div class="notes-section" style="margin-bottom: 30px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+          📝 備考
+        </h3>
+        <div style="
+          background-color: #f8f9fa; 
+          padding: 15px; 
+          border-radius: 6px; 
+          border-left: 4px solid #007bff;
+          color: #495057;
+          line-height: 1.6;
+        ">
+          <%= transaction.notes %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- アクションボタン -->
+    <div class="sales-actions" style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #eee; flex-wrap: wrap;">
+      <a 
+        href="/sales"
+        style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; transition: background-color 0.2s;"
+        onmouseover="this.style.backgroundColor='#5a6268'"
+        onmouseout="this.style.backgroundColor='#6c757d'"
+      >
+        📋 一覧に戻る
+      </a>
+      
+      <a 
+        href="/sales/<%= transaction.id %>/edit"
+        style="display: inline-block; padding: 10px 20px; background-color: #ffc107; color: #212529; text-decoration: none; border-radius: 4px; transition: background-color 0.2s; font-weight: bold;"
+        onmouseover="this.style.backgroundColor='#e0a800'"
+        onmouseout="this.style.backgroundColor='#ffc107'"
+      >
+        ✏️ 編集
+      </a>
+
+      <form 
+        method="POST" 
+        action="/sales/<%= transaction.id %>" 
+        style="display: inline;"
+        onsubmit="return confirm('この販売記録を削除してもよろしいですか？\\n\\n削除すると復元できません。')"
+      >
+        <input type="hidden" name="_method" value="DELETE">
+        <button 
+          type="submit" 
+          style="
+            padding: 10px 20px; 
+            background-color: #dc3545; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background-color 0.2s;
+            font-weight: bold;
+          "
+          onmouseover="this.style.backgroundColor='#c82333'"
+          onmouseout="this.style.backgroundColor='#dc3545'"
+        >
+          🗑️ 削除
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- レスポンシブ対応 -->
+<style>
+  @media (max-width: 768px) {
+    .detail-grid {
+      grid-template-columns: 120px 1fr !important;
+    }
+    
+    .sales-actions {
+      flex-direction: column;
+    }
+    
+    .sales-actions a,
+    .sales-actions button {
+      text-align: center;
+    }
+    
+    table {
+      font-size: 14px;
+    }
+    
+    th, td {
+      padding: 8px !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .detail-grid {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+    }
+    
+    .detail-grid > div:nth-child(odd) {
+      font-weight: bold;
+      color: #666;
+    }
+    
+    .detail-grid > div:nth-child(even) {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+  }
+</style>
