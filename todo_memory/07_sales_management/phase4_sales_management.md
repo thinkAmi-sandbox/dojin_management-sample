@@ -19,7 +19,7 @@ Phase 4では、Phase 1-3で構築した版管理・在庫管理基盤を活用�
 ## 📊 Phase 4 実装スケジュール
 
 ### ✅ Phase 4-1: 販売取引基盤実装（完了）
-### ⏳ Phase 4-2: 価格管理システム実装（1-2日）
+### 🔄 Phase 4-2: 価格管理システム実装（1-2日）- 基盤完成
 ### ⏳ Phase 4-3: 売上レポート機能実装（2-3日）
 ### ⏳ Phase 4-4: 在庫連携・統合テスト（1-2日）
 
@@ -438,27 +438,89 @@ export class CreateSalesDetailDto {
 }
 ```
 
-## 🗂️ Phase 4-2: 価格管理システム実装（1-2日）
+## 🗂️ Phase 4-2: 価格管理システム実装（1-2日）- 基盤完成
 
 **実装期間**: 1-2日間（2025年6月30日〜7月1日予定）
-**開始予定**: 2025年6月30日
-**完了予定**: 2025年7月1日
+**開始日**: 2025年6月30日
+**基盤完成日**: 2025年6月30日
+**予定完了日**: 2025年7月1日
+
+### ✅ Phase 4-2基盤実装完了（2025年6月30日）
+
+**実装完了内容**:
+- ✅ **PricingRulesテーブルスキーマ実装完了**: pricingRuleTypeEnum（4種類割引タイプ）、完全テーブル定義
+- ✅ **マイグレーション生成・適用完了**: 0019_tearful_mach_iv.sql、本番・テスト環境適用済み
+- ✅ **型エラー完全修正**: websiteUrlフィールドエラー、date型変換エラー等全件修正完了
+- ✅ **Lintエラー97%改善**: 30件→1件（any型11→0、未使用変数削除等）
+- ✅ **any型完全解消**: 全テストファイルのany型をschema型（Book, Edition, Event等）に変更
+- ✅ **コード品質向上**: TypeScript型安全性確保、統一されたimport文使用
+
+**データベース実装詳細**:
+```sql
+-- 0019_tearful_mach_iv.sql
+DO $$ BEGIN
+ CREATE TYPE "public"."pricing_rule_type" AS ENUM('event_discount', 'bulk_discount', 'early_bird', 'consignment');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "PricingRule" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"editionId" integer NOT NULL,
+	"ruleType" "pricing_rule_type" NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"price" integer,
+	"discountRate" integer,
+	"minQuantity" integer,
+	"eventId" integer,
+	"validFrom" date,
+	"validUntil" date,
+	"priority" integer DEFAULT 0 NOT NULL,
+	"isActive" boolean DEFAULT true NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL,
+	"updatedAt" timestamp DEFAULT now() NOT NULL
+);
+-- 外部キー制約追加
+ALTER TABLE "PricingRule" ADD CONSTRAINT "PricingRule_editionId_Edition_id_fk" FOREIGN KEY ("editionId") REFERENCES "public"."Edition"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "PricingRule" ADD CONSTRAINT "PricingRule_eventId_Event_id_fk" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE set null ON UPDATE no action;
+```
+
+**TypeScript型安全性改善詳細**:
+- **any型解消**: `test/integration/sales/`, `test/integration/events/`全ファイル
+- **schema型への統一**: `schema.Book`, `schema.Edition`, `schema.Event`, `schema.StorageLocation`等
+- **適切なtype-only import**: `import type { Response } from 'express'`
+- **変数名重複解決**: `stocks.service.ts`のdestructuring変数競合修正
 
 ### 📋 Phase 4-2実装計画詳細
 
 #### 実装スケジュール
-- **Step 1**: スキーマ・サービス層実装（6時間）
-  - PricingRulesテーブルスキーマ設計・マイグレーション生成
-  - PricingServiceの価格計算ロジック実装
-- **Step 2**: コントローラー・DTO実装（4時間）
+- **✅ Step 1**: スキーマ・基盤実装（完了 - 2025年6月30日）
+  - ✅ PricingRulesテーブルスキーマ設計・マイグレーション生成
+  - ✅ 型エラー・Lintエラー修正、any型解消
+  - ⏳ PricingServiceの価格計算ロジック実装
+- **⏳ Step 2**: コントローラー・DTO実装（4時間）
   - 価格管理用コントローラー・DTO実装
   - バリデーション規則・エラーハンドリング
-- **Step 3**: ビューファイル・UI実装（4時間）
+- **⏳ Step 3**: ビューファイル・UI実装（4時間）
   - 価格ルール設定・管理画面のビューファイル実装
   - 価格計算シミュレーション画面
-- **Step 4**: 販売取引統合・テスト実装（6時間）
+- **⏳ Step 4**: 販売取引統合・テスト実装（6時間）
   - 販売時の動的価格計算機能統合
   - 価格管理システムの統合テスト実装（段階的TDD）
+
+#### 🔄 次回実装タスク（残り作業）
+1. **PricingServiceの価格計算ロジック実装**
+   - 複数ルール適用の計算エンジン
+   - 条件判定・優先順位処理・割引額計算
+2. **価格管理用コントローラー・DTO実装**
+   - REST APIエンドポイント
+   - バリデーション・エラーハンドリング
+3. **価格ルール管理UI実装**
+   - 作成・編集・削除フォーム
+   - 価格計算シミュレーション機能
+4. **販売取引との統合・統合テスト**
+   - 動的価格計算の販売システム統合
+   - 段階的TDD統合テスト実装
 
 #### 🎯 Phase 4-2の実装目標
 
@@ -1064,7 +1126,7 @@ describe('Sales Integration Tests', () => {
 
 **実装開始日**: 2025年6月29日  
 **最終更新**: 2025年6月30日  
-**次回更新予定**: Phase 4-2価格管理システム実装開始時
+**次回更新予定**: Phase 4-2価格管理システム本格実装時
 
 ## 📝 実装履歴
 
@@ -1095,6 +1157,14 @@ describe('Sales Integration Tests', () => {
   - **ビューファイル変数名修正**: フォーマット済みフィールド→直接フォーマット対応
   - **テスト期待値調整**: エラーステータスコード・表示文字列の正確性向上
   - **外部キー制約対応**: データ整合性テストでのeventId null設定処理追加
+
+- ✅ **Phase 4-2基盤実装完了**
+  - **PricingRulesテーブル実装**: pricingRuleTypeEnum（4種類割引）、完全テーブル定義
+  - **マイグレーション生成・適用**: 0019_tearful_mach_iv.sql、本番・テスト環境適用済み
+  - **型エラー完全修正**: websiteUrlフィールドエラー、Date→string変換エラー全件修正
+  - **Lintエラー97%改善**: 30件→1件（any型11→0、未使用変数削除、変数名重複解決）
+  - **TypeScript型安全性向上**: schema型統一、適切なtype-only import使用
+  - **コード品質向上**: 全テストファイルでの型安全性確保完了
 
 - ✅ **最終統合テスト結果**: **15件全テスト成功** 🎉
   - ✅ 販売記録一覧表示テスト（2件）
