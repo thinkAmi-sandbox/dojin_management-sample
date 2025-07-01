@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .status-active { color: #28a745; font-weight: bold; }
+        .status-inactive { color: #6c757d; }
+        .rule-type { padding: 4px 8px; border-radius: 4px; font-size: 0.9em; }
+        .rule-type-event { background: #e3f2fd; color: #1976d2; }
+        .rule-type-bulk { background: #f3e5f5; color: #7b1fa2; }
+        .rule-type-early { background: #e8f5e8; color: #388e3c; }
+        .rule-type-consignment { background: #fff3e0; color: #f57c00; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="/pricing-rules/new" class="btn btn-success">新規価格ルール作成</a>
+        <a href="/" class="btn">ホームに戻る</a>
+    </div>
+
+    <% if (pricingRules.length === 0) { %>
+        <p>価格ルールがまだ登録されていません。</p>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ルール名</th>
+                    <th>ルールタイプ</th>
+                    <th>版ID</th>
+                    <th>価格設定</th>
+                    <th>優先順位</th>
+                    <th>ステータス</th>
+                    <th>作成日</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% pricingRules.forEach(rule => { %>
+                <tr>
+                    <td><%= rule.id %></td>
+                    <td><%= rule.name %></td>
+                    <td>
+                        <span class="rule-type rule-type-<%= rule.ruleType.replace('_', '-') %>">
+                            <% if (rule.ruleType === 'event_discount') { %>
+                                イベント割引
+                            <% } else if (rule.ruleType === 'bulk_discount') { %>
+                                まとめ買い割引
+                            <% } else if (rule.ruleType === 'early_bird') { %>
+                                早期割引
+                            <% } else if (rule.ruleType === 'consignment') { %>
+                                委託価格
+                            <% } %>
+                        </span>
+                    </td>
+                    <td><%= rule.editionId %></td>
+                    <td>
+                        <% if (rule.price !== null) { %>
+                            固定価格: ¥<%= rule.price.toLocaleString() %>
+                        <% } else if (rule.discountRate !== null) { %>
+                            <%= rule.discountRate %>%引き
+                        <% } else { %>
+                            未設定
+                        <% } %>
+                        <% if (rule.minQuantity) { %>
+                            <br><small><%= rule.minQuantity %>冊以上</small>
+                        <% } %>
+                    </td>
+                    <td><%= rule.priority %></td>
+                    <td>
+                        <span class="<%= rule.isActive ? 'status-active' : 'status-inactive' %>">
+                            <%= rule.isActive ? 'アクティブ' : '無効' %>
+                        </span>
+                    </td>
+                    <td><%= new Date(rule.createdAt).toLocaleDateString('ja-JP') %></td>
+                    <td>
+                        <a href="/pricing-rules/<%= rule.id %>" class="btn">詳細</a>
+                        <a href="/pricing-rules/<%= rule.id %>/edit" class="btn">編集</a>
+                        <form method="POST" action="/pricing-rules/<%= rule.id %>" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger" 
+                                    onclick="return confirm('この価格ルールを削除しますか？')">削除</button>
+                        </form>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+</body>
+</html>

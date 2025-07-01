@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: #dc3545; }
+        .detail-section { margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .detail-item { display: flex; margin-bottom: 10px; }
+        .detail-label { font-weight: bold; min-width: 150px; }
+        .detail-value { flex: 1; }
+        .rule-type { padding: 4px 8px; border-radius: 4px; font-size: 0.9em; }
+        .rule-type-event { background: #e3f2fd; color: #1976d2; }
+        .rule-type-bulk { background: #f3e5f5; color: #7b1fa2; }
+        .rule-type-early { background: #e8f5e8; color: #388e3c; }
+        .rule-type-consignment { background: #fff3e0; color: #f57c00; }
+        .status-active { color: #28a745; font-weight: bold; }
+        .status-inactive { color: #6c757d; }
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="/pricing-rules/<%= pricingRule.id %>/edit" class="btn">編集</a>
+        <form method="POST" action="/pricing-rules/<%= pricingRule.id %>" style="display: inline;">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger" 
+                    onclick="return confirm('この価格ルールを削除しますか？')">削除</button>
+        </form>
+        <a href="/pricing-rules" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <div class="detail-section">
+        <div class="section-title">基本情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">ID:</div>
+                <div class="detail-value"><%= pricingRule.id %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">ルール名:</div>
+                <div class="detail-value"><%= pricingRule.name %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">ルールタイプ:</div>
+                <div class="detail-value">
+                    <span class="rule-type rule-type-<%= pricingRule.ruleType.replace('_', '-') %>">
+                        <% if (pricingRule.ruleType === 'event_discount') { %>
+                            イベント割引
+                        <% } else if (pricingRule.ruleType === 'bulk_discount') { %>
+                            まとめ買い割引
+                        <% } else if (pricingRule.ruleType === 'early_bird') { %>
+                            早期割引
+                        <% } else if (pricingRule.ruleType === 'consignment') { %>
+                            委託価格
+                        <% } %>
+                    </span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">版ID:</div>
+                <div class="detail-value"><%= pricingRule.editionId %></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <div class="section-title">価格設定</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">固定価格:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.price !== null) { %>
+                        ¥<%= pricingRule.price.toLocaleString() %>
+                    <% } else { %>
+                        未設定
+                    <% } %>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">割引率:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.discountRate !== null) { %>
+                        <%= pricingRule.discountRate %>%
+                    <% } else { %>
+                        未設定
+                    <% } %>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">最小数量:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.minQuantity !== null) { %>
+                        <%= pricingRule.minQuantity %>冊以上
+                    <% } else { %>
+                        未設定
+                    <% } %>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">イベントID:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.eventId !== null) { %>
+                        <%= pricingRule.eventId %>
+                    <% } else { %>
+                        未設定
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <div class="section-title">有効期間・設定</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">有効開始日:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.validFrom) { %>
+                        <%= new Date(pricingRule.validFrom).toLocaleDateString('ja-JP') %>
+                    <% } else { %>
+                        未設定
+                    <% } %>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">有効終了日:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.validUntil) { %>
+                        <%= new Date(pricingRule.validUntil).toLocaleDateString('ja-JP') %>
+                    <% } else { %>
+                        未設定
+                    <% } %>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">優先順位:</div>
+                <div class="detail-value"><%= pricingRule.priority %></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">ステータス:</div>
+                <div class="detail-value">
+                    <span class="<%= pricingRule.isActive ? 'status-active' : 'status-inactive' %>">
+                        <%= pricingRule.isActive ? 'アクティブ' : '無効' %>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <div class="section-title">システム情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">作成日時:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.createdAt) { %>
+                        <%= new Date(pricingRule.createdAt).toLocaleString('ja-JP') %>
+                    <% } else { %>
+                        不明
+                    <% } %>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">更新日時:</div>
+                <div class="detail-value">
+                    <% if (pricingRule.updatedAt) { %>
+                        <%= new Date(pricingRule.updatedAt).toLocaleString('ja-JP') %>
+                    <% } else { %>
+                        未更新
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

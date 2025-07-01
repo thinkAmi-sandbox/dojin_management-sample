@@ -196,6 +196,22 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.quantity = error
         } else if (error.includes('販売明細')) {
           errors.details = error
+        } else if (error.includes('ルール名')) {
+          errors.name = error
+        } else if (error.includes('価格ルールタイプ')) {
+          errors.ruleType = error
+        } else if (error.includes('割引率')) {
+          errors.discountRate = error
+        } else if (error.includes('最小数量')) {
+          errors.minQuantity = error
+        } else if (error.includes('開始日')) {
+          errors.validFrom = error
+        } else if (error.includes('終了日')) {
+          errors.validUntil = error
+        } else if (error.includes('優先順位')) {
+          errors.priority = error
+        } else if (error.includes('アクティブ状態')) {
+          errors.isActive = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -364,6 +380,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /circles/:circleId/members (新規メンバー追加)
           templatePath = 'circles/members/add'
           title = 'メンバー追加'
+        }
+      } else if (path.includes('/pricing-rules')) {
+        if (path.includes('/edit')) {
+          templatePath = 'pricing-rules/edit'
+          title = '価格ルール編集'
+        } else if (path.endsWith('/pricing-rules')) {
+          templatePath = 'pricing-rules/new'
+          title = '新規価格ルール作成'
+        } else if (path.match(/\/pricing-rules\/\d+$/)) {
+          // POST /pricing-rules/:id (PUT via _method)
+          templatePath = 'pricing-rules/edit'
+          title = '価格ルール編集'
         }
       } else if (path.includes('/events')) {
         if (path.includes('/edit')) {
@@ -1310,6 +1338,83 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           ? [
               { name: '在庫一覧', url: '/stocks' },
               { name: `在庫 #${id}`, url: `/stocks/${id}` },
+              { name: '編集', url: null },
+            ]
+          : [],
+      }
+    } else if (path.includes('/pricing-rules')) {
+      // 価格ルール関連パス
+      const idMatch = path.match(/\/pricing-rules\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/pricing-rules') {
+        return {
+          formData: {
+            editionId: formData.editionId || '',
+            ruleType: formData.ruleType || '',
+            name: formData.name || '',
+            price: formData.price || '',
+            discountRate: formData.discountRate || '',
+            minQuantity: formData.minQuantity || '',
+            eventId: formData.eventId || '',
+            validFrom: formData.validFrom || '',
+            validUntil: formData.validUntil || '',
+            priority: formData.priority || '0',
+            isActive: formData.isActive !== false,
+          },
+          editions: [
+            { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+          ], // エラー表示のためのダミーデータ
+          events: [
+            { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
+          ], // エラー表示のためのダミーデータ
+          breadcrumbs: [
+            { name: '価格ルール一覧', url: '/pricing-rules' },
+            { name: '新規作成', url: null },
+          ],
+        }
+      }
+
+      // 編集の場合
+      return {
+        pricingRule: {
+          id,
+          editionId: formData.editionId || '',
+          ruleType: formData.ruleType || '',
+          name: formData.name || '',
+          price: formData.price || '',
+          discountRate: formData.discountRate || '',
+          minQuantity: formData.minQuantity || '',
+          eventId: formData.eventId || '',
+          validFrom: formData.validFrom || '',
+          validUntil: formData.validUntil || '',
+          priority: formData.priority || 0,
+          isActive: formData.isActive !== false,
+        },
+        formData: {
+          editionId: formData.editionId || '',
+          ruleType: formData.ruleType || '',
+          name: formData.name || '',
+          price: formData.price || '',
+          discountRate: formData.discountRate || '',
+          minQuantity: formData.minQuantity || '',
+          eventId: formData.eventId || '',
+          validFrom: formData.validFrom || '',
+          validUntil: formData.validUntil || '',
+          priority: formData.priority || '0',
+          isActive: formData.isActive !== false,
+        },
+        editions: [
+          { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+        ],
+        events: [
+          { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
+        ],
+        breadcrumbs: id
+          ? [
+              { name: '価格ルール一覧', url: '/pricing-rules' },
+              { name: `価格ルール #${id}`, url: `/pricing-rules/${id}` },
               { name: '編集', url: null },
             ]
           : [],

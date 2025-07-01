@@ -13,6 +13,7 @@ import { EditionsModule } from './editions/editions.module'
 import { EventsModule } from './events/events.module'
 import { ExhibitBooksModule } from './exhibit-books/exhibit-books.module'
 import { ExhibitsModule } from './exhibits/exhibits.module'
+import { PricingModule } from './pricing/pricing.module'
 import { PrintingCompaniesModule } from './printing-companies/printing-companies.module'
 import { SalesModule } from './sales/sales.module'
 import { StockMovementsModule } from './stock-movements/stock-movements.module'
@@ -82,6 +83,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
     EventsModule,
     ExhibitBooksModule,
     ExhibitsModule,
+    PricingModule,
     PrintingCompaniesModule,
     SalesModule,
     StockMovementsModule,
