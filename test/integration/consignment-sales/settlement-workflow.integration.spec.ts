@@ -71,7 +71,7 @@ describe('Settlement Workflow Integration Tests', () => {
   describe('期間別一括精算機能', () => {
     it('指定期間内の複数販売報告を一括精算できること', async () => {
       // 複数の販売報告を作成（確認済み状態）
-      const report1 = await testDbUtils.createTestConsignmentSalesReport({
+      const _report1 = await testDbUtils.createTestConsignmentSalesReport({
         consignmentId: testConsignment.id,
         reportPeriodStart: new Date('2025-01-01'),
         reportPeriodEnd: new Date('2025-01-31'),
@@ -79,7 +79,7 @@ describe('Settlement Workflow Integration Tests', () => {
         status: 'confirmed',
       })
 
-      const report2 = await testDbUtils.createTestConsignmentSalesReport({
+      const _report2 = await testDbUtils.createTestConsignmentSalesReport({
         consignmentId: testConsignment.id,
         reportPeriodStart: new Date('2025-02-01'),
         reportPeriodEnd: new Date('2025-02-28'),
@@ -226,7 +226,7 @@ describe('Settlement Workflow Integration Tests', () => {
     })
 
     it('支払完了を記録できること', async () => {
-      const salesReport = await testDbUtils.createTestConsignmentSalesReport({
+      const _salesReport = await testDbUtils.createTestConsignmentSalesReport({
         consignmentId: testConsignment.id,
         totalSalesAmount: 25000,
         status: 'settled',
@@ -274,17 +274,7 @@ describe('Settlement Workflow Integration Tests', () => {
       const response = await request(app.getHttpServer())
         .get(`/consignments/${testConsignment.id}/reports/monthly-summary`)
         .query({ year: 2025, month: 1 })
-
-      if (response.status !== 200) {
-        console.error('Monthly summary error:', response.body)
-        console.error('Error details:', {
-          status: response.status,
-          text: response.text,
-          body: response.body,
-        })
-      }
-
-      expect(response.status).toBe(200)
+        .expect(200)
 
       expect(response.body).toHaveProperty('totalSales', 50000)
       expect(response.body).toHaveProperty('totalCommission', 15000) // 30%
@@ -312,17 +302,7 @@ describe('Settlement Workflow Integration Tests', () => {
           periodStart: '2025-01-01',
           periodEnd: '2025-12-31',
         })
-
-      if (response.status !== 200) {
-        console.error('CSV export error:', response.body)
-        console.error('Error details:', {
-          status: response.status,
-          text: response.text,
-          body: response.body,
-        })
-      }
-
-      expect(response.status).toBe(200)
+        .expect(200)
 
       expect(response.headers['content-type']).toContain('text/csv')
       expect(response.headers['content-disposition']).toContain('attachment')

@@ -33,7 +33,7 @@ export class ConsignmentReportsController {
 
   // テスト用エンドポイント
   @Get('test')
-  async test() {
+  test() {
     return { message: 'Test endpoint works' }
   }
 
@@ -109,13 +109,6 @@ export class ConsignmentReportsController {
 
       res.json(result)
     } catch (error) {
-      console.error('[Controller] Monthly summary error:', error)
-      console.error('[Controller] Error details:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-      })
       res.status(500).json({
         statusCode: 500,
         message: 'Internal server error',
@@ -156,7 +149,6 @@ export class ConsignmentReportsController {
 
       res.json(result)
     } catch (error) {
-      console.error('Quarterly summary error:', error)
       res.status(500).json({
         statusCode: 500,
         message: 'Internal server error',
@@ -324,9 +316,9 @@ export class ConsignmentReportsController {
     'Content-Disposition',
     'attachment; filename="settlement-statement.pdf"',
   )
-  async generateStatement(
-    @Param('consignmentId') consignmentId: string,
-    @Param('id') id: string,
+  generateStatement(
+    @Param('consignmentId') _consignmentId: string,
+    @Param('id') _id: string,
     @Res() res: Response,
   ) {
     // PDF生成は実際にはPDFライブラリを使用しますが、ここでは仮実装
@@ -335,10 +327,10 @@ export class ConsignmentReportsController {
 
   // 精算明細書メール送信（仮実装）
   @Post(':id/send-statement')
-  async sendStatement(
-    @Param('consignmentId') consignmentId: string,
-    @Param('id') id: string,
-    @Body() body: { email: string; subject: string; message: string },
+  sendStatement(
+    @Param('consignmentId') _consignmentId: string,
+    @Param('id') _id: string,
+    @Body() _body: { email: string; subject: string; message: string },
   ) {
     // メール送信は実際にはメールサービスを使用しますが、ここでは仮実装
     return {
@@ -349,8 +341,8 @@ export class ConsignmentReportsController {
 
   // 支払予定登録（仮実装）
   @Post(':id/payment-schedule')
-  async createPaymentSchedule(
-    @Param('consignmentId') consignmentId: string,
+  createPaymentSchedule(
+    @Param('consignmentId') _consignmentId: string,
     @Param('id') id: string,
     @Body() body: {
       scheduledDate: string
@@ -375,8 +367,8 @@ export class ConsignmentReportsController {
 
   // 支払完了記録（仮実装）
   @Post('payment-schedules/:scheduleId/complete')
-  async completePayment(
-    @Param('consignmentId') consignmentId: string,
+  completePayment(
+    @Param('consignmentId') _consignmentId: string,
     @Param('scheduleId') scheduleId: string,
     @Body() body: {
       actualDate: string
@@ -402,8 +394,8 @@ export class ConsignmentReportsController {
 
   // 未精算レポート通知（仮実装）
   @Post('send-reminder')
-  async sendReminder(
-    @Param('consignmentId') consignmentId: string,
+  sendReminder(
+    @Param('consignmentId') _consignmentId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     // 通知機能は将来的に実装
@@ -416,7 +408,7 @@ export class ConsignmentReportsController {
 
   // 精算期限アラート設定（仮実装）
   @Post('settlement-alerts')
-  async createSettlementAlerts(
+  createSettlementAlerts(
     @Param('consignmentId') consignmentId: string,
     @Body() body: { alertDays: number[]; enabled: boolean },
     @Res({ passthrough: true }) res: Response,

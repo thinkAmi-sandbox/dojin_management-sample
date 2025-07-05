@@ -109,14 +109,7 @@ describe('Event Exhibits Integration Tests', () => {
       const response = await request(app.getHttpServer())
         .post(`/events/${eventId}/exhibits`)
         .send(exhibitData)
-
-      // デバッグ用: レスポンス内容を確認
-      if (response.status !== 302) {
-        console.log('Response status:', response.status)
-        console.log('Response body:', response.text)
-      }
-
-      expect(response.status).toBe(302)
+        .expect(302)
 
       // データベース確認
       const exhibits = await drizzleService.db.select().from(schema.exhibits)

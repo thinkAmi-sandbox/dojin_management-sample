@@ -50,7 +50,7 @@ export class ConsignmentAnalyticsController {
   async getSalesTrend(
     @Param('id') consignmentId: string,
     @Query('year') year: string,
-    @Query('groupBy') groupBy: string,
+    @Query('groupBy') _groupBy: string,
   ) {
     const consignmentIdNum = parseInt(consignmentId, 10)
     const yearNum = parseInt(year, 10)

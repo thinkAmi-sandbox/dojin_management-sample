@@ -1526,3 +1526,67 @@ describe('Consignment Management Integration Tests', () => {
    - 標準の比較関数（gte, lte）を使用することで環境依存を回避
 
 **Phase 5-3完了**: 2025年7月5日（100%成功率達成）
+
+## 📝 Phase 5-3 追加作業: 不要なログの削除（2025年7月5日）
+
+### 削除したログの詳細
+
+#### プロダクションコード
+1. **ConsignmentSalesService（委託販売サービス）**
+   - `getMonthlySummary`: 実行開始、日付範囲、クエリ実行完了、結果、エラー詳細の各種console.log
+   - `getQuarterlySummary`: 実行開始、月データ取得中、結果、エラー詳細の各種console.log
+   - `getExportData`: 実行開始、期間、クエリ実行完了、エクスポートデータ作成完了、エラー詳細の各種console.log
+   - 不要なtry-catchブロック（単にエラーを再スローするだけのもの）を削除
+
+2. **ConsignmentReportsController（委託販売レポートコントローラー）**
+   - `getMonthlySummary`: エラーハンドリング時のconsole.errorとエラー詳細出力
+   - `getQuarterlySummary`: エラーハンドリング時のconsole.error
+   - 不要なasync修飾子を削除（awaitを使用していない仮実装メソッド）
+
+3. **ValidationExceptionFilter（バリデーション例外フィルター）**
+   - サークル分岐のデバッグログ: "🔍 通常のサークル分岐に入りました"
+   - サークルメンバー管理分岐のデバッグログ: "🔍 サークルメンバー管理分岐に入りました"
+
+4. **PricingController（価格管理コントローラー）**
+   - 価格ルール削除エラーのconsole.error: "価格ルール削除エラー:"
+
+5. **ConsignmentAnalyticsController**
+   - 未使用パラメータ`groupBy`にアンダースコアを追加
+
+#### テストコード
+1. **settlement-workflow.integration.spec.ts**
+   - 月次サマリーのエラーデバッグ用console.error（status !== 200時）
+   - CSVエクスポートのエラーデバッグ用console.error（status !== 200時）
+   - 未使用変数`report1`、`report2`、`salesReport`にアンダースコアを追加
+
+2. **circle-exhibits.integration.spec.ts**
+   - レスポンスデバッグ用console.log（status !== 302時）
+
+3. **event-exhibits.integration.spec.ts**
+   - レスポンスデバッグ用console.log（status !== 302時）
+
+### 技術的な改善点
+1. **コードクリーンアップ**
+   - 不要なasync修飾子の削除（7箇所）
+   - 未使用パラメータへのアンダースコア追加（8箇所）
+   - 未使用変数へのアンダースコア追加（3箇所）
+   - 不要なtry-catchブロックの削除（3箇所）
+
+2. **ログ削除の効果**
+   - 統合テスト実行時のコンソール出力がクリーンに
+   - プロダクション環境でのログノイズを削減
+   - デバッグ時の必要な情報のみに集中可能
+
+### 統合テスト実行結果
+- 全てのログ削除後も統合テストは正常に動作
+- 465/471テスト成功（6件スキップ）- 変更なし
+- ログ削除によるテストへの影響なし
+
+### 注意事項
+- global-setup.tsとdb-utils.tsのログは意図的に残置
+  - セットアップ時の重要な情報を含むため
+  - エラー発生時のデバッグに必要
+- NestJSのLoggerサービス（books.service.ts）は正常なロギング機能のため削除対象外
+- Vitestのテスト結果表示（"✓ Book Authors Management..."）は正常な出力であり、不要なログではない
+
+**ログ削除作業完了**: 2025年7月5日

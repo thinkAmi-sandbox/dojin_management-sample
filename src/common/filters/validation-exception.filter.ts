@@ -510,7 +510,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           title = '保管場所編集'
         }
       } else if (path.includes('/circles')) {
-        console.log('🔍 通常のサークル分岐に入りました')
         if (path.includes('/edit')) {
           templatePath = 'circles/edit'
           title = 'サークル編集'
@@ -1325,7 +1324,6 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       }
     } else if (path.match(/\/circles\/\d+\/members/)) {
       // サークルメンバー管理関連パス
-      console.log('🔍 サークルメンバー管理分岐に入りました')
       const circleIdMatch = path.match(/\/circles\/(\d+)\/members/)
       if (circleIdMatch) {
         const circleId = parseInt(circleIdMatch[1], 10)

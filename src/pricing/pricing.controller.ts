@@ -258,8 +258,7 @@ export class PricingController {
         .where(eq(pricingRules.id, id))
 
       res.redirect('/pricing-rules')
-    } catch (error) {
-      console.error('価格ルール削除エラー:', error)
+    } catch (_error) {
       res.status(500).send('価格ルール削除中にエラーが発生しました')
     }
   }
