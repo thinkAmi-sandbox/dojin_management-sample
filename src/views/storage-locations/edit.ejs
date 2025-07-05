@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        .breadcrumb a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        .required {
+            color: #dc3545;
+        }
+        .form-text {
+            font-size: 0.875em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .error {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <% breadcrumbs.forEach((breadcrumb, index) => { %>
+                <% if (index > 0) { %> &gt; <% } %>
+                <% if (breadcrumb.url) { %>
+                    <a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a>
+                <% } else { %>
+                    <%= breadcrumb.name %>
+                <% } %>
+            <% }) %>
+        </div>
+
+        <h1><%= title %></h1>
+
+        <form action="/storage-locations/<%= storageLocation.id %>" method="POST">
+            <input type="hidden" name="_method" value="PUT">
+            
+            <div class="form-group">
+                <label for="name">保管場所名 <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    required
+                    maxlength="255"
+                    value="<%= storageLocation.name %>"
+                >
+                <% if (locals.errors && errors.name) { %>
+                    <div class="error"><%= errors.name %></div>
+                <% } %>
+                <div class="form-text">必須項目です。255文字以内で入力してください。</div>
+            </div>
+
+            <div class="form-group">
+                <label for="type">保管場所タイプ <span class="required">*</span></label>
+                <select id="type" name="type" required>
+                    <% typeOptions.forEach(option => { %>
+                        <option value="<%= option.value %>" <%= storageLocation.type === option.value ? 'selected' : '' %>>
+                            <%= option.label %>
+                        </option>
+                    <% }) %>
+                </select>
+                <% if (locals.errors && errors.type) { %>
+                    <div class="error"><%= errors.type %></div>
+                <% } %>
+                <div class="form-text">必須項目です。保管場所のタイプを選択してください。</div>
+            </div>
+
+            <div class="form-group">
+                <label>委託販売フラグ</label>
+                <div class="checkbox-group">
+                    <input 
+                        type="hidden" 
+                        name="isConsignment" 
+                        value="false"
+                    >
+                    <input 
+                        type="checkbox" 
+                        id="isConsignment" 
+                        name="isConsignment" 
+                        value="true"
+                        <%= storageLocation.isConsignment ? 'checked' : '' %>
+                    >
+                    <label for="isConsignment" style="margin-bottom: 0;">委託販売に使用する</label>
+                </div>
+                <% if (locals.errors && errors.isConsignment) { %>
+                    <div class="error"><%= errors.isConsignment %></div>
+                <% } %>
+                <div class="form-text">委託販売で使用する場合はチェックしてください。</div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">住所</label>
+                <input 
+                    type="text" 
+                    id="address" 
+                    name="address"
+                    maxlength="500"
+                    value="<%= storageLocation.address || '' %>"
+                >
+                <% if (locals.errors && errors.address) { %>
+                    <div class="error"><%= errors.address %></div>
+                <% } %>
+                <div class="form-text">任意項目です。500文字以内で入力してください。</div>
+            </div>
+
+            <div class="form-group">
+                <label for="contactInfo">連絡先情報</label>
+                <input 
+                    type="text" 
+                    id="contactInfo" 
+                    name="contactInfo"
+                    maxlength="500"
+                    value="<%= storageLocation.contactInfo || '' %>"
+                >
+                <% if (locals.errors && errors.contactInfo) { %>
+                    <div class="error"><%= errors.contactInfo %></div>
+                <% } %>
+                <div class="form-text">任意項目です。500文字以内で入力してください。</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">備考</label>
+                <textarea 
+                    id="notes" 
+                    name="notes" 
+                    rows="4"
+                    maxlength="1000"
+                ><%= storageLocation.notes || '' %></textarea>
+                <% if (locals.errors && errors.notes) { %>
+                    <div class="error"><%= errors.notes %></div>
+                <% } %>
+                <div class="form-text">任意項目です。1000文字以内で入力してください。</div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">更新する</button>
+                <a href="/storage-locations/<%= storageLocation.id %>" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

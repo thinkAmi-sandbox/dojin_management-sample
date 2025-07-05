@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .form-container { max-width: 600px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-secondary { background: #6c757d; }
+        .error { color: #dc3545; font-size: 0.875em; margin-top: 5px; }
+        .error-summary { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <% if (typeof errors !== 'undefined' && Object.keys(errors).length > 0) { %>
+        <div class="error-summary">
+            <strong>入力内容を確認してください：</strong>
+            <ul>
+                <% Object.values(errors).forEach(error => { %>
+                    <li><%= error %></li>
+                <% }) %>
+            </ul>
+        </div>
+    <% } %>
+
+    <div class="form-container">
+        <form method="POST" action="/pricing-rules/<%= pricingRule.id %>">
+            <input type="hidden" name="_method" value="PUT">
+            
+            <div class="form-group">
+                <label for="editionId">版ID <span style="color: red;">*</span></label>
+                <input type="number" name="editionId" id="editionId" 
+                       value="<%= (formData && formData.editionId) || pricingRule.editionId || '' %>" required>
+                <% if (typeof errors !== 'undefined' && errors.editionId) { %>
+                    <div class="error"><%= errors.editionId %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="ruleType">価格ルールタイプ <span style="color: red;">*</span></label>
+                <select name="ruleType" id="ruleType" required>
+                    <option value="">選択してください</option>
+                    <option value="event_discount" <%= ((formData && formData.ruleType) || pricingRule.ruleType) === 'event_discount' ? 'selected' : '' %>>イベント割引</option>
+                    <option value="bulk_discount" <%= ((formData && formData.ruleType) || pricingRule.ruleType) === 'bulk_discount' ? 'selected' : '' %>>まとめ買い割引</option>
+                    <option value="early_bird" <%= ((formData && formData.ruleType) || pricingRule.ruleType) === 'early_bird' ? 'selected' : '' %>>早期割引</option>
+                    <option value="consignment" <%= ((formData && formData.ruleType) || pricingRule.ruleType) === 'consignment' ? 'selected' : '' %>>委託価格</option>
+                </select>
+                <% if (typeof errors !== 'undefined' && errors.ruleType) { %>
+                    <div class="error"><%= errors.ruleType %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="name">ルール名 <span style="color: red;">*</span></label>
+                <input type="text" name="name" id="name" 
+                       value="<%= (formData && formData.name) || pricingRule.name || '' %>" required>
+                <% if (typeof errors !== 'undefined' && errors.name) { %>
+                    <div class="error"><%= errors.name %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="price">固定価格（円）</label>
+                <input type="number" name="price" id="price" 
+                       value="<%= (formData && formData.price) || pricingRule.price || '' %>" min="0">
+                <small>固定価格を設定する場合に入力してください</small>
+                <% if (typeof errors !== 'undefined' && errors.price) { %>
+                    <div class="error"><%= errors.price %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="discountRate">割引率（%）</label>
+                <input type="number" name="discountRate" id="discountRate" 
+                       value="<%= (formData && formData.discountRate) || pricingRule.discountRate || '' %>" min="0" max="100">
+                <small>割引率を設定する場合に入力してください</small>
+                <% if (typeof errors !== 'undefined' && errors.discountRate) { %>
+                    <div class="error"><%= errors.discountRate %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="minQuantity">最小数量</label>
+                <input type="number" name="minQuantity" id="minQuantity" 
+                       value="<%= (formData && formData.minQuantity) || pricingRule.minQuantity || '' %>" min="1">
+                <small>まとめ買い割引の場合に設定してください</small>
+                <% if (typeof errors !== 'undefined' && errors.minQuantity) { %>
+                    <div class="error"><%= errors.minQuantity %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="eventId">イベントID</label>
+                <input type="number" name="eventId" id="eventId" 
+                       value="<%= (formData && formData.eventId) || pricingRule.eventId || '' %>">
+                <small>特定のイベント限定の場合に設定してください</small>
+                <% if (typeof errors !== 'undefined' && errors.eventId) { %>
+                    <div class="error"><%= errors.eventId %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="validFrom">有効開始日</label>
+                <input type="date" name="validFrom" id="validFrom" 
+                       value="<%= (formData && formData.validFrom) || pricingRule.validFrom || '' %>">
+                <% if (typeof errors !== 'undefined' && errors.validFrom) { %>
+                    <div class="error"><%= errors.validFrom %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="validUntil">有効終了日</label>
+                <input type="date" name="validUntil" id="validUntil" 
+                       value="<%= (formData && formData.validUntil) || pricingRule.validUntil || '' %>">
+                <% if (typeof errors !== 'undefined' && errors.validUntil) { %>
+                    <div class="error"><%= errors.validUntil %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="priority">優先順位</label>
+                <input type="number" name="priority" id="priority" 
+                       value="<%= (formData && formData.priority) || pricingRule.priority || '0' %>" min="0">
+                <small>数値が大きいほど優先度が高くなります</small>
+                <% if (typeof errors !== 'undefined' && errors.priority) { %>
+                    <div class="error"><%= errors.priority %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="isActive" value="true" 
+                           <%= ((formData && formData.isActive !== false) || pricingRule.isActive) ? 'checked' : '' %>>
+                    アクティブ
+                </label>
+                <% if (typeof errors !== 'undefined' && errors.isActive) { %>
+                    <div class="error"><%= errors.isActive %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn">更新</button>
+                <a href="/pricing-rules/<%= pricingRule.id %>" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

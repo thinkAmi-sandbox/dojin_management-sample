@@ -1,0 +1,130 @@
+<div class="page-header">
+  <h1><%= title %></h1>
+  <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs }) %>
+</div>
+
+<div class="book-detail" style="max-width: 800px;">
+  <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    
+    <div class="book-info" style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 20px 0; font-size: 28px; color: #333;">
+        <%= book.title %>
+        <% if (book.subtitle) { %>
+          <span style="display: block; font-size: 18px; color: #666; margin-top: 5px;">
+            <%= book.subtitle %>
+          </span>
+        <% } %>
+      </h2>
+
+      <div class="book-meta" style="display: grid; grid-template-columns: 120px 1fr; gap: 15px; color: #666;">
+        <div style="font-weight: bold;">説明:</div>
+        <div>
+          <% if (book.description) { %>
+            <%= book.description %>
+          <% } else { %>
+            <span style="color: #999;">説明なし</span>
+          <% } %>
+        </div>
+
+
+        <div style="font-weight: bold;">ステータス:</div>
+        <div>
+          <span style="
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 14px;
+            font-weight: bold;
+            <% if (book.status === 'planning') { %>
+              background-color: #ffeaa7; color: #d63031;
+            <% } else if (book.status === 'writing') { %>
+              background-color: #74b9ff; color: white;
+            <% } else if (book.status === 'editing') { %>
+              background-color: #fdcb6e; color: #2d3436;
+            <% } else if (book.status === 'completed') { %>
+              background-color: #00b894; color: white;
+            <% } %>
+          ">
+            <%= book.statusLabel %>
+          </span>
+        </div>
+
+        <div style="font-weight: bold;">作成日時:</div>
+        <div><%= book.formattedCreatedAt %></div>
+
+        <div style="font-weight: bold;">更新日時:</div>
+        <div><%= book.formattedUpdatedAt %></div>
+      </div>
+    </div>
+
+    <div class="book-actions" style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #eee;">
+      <a 
+        href="/books"
+        style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        一覧に戻る
+      </a>
+      <a 
+        href="/books/<%= book.id %>/deadlines"
+        style="display: inline-block; padding: 10px 20px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        締切一覧
+      </a>
+      <a 
+        href="/books/<%= book.id %>/authors"
+        style="display: inline-block; padding: 10px 20px; background-color: #6f42c1; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        執筆者管理
+      </a>
+      <a 
+        href="/books/<%= book.id %>/editions"
+        style="display: inline-block; padding: 10px 20px; background-color: #8e44ad; color: white; text-decoration: none; border-radius: 4px;"
+        title="この書籍の版を管理します"
+      >
+        📖 版管理
+      </a>
+      <a 
+        href="/books/<%= book.id %>/editions/new"
+        style="display: inline-block; padding: 10px 20px; background-color: #27ae60; color: white; text-decoration: none; border-radius: 4px;"
+        title="この書籍の新しい版を作成します"
+      >
+        ➕ 新版作成
+      </a>
+      <a 
+        href="/books/<%= book.id %>/submissions"
+        style="display: inline-block; padding: 10px 20px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px;"
+        title="この書籍の入稿履歴を確認します"
+      >
+        📋 入稿履歴
+      </a>
+      <a 
+        href="/books/<%= book.id %>/submissions/new"
+        style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;"
+        title="この書籍の新しい入稿を作成します"
+      >
+        ➕ 新規入稿
+      </a>
+      <a 
+        href="<%= book.statusEditUrl %>"
+        style="display: inline-block; padding: 10px 20px; background-color: #ffc107; color: #212529; text-decoration: none; border-radius: 4px;"
+      >
+        ステータス変更
+      </a>
+      <a 
+        href="/books/<%= book.id %>/edit"
+        style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;"
+      >
+        編集
+      </a>
+      <form method="post" action="/books/<%= book.id %>" style="display: inline;">
+        <input type="hidden" name="_method" value="DELETE">
+        <button 
+          type="submit"
+          onclick="return confirm('本当に削除しますか？')"
+          style="display: inline-block; padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          削除
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

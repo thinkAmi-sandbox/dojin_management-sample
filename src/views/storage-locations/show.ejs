@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .header { margin-bottom: 20px; }
+        .breadcrumbs { margin-bottom: 20px; color: #666; }
+        .breadcrumbs a { color: #007bff; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 12px; }
+        .detail-table th { background-color: #f2f2f2; width: 150px; text-align: left; }
+        .notes { white-space: pre-wrap; }
+        .badge { padding: 4px 8px; border-radius: 3px; font-size: 0.9em; }
+        .badge-home { background-color: #e7f5ff; color: #1864ab; }
+        .badge-warehouse { background-color: #fff3cd; color: #856404; }
+        .badge-consignment { background-color: #f8d7da; color: #721c24; }
+        .badge-event { background-color: #d4edda; color: #155724; }
+        .status-yes { color: #28a745; font-weight: bold; }
+        .status-no { color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumbs">
+        <a href="/storage-locations">保管場所一覧</a> &gt; 
+        <span><%= storageLocation.name %></span>
+    </div>
+
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="<%= editUrl %>" class="btn">編集</a>
+        <a href="<%= listUrl %>" class="btn" style="background: #6c757d;">一覧に戻る</a>
+        <form style="display: inline;" onsubmit="return confirm('「<%= storageLocation.name %>」を削除してもよろしいですか？\n\nこの操作は元に戻せません。')" action="<%= deleteUrl %>" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <table class="detail-table">
+        <tr>
+            <th>保管場所名</th>
+            <td><%= storageLocation.name %></td>
+        </tr>
+        <tr>
+            <th>タイプ</th>
+            <td>
+                <span class="badge badge-<%= storageLocation.type %>">
+                    <%= storageLocation.typeDisplay %>
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <th>委託販売</th>
+            <td>
+                <span class="<%= storageLocation.isConsignment ? 'status-yes' : 'status-no' %>">
+                    <%= storageLocation.isConsignmentDisplay %>
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <th>住所</th>
+            <td><%= storageLocation.address %></td>
+        </tr>
+        <tr>
+            <th>連絡先情報</th>
+            <td><%= storageLocation.contactInfo %></td>
+        </tr>
+        <tr>
+            <th>備考</th>
+            <td class="notes"><%= storageLocation.notes %></td>
+        </tr>
+        <tr>
+            <th>登録日</th>
+            <td><%= storageLocation.createdAt %></td>
+        </tr>
+        <tr>
+            <th>更新日</th>
+            <td><%= storageLocation.updatedAt %></td>
+        </tr>
+    </table>
+
+    <!-- 将来的に在庫履歴をここに表示 -->
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 4px;">
+        <h3>在庫履歴</h3>
+        <p style="color: #666;">在庫管理機能の実装後に履歴が表示されます。</p>
+    </div>
+</body>
+</html>

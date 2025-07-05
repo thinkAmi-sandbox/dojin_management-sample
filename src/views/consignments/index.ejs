@@ -1,0 +1,108 @@
+<style>
+    .actions { margin-bottom: 20px; }
+    .btn { 
+        background: #007bff; 
+        color: white; 
+        padding: 8px 16px; 
+        text-decoration: none; 
+        border-radius: 4px; 
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .btn-secondary { background: #6c757d; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-danger { background: #dc3545; }
+    .btn-info { background: #17a2b8; }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 20px; 
+    }
+    th, td { 
+        padding: 12px; 
+        text-align: left; 
+        border-bottom: 1px solid #ddd; 
+    }
+    th { 
+        background: #f8f9fa; 
+        font-weight: bold; 
+    }
+    tr:hover { background-color: #f5f5f5; }
+    .active-badge { 
+        background: #28a745; 
+        color: white; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 0.8em; 
+    }
+    .inactive-badge { 
+        background: #6c757d; 
+        color: white; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 0.8em; 
+    }
+    .commission-rate {
+        font-weight: bold;
+        color: #dc3545;
+    }
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-style: italic;
+    }
+</style>
+
+<h1><%= title %></h1>
+
+    <div class="actions">
+        <a href="/consignments/new" class="btn">新規委託契約</a>
+        <a href="/" class="btn btn-secondary">ホームに戻る</a>
+    </div>
+
+    <% if (consignments && consignments.length > 0) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>店舗名</th>
+                    <th>保管場所</th>
+                    <th>手数料率</th>
+                    <th>精算サイクル</th>
+                    <th>契約開始日</th>
+                    <th>契約終了日</th>
+                    <th>担当者</th>
+                    <th>状態</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% consignments.forEach(consignment => { %>
+                <tr>
+                    <td><%= consignment.storeName %></td>
+                    <td><%= consignment.locationName %></td>
+                    <td class="commission-rate"><%= consignment.commissionRate %>%</td>
+                    <td><%= consignment.settlementCycle || '-' %></td>
+                    <td><%= consignment.contractStartDate.toLocaleDateString('ja-JP') %></td>
+                    <td><%= consignment.contractEndDate ? consignment.contractEndDate.toLocaleDateString('ja-JP') : '-' %></td>
+                    <td><%= consignment.contactPerson || '-' %></td>
+                    <td>
+                        <% if (consignment.isActive) { %>
+                            <span class="active-badge">有効</span>
+                        <% } else { %>
+                            <span class="inactive-badge">無効</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <a href="/consignments/<%= consignment.id %>" class="btn btn-info">詳細</a>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <div class="empty-message">
+            <p>委託契約が登録されていません。</p>
+            <p>「新規委託契約」ボタンから委託契約を作成してください。</p>
+        </div>
+    <% } %>

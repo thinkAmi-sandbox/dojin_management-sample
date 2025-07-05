@@ -1,0 +1,278 @@
+<%- contentFor('body') %>
+<div class="header">
+    <h1><%= title %></h1>
+    
+    <!-- ブレッドクラム -->
+    <nav class="breadcrumb">
+        <% breadcrumbs.forEach((crumb, index) => { %>
+            <% if (crumb.url) { %>
+                <a href="<%= crumb.url %>"><%= crumb.name %></a>
+            <% } else { %>
+                <span><%= crumb.name %></span>
+            <% } %>
+            <% if (index < breadcrumbs.length - 1) { %>
+                <span class="separator">></span>
+            <% } %>
+        <% }); %>
+    </nav>
+</div>
+
+<div class="actions">
+    <a href="/circles/<%= circle.id %>/members" class="btn btn-secondary">🔙 メンバー一覧に戻る</a>
+</div>
+
+<!-- サークル情報セクション -->
+<div class="detail-section">
+    <div class="section-title">サークル情報</div>
+    <div class="detail-item">
+        <span class="detail-label">サークル名:</span>
+        <span class="detail-value"><%= circle.name %></span>
+    </div>
+</div>
+
+<!-- メンバー情報セクション -->
+<div class="detail-section">
+    <div class="section-title">編集対象メンバー</div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">名前:</span>
+            <span class="detail-value"><%= member.name %></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">メール:</span>
+            <span class="detail-value"><%= member.email || '-' %></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">プロフィール:</span>
+            <span class="detail-value"><%= member.bio || '-' %></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">現在の参加日:</span>
+            <span class="detail-value"><%= new Date(member.joinedAt).toLocaleDateString('ja-JP') %></span>
+        </div>
+    </div>
+</div>
+
+<!-- メンバー情報編集フォームセクション -->
+<div class="detail-section">
+    <div class="section-title">メンバー情報編集</div>
+    
+    <form method="POST" action="/circles/<%= circle.id %>/members/<%= member.id %>" class="member-form">
+        <input type="hidden" name="_method" value="PUT">
+        
+        <!-- エラー表示 -->
+        <% if (errors && Object.keys(errors).length > 0) { %>
+            <div class="error-section">
+                <% Object.values(errors).forEach(errorList => { %>
+                    <% if (Array.isArray(errorList)) { %>
+                        <% errorList.forEach(error => { %>
+                            <div class="error-message"><%= error %></div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="error-message"><%= errorList %></div>
+                    <% } %>
+                <% }); %>
+            </div>
+        <% } %>
+        
+        <!-- 役割変更 -->
+        <div class="form-group">
+            <label for="role" class="form-label">役割</label>
+            <select name="role" id="role" class="form-control">
+                <option value="">変更しない</option>
+                <% roles.forEach(role => { %>
+                    <option value="<%= role.value %>" 
+                            <%= member.role === role.value ? 'selected' : '' %>>
+                        <%= role.label %>
+                    </option>
+                <% }); %>
+            </select>
+            <small class="form-help">
+                現在: <strong><%= roles.find(r => r.value === member.role)?.label || member.role %></strong>
+            </small>
+        </div>
+        
+        <!-- 退会日設定 -->
+        <div class="form-group">
+            <label for="leftAt" class="form-label">退会日</label>
+            <input type="date" name="leftAt" id="leftAt" class="form-control" 
+                   value="<%= member.leftAt || '' %>">
+            <small class="form-help">
+                退会日を設定すると、このメンバーは「退会済み」として表示されます。
+                <% if (member.leftAt) { %>
+                    <br><strong>現在の退会日: <%= new Date(member.leftAt).toLocaleDateString('ja-JP') %></strong>
+                    （空にすると退会日をクリアできます）
+                <% } %>
+            </small>
+        </div>
+        
+        <!-- 備考更新 -->
+        <div class="form-group">
+            <label for="notes" class="form-label">備考</label>
+            <textarea name="notes" id="notes" class="form-control" rows="3" 
+                      placeholder="担当分野や特記事項があれば記入してください"><%= member.notes || '' %></textarea>
+            <small class="form-help">メンバーの担当分野や役割について</small>
+        </div>
+        
+        <!-- フォームアクション -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">💾 変更を保存</button>
+            <a href="/circles/<%= circle.id %>/members" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+</div>
+
+<!-- 危険な操作セクション -->
+<div class="detail-section danger-section">
+    <div class="section-title">⚠️ 危険な操作</div>
+    <p class="danger-warning">
+        以下の操作は元に戻せません。十分注意して実行してください。
+    </p>
+    
+    <div class="danger-actions">
+        <form method="POST" 
+              action="/circles/<%= circle.id %>/members/<%= member.id %>" 
+              style="display: inline;"
+              onsubmit="return confirmRemoval()">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">
+                ❌ このメンバーをサークルから完全に削除
+            </button>
+        </form>
+    </div>
+    
+    <small class="form-help">
+        削除すると、このメンバーのサークル所属履歴が完全に削除されます。
+        一時的な退会の場合は、上記の「退会日」を設定することをお勧めします。
+    </small>
+</div>
+
+<style>
+    /* 共通スタイル */
+    body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+    .header { margin-bottom: 20px; }
+    .breadcrumb { font-size: 0.9em; color: #666; margin-top: 10px; }
+    .breadcrumb a { color: #007bff; text-decoration: none; }
+    .breadcrumb .separator { margin: 0 8px; }
+    .actions { margin-bottom: 20px; }
+    .btn { 
+        background: #007bff; color: white; padding: 8px 16px; 
+        text-decoration: none; border-radius: 4px; margin-right: 8px;
+        border: none; cursor: pointer; display: inline-block;
+    }
+    .btn-secondary { background: #6c757d; }
+    .btn-primary { background: #007bff; }
+    .btn-danger { background: #dc3545; }
+    .btn:hover { opacity: 0.9; }
+    
+    /* セクション構造 */
+    .detail-section { 
+        margin-bottom: 30px; background: #f8f9fa; 
+        padding: 20px; border-radius: 8px; 
+    }
+    .danger-section { 
+        background: #f8f9fa; 
+        border: 2px solid #dc3545; 
+    }
+    .section-title { 
+        font-size: 1.2em; font-weight: bold; 
+        margin-bottom: 15px; border-bottom: 2px solid #007bff; 
+        padding-bottom: 5px;
+    }
+    .danger-section .section-title { 
+        color: #dc3545; 
+        border-bottom-color: #dc3545; 
+    }
+    .detail-item { display: flex; margin-bottom: 10px; }
+    .detail-label { font-weight: bold; min-width: 120px; }
+    .detail-value { flex: 1; }
+    .detail-grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 15px; 
+    }
+    
+    /* フォームスタイル */
+    .member-form { max-width: 600px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { 
+        display: block; font-weight: bold; 
+        margin-bottom: 5px; 
+    }
+    .form-control { 
+        width: 100%; padding: 8px 12px; 
+        border: 1px solid #ddd; border-radius: 4px; 
+        font-size: 14px;
+    }
+    .form-control:focus { 
+        border-color: #007bff; outline: none; 
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    .form-help { 
+        display: block; font-size: 0.85em; 
+        color: #666; margin-top: 4px; 
+    }
+    
+    /* エラー表示 */
+    .error-section { 
+        background: #f8d7da; border: 1px solid #f5c6cb; 
+        border-radius: 4px; padding: 10px; margin-bottom: 20px; 
+    }
+    .error-message { 
+        color: #721c24; font-size: 0.9em; 
+        margin-bottom: 5px; 
+    }
+    .error-message:last-child { margin-bottom: 0; }
+    
+    /* フォームアクション */
+    .form-actions { 
+        margin-top: 30px; padding-top: 20px; 
+        border-top: 1px solid #ddd; 
+    }
+    
+    /* 危険な操作セクション */
+    .danger-warning { 
+        color: #721c24; font-weight: bold; 
+        margin-bottom: 15px; 
+    }
+    .danger-actions { margin-bottom: 10px; }
+    
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+        body { margin: 10px; }
+        .member-form { max-width: none; }
+        .detail-grid { grid-template-columns: 1fr; }
+        .detail-item { flex-direction: column; }
+        .detail-label { min-width: auto; margin-bottom: 2px; }
+        .form-actions, .danger-actions { text-align: center; }
+        .btn { margin-bottom: 8px; }
+    }
+</style>
+
+<script>
+    function confirmRemoval() {
+        return confirm(
+            `メンバー「<%= member.name %>」をサークル「<%= circle.name %>」から完全に削除しますか？\n\n` +
+            'この操作は元に戻せません。\n' +
+            '一時的な退会の場合は、「退会日」を設定することをお勧めします。\n\n' +
+            '本当に削除しますか？'
+        );
+    }
+    
+    // 退会日フィールドのインタラクション
+    document.getElementById('leftAt').addEventListener('change', function() {
+        const leftAtValue = this.value;
+        const formHelp = this.nextElementSibling;
+        
+        if (leftAtValue) {
+            const selectedDate = new Date(leftAtValue);
+            const today = new Date();
+            
+            if (selectedDate > today) {
+                formHelp.innerHTML += '<br><strong style="color: #007bff;">将来の退会日が設定されています。</strong>';
+            } else {
+                formHelp.innerHTML += '<br><strong style="color: #dc3545;">このメンバーは退会済みとして表示されます。</strong>';
+            }
+        }
+    });
+</script>

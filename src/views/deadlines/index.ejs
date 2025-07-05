@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= book.title %></title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="container">
+    <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs }) %>
+    
+    <h1><%= title %></h1>
+    <h2>書籍: <%= book.title %></h2>
+    
+    <div class="mb-4">
+      <a href="/books/<%= book.id %>/deadlines/new" class="btn btn-primary">新規締切作成</a>
+    </div>
+    
+    <% if (deadlines.length === 0) { %>
+      <p>締切がありません</p>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>締切名</th>
+            <th>期日</th>
+            <th>説明</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% deadlines.forEach(function(deadline) { %>
+            <tr>
+              <td><%= deadline.title %></td>
+              <td><%= deadline.formattedDueDate %></td>
+              <td><%= deadline.description || '-' %></td>
+              <td>
+                <a href="/deadlines/<%= deadline.id %>/edit" class="btn btn-sm btn-secondary">編集</a>
+                <form action="/deadlines/<%= deadline.id %>" method="POST" style="display: inline;">
+                  <input type="hidden" name="_method" value="DELETE">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+    
+    <div class="mt-4">
+      <a href="/books/<%= book.id %>" class="btn btn-secondary">書籍詳細に戻る</a>
+    </div>
+  </div>
+</body>
+</html>

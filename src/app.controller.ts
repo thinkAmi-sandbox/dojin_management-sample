@@ -1,12 +1,18 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Controller, Get, Render } from '@nestjs/common'
+import { AppService } from './app.service'
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor() {
+    // このコンストラクタは将来の依存関係注入のために予約されています
+  }
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Render('home/index')
+  getHello() {
+    return {
+      title: 'ホーム',
+      breadcrumbs: [{ label: 'ホーム', href: '/', isActive: true }],
+    }
   }
 }

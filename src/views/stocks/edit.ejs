@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .required {
+      color: red;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      display: inline-block;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+    .actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+    .error {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    .number-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+    .readonly-info {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 8px;
+      color: #495057;
+    }
+    @media (max-width: 768px) {
+      .number-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><%= title %></h1>
+    </div>
+
+    <form action="/stocks/<%= stock.id %>" method="POST">
+      <input type="hidden" name="_method" value="PUT">
+      
+      <!-- 版情報（読み取り専用） -->
+      <div class="form-group">
+        <label>版情報</label>
+        <div class="readonly-info">
+          <%= stock.editionName %>
+        </div>
+        <div class="help-text">版情報は変更できません。</div>
+      </div>
+
+      <!-- 保管場所（読み取り専用） -->
+      <div class="form-group">
+        <label>保管場所</label>
+        <div class="readonly-info">
+          <%= stock.locationName %>
+        </div>
+        <div class="help-text">保管場所は変更できません。</div>
+      </div>
+
+      <div class="number-grid">
+        <div class="form-group">
+          <label for="quantity">在庫数 <span class="required">*</span></label>
+          <input 
+            type="number" 
+            id="quantity" 
+            name="quantity"
+            min="0"
+            step="1"
+            required
+            value="<%= locals.formData ? formData.quantity : stock.quantity %>"
+          >
+          <% if (locals.errors && errors.quantity) { %>
+            <div class="error">⚠️ <%= errors.quantity %></div>
+          <% } %>
+          <div class="help-text">総在庫数を入力。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="reservedQuantity">予約済み数</label>
+          <input 
+            type="number" 
+            id="reservedQuantity" 
+            name="reservedQuantity"
+            min="0"
+            step="1"
+            value="<%= locals.formData ? formData.reservedQuantity : stock.reservedQuantity %>"
+          >
+          <% if (locals.errors && errors.reservedQuantity) { %>
+            <div class="error">⚠️ <%= errors.reservedQuantity %></div>
+          <% } %>
+          <div class="help-text">予約済み数量。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="availableQuantity">販売可能数</label>
+          <input 
+            type="number" 
+            id="availableQuantity" 
+            name="availableQuantity"
+            min="0"
+            step="1"
+            value="<%= locals.formData ? formData.availableQuantity : stock.availableQuantity %>"
+          >
+          <% if (locals.errors && errors.availableQuantity) { %>
+            <div class="error">⚠️ <%= errors.availableQuantity %></div>
+          <% } %>
+          <div class="help-text">販売可能数量。</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">備考</label>
+        <textarea 
+          id="notes" 
+          name="notes" 
+          rows="3"
+          maxlength="1000"
+          placeholder="在庫に関する備考があれば入力してください"
+        ><%= locals.formData ? formData.notes : (stock.notes || '') %></textarea>
+        <% if (locals.errors && errors.notes) { %>
+          <div class="error">⚠️ <%= errors.notes %></div>
+        <% } %>
+        <div class="help-text">任意項目です。1000文字以内で入力してください。</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">更新</button>
+        <a href="/stocks/<%= stock.id %>" class="btn btn-secondary">戻る</a>
+        
+        <!-- 削除ボタン -->
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          onclick="deleteStock()"
+          style="float: right;"
+        >
+          削除
+        </button>
+      </div>
+    </form>
+
+    <!-- 削除用フォーム（非表示） -->
+    <form id="deleteForm" action="/stocks/<%= stock.id %>" method="POST" style="display: none;">
+      <input type="hidden" name="_method" value="DELETE">
+    </form>
+  </div>
+
+  <script>
+    // 数量の自動計算機能
+    document.addEventListener('DOMContentLoaded', function() {
+      const quantityInput = document.getElementById('quantity')
+      const reservedInput = document.getElementById('reservedQuantity')
+      const availableInput = document.getElementById('availableQuantity')
+
+      // 総数量 = 予約済み + 販売可能 の整合性チェック
+      function checkQuantityBalance() {
+        const quantity = parseInt(quantityInput.value) || 0
+        const reserved = parseInt(reservedInput.value) || 0
+        const available = parseInt(availableInput.value) || 0
+
+        if (quantity !== reserved + available) {
+          quantityInput.style.borderColor = '#dc3545'
+          reservedInput.style.borderColor = '#dc3545'
+          availableInput.style.borderColor = '#dc3545'
+        } else {
+          quantityInput.style.borderColor = '#28a745'
+          reservedInput.style.borderColor = '#28a745'
+          availableInput.style.borderColor = '#28a745'
+        }
+      }
+
+      quantityInput.addEventListener('input', checkQuantityBalance)
+      reservedInput.addEventListener('input', checkQuantityBalance)
+      availableInput.addEventListener('input', checkQuantityBalance)
+
+      // 初期チェック
+      checkQuantityBalance()
+    })
+
+    // 削除確認
+    function deleteStock() {
+      if (confirm('この在庫データを削除しますか？\n※この操作は取り消せません。')) {
+        document.getElementById('deleteForm').submit()
+      }
+    }
+  </script>
+</body>
+</html>

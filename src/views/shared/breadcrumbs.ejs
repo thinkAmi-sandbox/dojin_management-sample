@@ -1,0 +1,16 @@
+<nav aria-label="パンくず" style="margin-bottom: 20px;">
+  <ol style="list-style: none; padding: 0; display: flex; align-items: center; gap: 10px;">
+    <% breadcrumbs.forEach((breadcrumb, index) => { %>
+      <li style="display: flex; align-items: center;">
+        <% if (!breadcrumb.isLast) { %>
+          <a href="<%= breadcrumb.url %>" style="color: #007bff; text-decoration: none;">
+            <%= breadcrumb.name %>
+          </a>
+          <span style="margin-left: 10px; color: #6c757d;">&gt;</span>
+        <% } else { %>
+          <span style="color: #6c757d;"><%= breadcrumb.name %></span>
+        <% } %>
+      </li>
+    <% }) %>
+  </ol>
+</nav>

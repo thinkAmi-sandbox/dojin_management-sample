@@ -1,0 +1,203 @@
+<style>
+    .form-group { margin-bottom: 20px; }
+    label { 
+        display: block; 
+        margin-bottom: 5px; 
+        font-weight: bold; 
+        color: #555;
+    }
+    input[type="text"], 
+    input[type="email"], 
+    input[type="tel"], 
+    input[type="number"], 
+    input[type="date"],
+    select,
+    textarea { 
+        width: 100%; 
+        max-width: 400px;
+        padding: 8px 12px; 
+        border: 1px solid #ddd; 
+        border-radius: 4px; 
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    .btn { 
+        background: #007bff; 
+        color: white; 
+        padding: 10px 20px; 
+        border: none; 
+        border-radius: 4px; 
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+    .btn:hover { background: #0056b3; }
+    .btn-secondary { 
+        background: #6c757d; 
+        color: white; 
+        text-decoration: none;
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 4px;
+    }
+    .btn-secondary:hover { background: #545b62; }
+    .required { color: #dc3545; }
+    .error { 
+        color: #dc3545; 
+        margin-top: 5px; 
+        font-size: 14px; 
+    }
+    .form-section {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+    }
+    .section-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .input-suffix {
+        font-weight: bold;
+        color: #666;
+    }
+</style>
+
+<h1><%= title %></h1>
+
+    <% if (errors && Object.keys(errors).length > 0) { %>
+        <div style="background: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <h3 style="margin-top: 0;">エラーが発生しました</h3>
+            <ul style="margin-bottom: 0;">
+                <% Object.values(errors).forEach(error => { %>
+                    <li><%= error %></li>
+                <% }) %>
+            </ul>
+        </div>
+    <% } %>
+
+    <form action="/consignments" method="POST">
+        <div class="form-section">
+            <div class="section-title">基本情報</div>
+            
+            <div class="form-group">
+                <label for="locationId">保管場所 <span class="required">*</span></label>
+                <select name="locationId" id="locationId" required>
+                    <option value="">選択してください</option>
+                    <% availableLocations.forEach(location => { %>
+                        <option value="<%= location.id %>">
+                            <%= location.name %> <%= location.address ? `(${location.address})` : '' %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="storeName">店舗名 <span class="required">*</span></label>
+                <input type="text" name="storeName" id="storeName" 
+                       value="<%= formData.storeName || '' %>" 
+                       required 
+                       maxlength="255">
+            </div>
+
+            <div class="form-group">
+                <label for="commissionRate">手数料率 <span class="required">*</span></label>
+                <div class="input-group">
+                    <input type="number" name="commissionRate" id="commissionRate" 
+                           value="<%= formData.commissionRate || '' %>" 
+                           required 
+                           min="0" 
+                           max="100">
+                    <span class="input-suffix">%</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="settlementCycle">精算サイクル</label>
+                <select name="settlementCycle" id="settlementCycle">
+                    <option value="">選択してください</option>
+                    <option value="monthly">月次</option>
+                    <option value="quarterly">四半期</option>
+                    <option value="custom">カスタム</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title">契約情報</div>
+            
+            <div class="form-group">
+                <label for="contractStartDate">契約開始日 <span class="required">*</span></label>
+                <input type="date" name="contractStartDate" id="contractStartDate" 
+                       value="<%= formData.contractStartDate || '' %>" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="contractEndDate">契約終了日</label>
+                <input type="date" name="contractEndDate" id="contractEndDate" 
+                       value="<%= formData.contractEndDate || '' %>">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title">連絡先情報</div>
+            
+            <div class="form-group">
+                <label for="contactPerson">担当者名</label>
+                <input type="text" name="contactPerson" id="contactPerson" 
+                       value="<%= formData.contactPerson || '' %>" 
+                       maxlength="255">
+            </div>
+
+            <div class="form-group">
+                <label for="contactEmail">連絡先メールアドレス</label>
+                <input type="email" name="contactEmail" id="contactEmail" 
+                       value="<%= formData.contactEmail || '' %>" 
+                       maxlength="255">
+            </div>
+
+            <div class="form-group">
+                <label for="contactPhone">電話番号</label>
+                <input type="tel" name="contactPhone" id="contactPhone" 
+                       value="<%= formData.contactPhone || '' %>" 
+                       maxlength="50">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title">その他の情報</div>
+            
+            <div class="form-group">
+                <label for="paymentInfo">支払情報</label>
+                <textarea name="paymentInfo" id="paymentInfo"><%= formData.paymentInfo || '' %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="contractTerms">契約条件</label>
+                <textarea name="contractTerms" id="contractTerms"><%= formData.contractTerms || '' %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">備考</label>
+                <textarea name="notes" id="notes"><%= formData.notes || '' %></textarea>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn">作成</button>
+            <a href="/consignments" class="btn-secondary">キャンセル</a>
+        </div>
+    </form>

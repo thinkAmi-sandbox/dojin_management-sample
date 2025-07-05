@@ -1,0 +1,37 @@
+<header style="background-color: #333; color: white; padding: 15px 0;">
+  <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+    <h1 style="margin: 0; font-size: 24px;">同人誌管理システム</h1>
+    <nav style="margin-top: 10px;">
+      <a href="/" style="color: white; text-decoration: none; margin-right: 20px; padding: 8px 12px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#555'" onmouseout="this.style.backgroundColor='transparent'">ホーム</a>
+      <a href="/books" style="color: white; text-decoration: none; margin-right: 20px; padding: 8px 12px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#555'" onmouseout="this.style.backgroundColor='transparent'">書籍一覧</a>
+      <a href="/authors" style="color: white; text-decoration: none; margin-right: 20px; padding: 8px 12px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#555'" onmouseout="this.style.backgroundColor='transparent'">執筆者一覧</a>
+      <a href="/printing-companies" style="color: white; text-decoration: none; margin-right: 20px; padding: 8px 12px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#555'" onmouseout="this.style.backgroundColor='transparent'">印刷所一覧</a>
+      <a href="/submissions" style="color: white; text-decoration: none; padding: 8px 12px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#555'" onmouseout="this.style.backgroundColor='transparent'">入稿一覧</a>
+    </nav>
+    
+    <!-- モバイル対応のためのCSS -->
+    <style>
+      @media (max-width: 768px) {
+        nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        nav a {
+          margin-right: 0 !important;
+          font-size: 14px;
+          padding: 6px 10px !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        nav {
+          flex-direction: column;
+        }
+        nav a {
+          text-align: center;
+        }
+      }
+    </style>
+  </div>
+</header>

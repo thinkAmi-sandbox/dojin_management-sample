@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        /* フィルターセクション */
+        .filter-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .filter-form { display: flex; gap: 10px; align-items: end; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-weight: bold; margin-bottom: 5px; }
+        .filter-group input, .filter-group select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* テーブルスタイル */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .actions-cell { white-space: nowrap; }
+        .action-link { margin-right: 8px; text-decoration: none; color: #007bff; }
+        .action-link:hover { text-decoration: underline; }
+        .empty-message { text-align: center; padding: 40px; color: #666; }
+        
+        /* 移動タイプ表示 */
+        .movement-type { font-weight: bold; padding: 2px 8px; border-radius: 12px; }
+        .type-inbound { background: #d4edda; color: #155724; }
+        .type-outbound { background: #f8d7da; color: #721c24; }
+        .type-transfer { background: #cce7ff; color: #004085; }
+        .type-sale { background: #fff3cd; color: #856404; }
+        .type-return { background: #d1ecf1; color: #0c5460; }
+        .type-adjustment { background: #e2e3e5; color: #383d41; }
+        .type-disposal { background: #f5c6cb; color: #721c24; }
+        
+        /* 数量表示 */
+        .quantity-number { font-weight: bold; text-align: right; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .filter-form { flex-direction: column; align-items: stretch; }
+            table { font-size: 0.9em; }
+            .actions-cell { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <!-- フィルターセクション -->
+    <div class="filter-section">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label for="editionId">版ID:</label>
+                <input type="number" id="editionId" name="editionId" value="<%= filters.editionId %>" placeholder="版IDで絞り込み">
+            </div>
+            <div class="filter-group">
+                <label for="movementType">移動タイプ:</label>
+                <select id="movementType" name="movementType">
+                    <option value="">すべて</option>
+                    <option value="inbound" <%= filters.movementType === 'inbound' ? 'selected' : '' %>>入庫</option>
+                    <option value="outbound" <%= filters.movementType === 'outbound' ? 'selected' : '' %>>出庫</option>
+                    <option value="transfer" <%= filters.movementType === 'transfer' ? 'selected' : '' %>>移動</option>
+                    <option value="sale" <%= filters.movementType === 'sale' ? 'selected' : '' %>>販売</option>
+                    <option value="return" <%= filters.movementType === 'return' ? 'selected' : '' %>>返品</option>
+                    <option value="adjustment" <%= filters.movementType === 'adjustment' ? 'selected' : '' %>>調整</option>
+                    <option value="disposal" <%= filters.movementType === 'disposal' ? 'selected' : '' %>>廃棄</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">絞り込み</button>
+            <a href="/stock-movements" class="btn btn-secondary">リセット</a>
+        </form>
+    </div>
+
+    <!-- エラー表示 -->
+    <% if (typeof errors !== 'undefined' && errors) { %>
+        <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
+            <% if (errors._general) { %>
+                <p>⚠️ <%= errors._general %></p>
+            <% } %>
+            <% if (errors.editionId) { %>
+                <p>⚠️ <%= errors.editionId %></p>
+            <% } %>
+            <% if (errors.fromLocationId) { %>
+                <p>⚠️ <%= errors.fromLocationId %></p>
+            <% } %>
+            <% if (errors.toLocationId) { %>
+                <p>⚠️ <%= errors.toLocationId %></p>
+            <% } %>
+            <% if (errors.quantity) { %>
+                <p>⚠️ <%= errors.quantity %></p>
+            <% } %>
+            <% if (errors.movementType) { %>
+                <p>⚠️ <%= errors.movementType %></p>
+            <% } %>
+            <% if (errors.reason) { %>
+                <p>⚠️ <%= errors.reason %></p>
+            <% } %>
+        </div>
+    <% } %>
+
+    <% if (movements.length === 0) { %>
+        <div class="empty-message">
+            在庫移動履歴が登録されていません
+        </div>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>移動日時</th>
+                    <th>版</th>
+                    <th>移動元</th>
+                    <th>移動先</th>
+                    <th>数量</th>
+                    <th>移動タイプ</th>
+                    <th>理由</th>
+                    <th>作成者</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% movements.forEach(movement => { %>
+                    <tr>
+                        <td><%= movement.movedAt %></td>
+                        <td><%= movement.editionName %></td>
+                        <td><%= movement.fromLocationName %></td>
+                        <td><%= movement.toLocationName %></td>
+                        <td class="quantity-number"><%= movement.quantity %></td>
+                        <td>
+                            <span class="movement-type type-<%= movement.movementTypeValue %>">
+                                <%= movement.movementType %>
+                            </span>
+                        </td>
+                        <td><%= movement.reason %></td>
+                        <td><%= movement.createdBy %></td>
+                        <td class="actions-cell">
+                            <a href="/stock-movements/<%= movement.id %>" class="action-link">詳細</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+
+    <div class="actions">
+        <a href="/stocks" class="btn btn-secondary">在庫一覧に戻る</a>
+    </div>
+</body>
+</html>

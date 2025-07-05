@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .required {
+      color: red;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      display: inline-block;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+    .error {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    .alert {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+    .alert-warning {
+      color: #856404;
+      background-color: #fff3cd;
+      border-color: #ffeaa7;
+    }
+    .number-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+    @media (max-width: 768px) {
+      .number-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><%= title %></h1>
+    </div>
+
+    <!-- 版・保管場所が不足している場合の警告 -->
+    <% if (!editions || editions.length === 0) { %>
+      <div class="alert alert-warning">
+        ⚠️ 版が登録されていません。<a href="/books">書籍・版管理</a>から版を先に登録してください。
+      </div>
+    <% } %>
+    <% if (!storageLocations || storageLocations.length === 0) { %>
+      <div class="alert alert-warning">
+        ⚠️ 保管場所が登録されていません。<a href="/storage-locations">保管場所管理</a>から保管場所を先に登録してください。
+      </div>
+    <% } %>
+
+    <form action="/stocks" method="POST">
+      <div class="form-group">
+        <label for="editionId">版を選択 <span class="required">*</span></label>
+        <select id="editionId" name="editionId" required>
+          <option value="">版を選択してください</option>
+          <% if (editions && editions.length > 0) { %>
+            <% editions.forEach(edition => { %>
+              <option value="<%= edition.id %>" <%= (locals.formData && formData.editionId == edition.id) ? 'selected' : '' %>>
+                <%= edition.displayName %>
+              </option>
+            <% }) %>
+          <% } %>
+        </select>
+        <% if (locals.errors && errors.editionId) { %>
+          <div class="error">⚠️ <%= errors.editionId %></div>
+        <% } %>
+        <div class="help-text">必須項目です。在庫を登録する版を選択してください。</div>
+      </div>
+
+      <div class="form-group">
+        <label for="locationId">保管場所を選択 <span class="required">*</span></label>
+        <select id="locationId" name="locationId" required>
+          <option value="">保管場所を選択してください</option>
+          <% if (storageLocations && storageLocations.length > 0) { %>
+            <% storageLocations.forEach(location => { %>
+              <option value="<%= location.id %>" <%= (locals.formData && formData.locationId == location.id) ? 'selected' : '' %>>
+                <%= location.name %> (<%= location.type %>)
+              </option>
+            <% }) %>
+          <% } %>
+        </select>
+        <% if (locals.errors && errors.locationId) { %>
+          <div class="error">⚠️ <%= errors.locationId %></div>
+        <% } %>
+        <div class="help-text">必須項目です。在庫を保管する場所を選択してください。</div>
+      </div>
+
+      <div class="number-grid">
+        <div class="form-group">
+          <label for="quantity">在庫数</label>
+          <input 
+            type="number" 
+            id="quantity" 
+            name="quantity"
+            min="0"
+            step="1"
+            placeholder="0"
+            value="<%= locals.formData ? formData.quantity || '0' : '0' %>"
+          >
+          <% if (locals.errors && errors.quantity) { %>
+            <div class="error">⚠️ <%= errors.quantity %></div>
+          <% } %>
+          <div class="help-text">総在庫数を入力。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="reservedQuantity">予約済み数</label>
+          <input 
+            type="number" 
+            id="reservedQuantity" 
+            name="reservedQuantity"
+            min="0"
+            step="1"
+            placeholder="0"
+            value="<%= locals.formData ? formData.reservedQuantity || '0' : '0' %>"
+          >
+          <% if (locals.errors && errors.reservedQuantity) { %>
+            <div class="error">⚠️ <%= errors.reservedQuantity %></div>
+          <% } %>
+          <div class="help-text">予約済み数量。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="availableQuantity">販売可能数</label>
+          <input 
+            type="number" 
+            id="availableQuantity" 
+            name="availableQuantity"
+            min="0"
+            step="1"
+            placeholder="0"
+            value="<%= locals.formData ? formData.availableQuantity || '0' : '0' %>"
+          >
+          <% if (locals.errors && errors.availableQuantity) { %>
+            <div class="error">⚠️ <%= errors.availableQuantity %></div>
+          <% } %>
+          <div class="help-text">販売可能数量。</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">備考</label>
+        <textarea 
+          id="notes" 
+          name="notes" 
+          rows="3"
+          maxlength="1000"
+          placeholder="在庫に関する備考があれば入力してください"
+        ><%= locals.formData ? formData.notes : '' %></textarea>
+        <% if (locals.errors && errors.notes) { %>
+          <div class="error">⚠️ <%= errors.notes %></div>
+        <% } %>
+        <div class="help-text">任意項目です。1000文字以内で入力してください。</div>
+      </div>
+
+      <div class="actions">
+        <% if (editions && editions.length > 0 && storageLocations && storageLocations.length > 0) { %>
+          <button type="submit" class="btn btn-primary">在庫登録</button>
+        <% } else { %>
+          <button type="submit" class="btn btn-primary" disabled>在庫登録（版・保管場所が必要）</button>
+        <% } %>
+        <a href="/stocks" class="btn btn-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // 数量の自動計算機能（オプション）
+    document.addEventListener('DOMContentLoaded', function() {
+      const quantityInput = document.getElementById('quantity')
+      const reservedInput = document.getElementById('reservedQuantity')
+      const availableInput = document.getElementById('availableQuantity')
+
+      // 総数量 = 予約済み + 販売可能 の整合性チェック
+      function checkQuantityBalance() {
+        const quantity = parseInt(quantityInput.value) || 0
+        const reserved = parseInt(reservedInput.value) || 0
+        const available = parseInt(availableInput.value) || 0
+
+        if (quantity !== reserved + available) {
+          quantityInput.style.borderColor = '#dc3545'
+          reservedInput.style.borderColor = '#dc3545'
+          availableInput.style.borderColor = '#dc3545'
+        } else {
+          quantityInput.style.borderColor = '#28a745'
+          reservedInput.style.borderColor = '#28a745'
+          availableInput.style.borderColor = '#28a745'
+        }
+      }
+
+      quantityInput.addEventListener('input', checkQuantityBalance)
+      reservedInput.addEventListener('input', checkQuantityBalance)
+      availableInput.addEventListener('input', checkQuantityBalance)
+    })
+  </script>
+</body>
+</html>

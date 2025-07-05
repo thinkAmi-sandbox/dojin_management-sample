@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"], input[type="date"], textarea, select { 
+            width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;
+        }
+        textarea { min-height: 100px; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-sm { padding: 5px 10px; font-size: 0.875rem; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .error { color: #dc3545; margin-top: 5px; font-size: 0.875em; }
+        .actions { margin-top: 30px; }
+        .back-link { color: #007bff; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        
+        .section-title { font-size: 1.2em; font-weight: bold; margin: 30px 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
+        
+        #details-container { margin-top: 20px; }
+        .detail-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .detail-row select, .detail-row input { margin: 0; }
+        .detail-total { text-align: right; font-weight: bold; }
+        .add-detail-btn { margin-top: 10px; }
+        
+        .summary-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .summary-label { font-weight: bold; }
+        .summary-value { font-size: 1.2em; }
+        .total-row { border-top: 2px solid #dee2e6; padding-top: 10px; margin-top: 10px; }
+        .total-row .summary-value { color: #28a745; font-size: 1.4em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><%= title %></h1>
+            <p>委託先: <%= consignment.storeName %> (手数料率: <%= consignment.commissionRate %>%)</p>
+        </div>
+
+        <form action="/consignments/<%= consignment.id %>/reports" method="POST" onsubmit="return validateForm()">
+            <div class="section-title">報告期間</div>
+            
+            <div class="form-group">
+                <label for="reportPeriodStart">報告期間開始日 <span style="color: red;">*</span></label>
+                <input type="date" id="reportPeriodStart" name="reportPeriodStart" required
+                       value="<%= formData.reportPeriodStart || '' %>">
+                <% if (errors.reportPeriodStart) { %>
+                    <div class="error"><%= errors.reportPeriodStart %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="reportPeriodEnd">報告期間終了日 <span style="color: red;">*</span></label>
+                <input type="date" id="reportPeriodEnd" name="reportPeriodEnd" required
+                       value="<%= formData.reportPeriodEnd || '' %>">
+                <% if (errors.reportPeriodEnd) { %>
+                    <div class="error"><%= errors.reportPeriodEnd %></div>
+                <% } %>
+            </div>
+
+            <div class="section-title">販売明細</div>
+            
+            <div id="details-container">
+                <div class="detail-row">
+                    <div><strong>書籍・版</strong></div>
+                    <div><strong>数量</strong></div>
+                    <div><strong>単価</strong></div>
+                    <div></div>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-sm add-detail-btn" onclick="addDetail()">+ 明細追加</button>
+
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="summary-label">総売上金額:</span>
+                    <span class="summary-value">¥<span id="subtotal">0</span></span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">手数料 (<%= consignment.commissionRate %>%):</span>
+                    <span class="summary-value">¥<span id="commission">0</span></span>
+                </div>
+                <div class="summary-row total-row">
+                    <span class="summary-label">純額:</span>
+                    <span class="summary-value">¥<span id="netAmount">0</span></span>
+                </div>
+            </div>
+
+            <input type="hidden" id="totalSalesAmount" name="totalSalesAmount" value="0">
+
+            <div class="form-group">
+                <label for="notes">備考</label>
+                <textarea id="notes" name="notes"><%= formData.notes || '' %></textarea>
+                <% if (errors.notes) { %>
+                    <div class="error"><%= errors.notes %></div>
+                <% } %>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn">販売報告を作成</button>
+                <a href="/consignments/<%= consignment.id %>/reports" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const availableEditions = <%- JSON.stringify(availableEditions) %>;
+        const commissionRate = <%= consignment.commissionRate %>;
+        let detailIndex = 0;
+
+        function addDetail() {
+            const container = document.getElementById('details-container');
+            const detailRow = document.createElement('div');
+            detailRow.className = 'detail-row';
+            detailRow.id = `detail-${detailIndex}`;
+            
+            let optionsHtml = '<option value="">選択してください</option>';
+            availableEditions.forEach(edition => {
+                optionsHtml += `<option value="${edition.id}" data-price="${edition.basePrice || 0}" data-stock="${edition.availableQuantity}">
+                    ${edition.bookTitle} - ${edition.versionName} (在庫: ${edition.availableQuantity})
+                </option>`;
+            });
+            
+            detailRow.innerHTML = `
+                <select name="details[${detailIndex}][editionId]" onchange="updatePrice(${detailIndex})" required>
+                    ${optionsHtml}
+                </select>
+                <input type="number" name="details[${detailIndex}][quantity]" min="1" required 
+                       placeholder="数量" onchange="updateTotal()">
+                <input type="number" name="details[${detailIndex}][unitPrice]" min="0" required 
+                       placeholder="単価" onchange="updateTotal()">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeDetail(${detailIndex})">削除</button>
+            `;
+            
+            container.appendChild(detailRow);
+            detailIndex++;
+        }
+
+        function removeDetail(index) {
+            const detail = document.getElementById(`detail-${index}`);
+            if (detail) {
+                detail.remove();
+                updateTotal();
+            }
+        }
+
+        function updatePrice(index) {
+            const select = document.querySelector(`select[name="details[${index}][editionId]"]`);
+            const priceInput = document.querySelector(`input[name="details[${index}][unitPrice]"]`);
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.dataset.price) {
+                priceInput.value = selectedOption.dataset.price;
+                updateTotal();
+            }
+        }
+
+        function updateTotal() {
+            let total = 0;
+            
+            // 各明細の小計を計算
+            for (let i = 0; i < detailIndex; i++) {
+                const quantityInput = document.querySelector(`input[name="details[${i}][quantity]"]`);
+                const priceInput = document.querySelector(`input[name="details[${i}][unitPrice]"]`);
+                
+                if (quantityInput && priceInput) {
+                    const quantity = parseInt(quantityInput.value) || 0;
+                    const price = parseInt(priceInput.value) || 0;
+                    total += quantity * price;
+                }
+            }
+            
+            // 手数料と純額を計算
+            const commission = Math.floor(total * commissionRate / 100);
+            const netAmount = total - commission;
+            
+            // 表示を更新
+            document.getElementById('subtotal').textContent = total.toLocaleString();
+            document.getElementById('commission').textContent = commission.toLocaleString();
+            document.getElementById('netAmount').textContent = netAmount.toLocaleString();
+            document.getElementById('totalSalesAmount').value = total;
+        }
+
+        function validateForm() {
+            const details = document.querySelectorAll('.detail-row');
+            if (details.length <= 1) { // ヘッダー行を除く
+                alert('少なくとも1つの販売明細を追加してください。');
+                return false;
+            }
+            
+            // 在庫チェック
+            for (let i = 0; i < detailIndex; i++) {
+                const select = document.querySelector(`select[name="details[${i}][editionId]"]`);
+                const quantityInput = document.querySelector(`input[name="details[${i}][quantity]"]`);
+                
+                if (select && quantityInput) {
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption && selectedOption.dataset.stock) {
+                        const stock = parseInt(selectedOption.dataset.stock);
+                        const quantity = parseInt(quantityInput.value) || 0;
+                        
+                        if (quantity > stock) {
+                            alert(`${selectedOption.text} の在庫が不足しています。（在庫: ${stock}、入力数量: ${quantity}）`);
+                            return false;
+                        }
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        // 初期表示時に1行追加
+        addDetail();
+    </script>
+</body>
+</html>

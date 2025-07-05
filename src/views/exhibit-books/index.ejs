@@ -1,0 +1,196 @@
+<style>
+    .exhibit-info { margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; }
+    .exhibit-info h2 { margin: 0; font-size: 18px; color: #333; }
+    .exhibit-meta { margin-top: 8px; font-size: 14px; color: #666; }
+    
+    .books-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .books-header h3 { margin: 0; color: #333; }
+    .btn { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+    .btn:hover { background-color: #0056b3; }
+    .btn-secondary { background-color: #6c757d; }
+    .btn-secondary:hover { background-color: #545b62; }
+    .btn-danger { background-color: #dc3545; }
+    .btn-danger:hover { background-color: #c82333; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: #e9ecef; padding: 15px; border-radius: 6px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: bold; color: #007bff; }
+    .stat-label { font-size: 14px; color: #666; margin-top: 5px; }
+    
+    .books-grid { display: grid; gap: 20px; }
+    .book-card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; }
+    .book-header { display: flex; justify-content: between; align-items: flex-start; margin-bottom: 15px; }
+    .book-info { flex: 1; }
+    .book-title { margin: 0 0 8px 0; color: #333; font-size: 18px; }
+    .book-subtitle { margin: 0 0 10px 0; color: #666; font-size: 14px; }
+    .book-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .detail-item { font-size: 14px; }
+    .detail-label { font-weight: bold; color: #555; }
+    .detail-value { color: #333; }
+    
+    .book-actions { display: flex; gap: 10px; }
+    .btn-sm { padding: 6px 12px; font-size: 14px; }
+    
+    .empty-state { text-align: center; padding: 40px; color: #666; }
+    .empty-state p { font-size: 16px; margin-bottom: 20px; }
+    
+    .footer-actions { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; }
+    
+    /* レスポンシブ対応 */
+    @media (max-width: 768px) {
+        .books-header { flex-direction: column; gap: 15px; align-items: stretch; }
+        .stats-grid { grid-template-columns: 1fr; }
+        .book-details { grid-template-columns: 1fr; }
+        .book-actions { flex-direction: column; }
+    }
+</style>
+
+<div class="page-header">
+    <h1><%= title %></h1>
+    <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs.map(b => ({ name: b.name, url: b.url, isLast: !b.url })) }) %>
+</div>
+
+    <div class="exhibit-books-list">
+            <div class="exhibit-info">
+                <h2>出展申込情報</h2>
+                <div class="exhibit-meta">
+                    ステータス: <%= exhibit.status %> | 
+                    スペース番号: <%= exhibit.spaceNumber %> | 
+                    スペース種別: <%= exhibit.spaceType %>
+                </div>
+            </div>
+
+            <% if (exhibitBooks.length > 0) { %>
+                <!-- 統計情報（版対応） -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value"><%= stats.totalEditions %></div>
+                        <div class="stat-label">版数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= stats.totalPlannedQuantity.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">頒布予定数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= stats.totalActualQuantity.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">実際持込数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><%= stats.totalSoldQuantity.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">売上数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">¥<%= stats.totalRevenue.toLocaleString('ja-JP') %></div>
+                        <div class="stat-label">売上金額</div>
+                    </div>
+                </div>
+            <% } %>
+
+            <div class="books-header">
+                <h3>
+                    頒布書籍一覧 (<%= exhibitBooks.length %>冊)
+                </h3>
+                <a href="<%= addUrl %>" class="btn">
+                    書籍を追加
+                </a>
+            </div>
+
+            <% if (exhibitBooks.length === 0) { %>
+                <div class="empty-state">
+                    <p>頒布予定の書籍はありません</p>
+                    <a href="<%= addUrl %>" class="btn">
+                        最初の書籍を追加
+                    </a>
+                </div>
+            <% } else { %>
+                <div class="books-grid">
+                    <% exhibitBooks.forEach(function(exhibitBook) { %>
+                        <div class="book-card">
+                            <div class="book-header">
+                                <div class="book-info">
+                                    <h4 class="book-title">
+                                        <%= exhibitBook.book.title %>
+                                        <span style="font-size: 16px; color: #666;">（<%= exhibitBook.edition.versionName %>）</span>
+                                    </h4>
+                                    <% if (exhibitBook.book.subtitle) { %>
+                                        <p class="book-subtitle"><%= exhibitBook.book.subtitle %></p>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <div class="book-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">頒布予定数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedPlannedQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">実際持込数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedActualQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">売上数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedSoldQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">残数</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedRemainingQuantity %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">定価</div>
+                                    <div class="detail-value"><%= exhibitBook.edition.formattedBasePrice %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">販売価格</div>
+                                    <div class="detail-value"><%= exhibitBook.formattedPrice %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">ページ数</div>
+                                    <div class="detail-value"><%= exhibitBook.edition.pageCount ? `${exhibitBook.edition.pageCount}ページ` : '-' %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">表示順序</div>
+                                    <div class="detail-value"><%= exhibitBook.displayOrder %></div>
+                                </div>
+                            </div>
+                            
+                            <div class="book-actions">
+                                <a href="<%= exhibitBook.editUrl %>" class="btn btn-sm btn-secondary">編集</a>
+                                <form style="display: inline;" onsubmit="return confirm('この書籍を削除してもよろしいですか？')">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button 
+                                        type="button" 
+                                        onclick="deleteBook('<%= exhibitBook.deleteUrl %>')"
+                                        class="btn btn-sm btn-danger"
+                                    >
+                                        削除
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+            
+            <div class="footer-actions">
+                <a href="<%= backUrl %>" class="btn btn-secondary">出展申込に戻る</a>
+            </div>
+    </div>
+
+<script>
+    function deleteBook(deleteUrl) {
+        if (confirm('この書籍を削除してもよろしいですか？')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = deleteUrl;
+            
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>

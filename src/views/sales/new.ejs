@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .form-container { max-width: 800px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; 
+        }
+        .error { color: #dc3545; margin-top: 5px; font-size: 0.9em; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        .btn-secondary { background: #6c757d; }
+        .details-section { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+        .add-detail-btn { background: #28a745; }
+        .remove-detail-btn { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+        <a href="/sales" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <div class="form-container">
+        <% if (typeof errors !== 'undefined' && errors) { %>
+            <div class="alert alert-danger">
+                <h4>エラーが発生しました</h4>
+                <ul>
+                    <% Object.values(errors).forEach(error => { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+            </div>
+        <% } %>
+
+        <form method="POST" action="/sales">
+            <div class="form-group">
+                <label for="transactionType">販売タイプ <span style="color: red;">*</span></label>
+                <select id="transactionType" name="transactionType" required>
+                    <option value="">-- 選択してください --</option>
+                    <option value="event" <%= (formData.transactionType === 'event') ? 'selected' : '' %>>イベント販売</option>
+                    <option value="online" <%= (formData.transactionType === 'online') ? 'selected' : '' %>>オンライン販売</option>
+                    <option value="consignment" <%= (formData.transactionType === 'consignment') ? 'selected' : '' %>>委託販売</option>
+                    <option value="direct" <%= (formData.transactionType === 'direct') ? 'selected' : '' %>>直接販売</option>
+                </select>
+                <% if (typeof errors !== 'undefined' && errors && errors.transactionType) { %>
+                    <div class="error"><%= errors.transactionType %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="eventId">イベント</label>
+                <select id="eventId" name="eventId">
+                    <option value="">-- 選択してください --</option>
+                    <% if (events && events.length > 0) { %>
+                        <% events.forEach(event => { %>
+                            <option value="<%= event.id %>" <%= (formData.eventId == event.id) ? 'selected' : '' %>>
+                                <%= event.name %>
+                            </option>
+                        <% }) %>
+                    <% } %>
+                </select>
+                <% if (typeof errors !== 'undefined' && errors && errors.eventId) { %>
+                    <div class="error"><%= errors.eventId %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="locationId">販売場所</label>
+                <select id="locationId" name="locationId">
+                    <option value="">-- 選択してください --</option>
+                    <% if (locations && locations.length > 0) { %>
+                        <% locations.forEach(location => { %>
+                            <option value="<%= location.id %>" <%= (formData.locationId == location.id) ? 'selected' : '' %>>
+                                <%= location.name %>
+                            </option>
+                        <% }) %>
+                    <% } %>
+                </select>
+                <% if (typeof errors !== 'undefined' && errors && errors.locationId) { %>
+                    <div class="error"><%= errors.locationId %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="customerName">顧客名</label>
+                <input type="text" id="customerName" name="customerName" value="<%= formData.customerName || '' %>">
+                <% if (typeof errors !== 'undefined' && errors && errors.customerName) { %>
+                    <div class="error"><%= errors.customerName %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="customerEmail">顧客メールアドレス</label>
+                <input type="email" id="customerEmail" name="customerEmail" value="<%= formData.customerEmail || '' %>">
+                <% if (typeof errors !== 'undefined' && errors && errors.customerEmail) { %>
+                    <div class="error"><%= errors.customerEmail %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="totalAmount">合計金額 <span style="color: red;">*</span></label>
+                <input type="number" id="totalAmount" name="totalAmount" value="<%= formData.totalAmount || '' %>" required>
+                <% if (typeof errors !== 'undefined' && errors && errors.totalAmount) { %>
+                    <div class="error"><%= errors.totalAmount %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="discountAmount">割引金額</label>
+                <input type="number" id="discountAmount" name="discountAmount" value="<%= formData.discountAmount || '' %>">
+                <% if (typeof errors !== 'undefined' && errors && errors.discountAmount) { %>
+                    <div class="error"><%= errors.discountAmount %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="finalAmount">最終金額 <span style="color: red;">*</span></label>
+                <input type="number" id="finalAmount" name="finalAmount" value="<%= formData.finalAmount || '' %>" required>
+                <% if (typeof errors !== 'undefined' && errors && errors.finalAmount) { %>
+                    <div class="error"><%= errors.finalAmount %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="paymentMethod">支払い方法</label>
+                <select id="paymentMethod" name="paymentMethod">
+                    <option value="">-- 選択してください --</option>
+                    <option value="cash" <%= (formData.paymentMethod === 'cash') ? 'selected' : '' %>>現金</option>
+                    <option value="card" <%= (formData.paymentMethod === 'card') ? 'selected' : '' %>>カード</option>
+                    <option value="transfer" <%= (formData.paymentMethod === 'transfer') ? 'selected' : '' %>>振込</option>
+                    <option value="other" <%= (formData.paymentMethod === 'other') ? 'selected' : '' %>>その他</option>
+                </select>
+                <% if (typeof errors !== 'undefined' && errors && errors.paymentMethod) { %>
+                    <div class="error"><%= errors.paymentMethod %></div>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">備考</label>
+                <textarea id="notes" name="notes" rows="3"><%= formData.notes || '' %></textarea>
+                <% if (typeof errors !== 'undefined' && errors && errors.notes) { %>
+                    <div class="error"><%= errors.notes %></div>
+                <% } %>
+            </div>
+
+            <h3>販売明細</h3>
+            <div id="details-container">
+                <% if (formData.details && formData.details.length > 0) { %>
+                    <% formData.details.forEach((detail, index) => { %>
+                        <div class="details-section">
+                            <div class="form-group">
+                                <label for="details[<%= index %>][editionId]">版・エディション</label>
+                                <select name="details[<%= index %>][editionId]">
+                                    <option value="">-- 選択してください --</option>
+                                    <% if (availableEditions && availableEditions.length > 0) { %>
+                                        <% availableEditions.forEach(edition => { %>
+                                            <option value="<%= edition.id %>" <%= (detail.editionId == edition.id) ? 'selected' : '' %>>
+                                                <%= edition.bookTitle %> - <%= edition.versionName %>
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="details[<%= index %>][quantity]">数量</label>
+                                <input type="number" name="details[<%= index %>][quantity]" value="<%= detail.quantity || '' %>">
+                            </div>
+                            <div class="form-group">
+                                <label for="details[<%= index %>][unitPrice]">単価</label>
+                                <input type="number" name="details[<%= index %>][unitPrice]" value="<%= detail.unitPrice || '' %>">
+                            </div>
+                            <div class="form-group">
+                                <label for="details[<%= index %>][discountAmount]">割引金額</label>
+                                <input type="number" name="details[<%= index %>][discountAmount]" value="<%= detail.discountAmount || '' %>">
+                            </div>
+                            <button type="button" class="btn remove-detail-btn" onclick="removeDetail(this)">削除</button>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="details-section">
+                        <div class="form-group">
+                            <label for="details[0][editionId]">版・エディション</label>
+                            <select name="details[0][editionId]">
+                                <option value="">-- 選択してください --</option>
+                                <% if (availableEditions && availableEditions.length > 0) { %>
+                                    <% availableEditions.forEach(edition => { %>
+                                        <option value="<%= edition.id %>">
+                                            <%= edition.bookTitle %> - <%= edition.versionName %>
+                                        </option>
+                                    <% }) %>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="details[0][quantity]">数量</label>
+                            <input type="number" name="details[0][quantity]">
+                        </div>
+                        <div class="form-group">
+                            <label for="details[0][unitPrice]">単価</label>
+                            <input type="number" name="details[0][unitPrice]">
+                        </div>
+                        <div class="form-group">
+                            <label for="details[0][discountAmount]">割引金額</label>
+                            <input type="number" name="details[0][discountAmount]">
+                        </div>
+                        <button type="button" class="btn remove-detail-btn" onclick="removeDetail(this)">削除</button>
+                    </div>
+                <% } %>
+            </div>
+
+            <% if (typeof errors !== 'undefined' && errors && errors.details) { %>
+                <div class="error"><%= errors.details %></div>
+            <% } %>
+
+            <button type="button" class="btn add-detail-btn" onclick="addDetail()">明細追加</button>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn">登録</button>
+                <a href="/sales" class="btn btn-secondary">キャンセル</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let detailIndex = <%= (formData.details && formData.details.length > 0) ? formData.details.length : 1 %>;
+
+        function addDetail() {
+            const container = document.getElementById('details-container');
+            const newDetail = document.createElement('div');
+            newDetail.className = 'details-section';
+            
+            newDetail.innerHTML = `
+                <div class="form-group">
+                    <label for="details[${detailIndex}][editionId]">版・エディション</label>
+                    <select name="details[${detailIndex}][editionId]">
+                        <option value="">-- 選択してください --</option>
+                        <% if (availableEditions && availableEditions.length > 0) { %>
+                            <% availableEditions.forEach(edition => { %>
+                                <option value="<%= edition.id %>">
+                                    <%= edition.bookTitle %> - <%= edition.versionName %>
+                                </option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="details[${detailIndex}][quantity]">数量</label>
+                    <input type="number" name="details[${detailIndex}][quantity]">
+                </div>
+                <div class="form-group">
+                    <label for="details[${detailIndex}][unitPrice]">単価</label>
+                    <input type="number" name="details[${detailIndex}][unitPrice]">
+                </div>
+                <div class="form-group">
+                    <label for="details[${detailIndex}][discountAmount]">割引金額</label>
+                    <input type="number" name="details[${detailIndex}][discountAmount]">
+                </div>
+                <button type="button" class="btn remove-detail-btn" onclick="removeDetail(this)">削除</button>
+            `;
+            
+            container.appendChild(newDetail);
+            detailIndex++;
+        }
+
+        function removeDetail(button) {
+            const container = document.getElementById('details-container');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+    </script>
+</body>
+</html>

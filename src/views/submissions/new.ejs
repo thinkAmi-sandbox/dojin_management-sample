@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .book-info {
+      background-color: #e9ecef;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .book-info h2 {
+      margin-top: 0;
+      color: #555;
+      font-size: 1.2rem;
+    }
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .required {
+      color: #dc3545;
+    }
+    .form-section {
+      border-top: 1px solid #eee;
+      margin-top: 25px;
+      padding-top: 20px;
+    }
+    .form-section h3 {
+      margin-top: 0;
+      color: #666;
+      font-size: 1.1rem;
+    }
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .button-group {
+      margin-top: 30px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+    .error-message {
+      color: #dc3545;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    .alert {
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <h1><%= title %></h1>
+
+  <div class="book-info">
+    <h2>書籍情報</h2>
+    <p><strong>タイトル:</strong> <%= book.title %></p>
+    <% if (book.subtitle) { %>
+      <p><strong>サブタイトル:</strong> <%= book.subtitle %></p>
+    <% } %>
+  </div>
+
+  <% if (errors.general) { %>
+    <div class="alert">
+      <%= errors.general %>
+    </div>
+  <% } %>
+
+  <form action="/books/<%= book.id %>/submissions" method="POST">
+    <!-- 基本情報 -->
+    <div class="form-group">
+      <label for="printingCompanyId">印刷所 <span class="required">*</span></label>
+      <select id="printingCompanyId" name="printingCompanyId" required>
+        <option value="">印刷所を選択</option>
+        <% printingCompanies.forEach(company => { %>
+          <option value="<%= company.id %>" <%= submission.printingCompanyId == company.id ? 'selected' : '' %>>
+            <%= company.name %>
+          </option>
+        <% }) %>
+      </select>
+      <% if (errors.printingCompanyId) { %>
+        <div class="error-message"><%= errors.printingCompanyId %></div>
+      <% } %>
+    </div>
+
+    <div class="form-group">
+      <label for="quantity">部数 <span class="required">*</span></label>
+      <input type="number" id="quantity" name="quantity" value="<%= submission.quantity %>" min="1" required>
+      <% if (errors.quantity) { %>
+        <div class="error-message"><%= errors.quantity %></div>
+      <% } %>
+    </div>
+
+    <!-- 日付情報 -->
+    <div class="form-section">
+      <h3>日付情報</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="submissionDate">入稿日</label>
+          <input type="date" id="submissionDate" name="submissionDate" value="<%= submission.submissionDate %>">
+        </div>
+        <div class="form-group">
+          <label for="expectedDeliveryDate">納品予定日</label>
+          <input type="date" id="expectedDeliveryDate" name="expectedDeliveryDate" value="<%= submission.expectedDeliveryDate %>">
+        </div>
+      </div>
+    </div>
+
+    <!-- 印刷仕様 -->
+    <div class="form-section">
+      <h3>印刷仕様</h3>
+      <div class="form-group">
+        <label for="specificationNotes">仕様備考</label>
+        <textarea id="specificationNotes" name="specificationNotes" placeholder="例: A5サイズ、表紙フルカラー、本文モノクロ"><%= submission.specificationNotes %></textarea>
+      </div>
+    </div>
+
+    <!-- コスト情報 -->
+    <div class="form-section">
+      <h3>コスト情報</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="printingCost">印刷費（円）</label>
+          <input type="number" id="printingCost" name="printingCost" value="<%= submission.printingCost %>" min="0">
+        </div>
+        <div class="form-group">
+          <label for="shippingCost">送料（円）</label>
+          <input type="number" id="shippingCost" name="shippingCost" value="<%= submission.shippingCost %>" min="0">
+        </div>
+        <div class="form-group">
+          <label for="otherCost">その他費用（円）</label>
+          <input type="number" id="otherCost" name="otherCost" value="<%= submission.otherCost %>" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="discountType">割引種別</label>
+        <input type="text" id="discountType" name="discountType" value="<%= submission.discountType %>" placeholder="例: 早割、リピート割">
+      </div>
+    </div>
+
+    <!-- 配送情報 -->
+    <div class="form-section">
+      <h3>配送情報</h3>
+      <div class="form-group">
+        <label for="deliveryDestination">搬入先</label>
+        <input type="text" id="deliveryDestination" name="deliveryDestination" value="<%= submission.deliveryDestination %>" placeholder="例: 東京ビッグサイト">
+      </div>
+      <div class="form-group">
+        <label for="deliveryNotes">配送備考</label>
+        <textarea id="deliveryNotes" name="deliveryNotes"><%= submission.deliveryNotes %></textarea>
+      </div>
+    </div>
+
+    <!-- その他 -->
+    <div class="form-section">
+      <h3>その他</h3>
+      <div class="form-group">
+        <label for="submissionFileNotes">入稿ファイル備考</label>
+        <textarea id="submissionFileNotes" name="submissionFileNotes"><%= submission.submissionFileNotes %></textarea>
+      </div>
+      <div class="form-group">
+        <label for="generalNotes">全般備考</label>
+        <textarea id="generalNotes" name="generalNotes"><%= submission.generalNotes %></textarea>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button type="submit" class="btn btn-primary">作成</button>
+      <a href="/books/<%= book.id %>" class="btn btn-secondary">キャンセル</a>
+    </div>
+  </form>
+</body>
+</html>

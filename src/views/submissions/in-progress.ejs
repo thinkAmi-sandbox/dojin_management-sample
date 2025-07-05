@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .header h1 { margin-bottom: 8px; }
+        .header .subtitle { color: #666; font-size: 0.9em; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        
+        .actions-cell { white-space: nowrap; }
+        .action-link { margin-right: 8px; text-decoration: none; color: #007bff; }
+        .action-link:hover { color: #0056b3; }
+        
+        .empty-message { text-align: center; padding: 40px; color: #666; }
+        .empty-message p { margin-bottom: 20px; }
+        
+        /* ステータス色分け */
+        .status-submitted { color: #007bff; font-weight: bold; }
+        .status-printing { color: #fd7e14; font-weight: bold; }
+        
+        /* 書籍名表示 */
+        .book-title { font-weight: bold; }
+        .book-subtitle { font-size: 0.9em; color: #666; margin-top: 4px; }
+        
+        /* 納期アラート */
+        .urgent-row { background-color: #fff3cd; }
+        .urgent-date { color: #dc3545; font-weight: bold; }
+        .normal-date { color: #495057; }
+        
+        /* 統計情報 */
+        .stats { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .stats-item { display: inline-block; margin-right: 20px; }
+        .stats-number { font-size: 1.2em; font-weight: bold; color: #007bff; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            table { font-size: 0.9em; }
+            .actions-cell { font-size: 0.8em; }
+            .stats-item { display: block; margin-bottom: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+        <div class="subtitle">
+            入稿済み・印刷中のステータスの入稿を納期順で表示しています
+        </div>
+    </div>
+
+    <!-- サブナビゲーション -->
+    <div class="sub-navigation" style="margin-bottom: 20px; border-bottom: 1px solid #ddd;">
+        <a href="/submissions" class="tab" style="display: inline-block; padding: 10px 16px; text-decoration: none; color: #666; border-bottom: 2px solid transparent; margin-right: 20px; transition: color 0.2s, border-color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#666'">全て</a>
+        <a href="/submissions/in-progress" class="tab active" style="display: inline-block; padding: 10px 16px; text-decoration: none; color: #007bff; border-bottom: 2px solid #007bff; margin-right: 20px;">進行中のみ</a>
+        <a href="/submissions/costs" class="tab" style="display: inline-block; padding: 10px 16px; text-decoration: none; color: #666; border-bottom: 2px solid transparent; margin-right: 20px; transition: color 0.2s, border-color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#666'">コスト集計</a>
+    </div>
+
+    <div class="stats">
+        <div class="stats-item">
+            <span class="stats-number"><%= inProgressCount %></span> 件の進行中入稿
+        </div>
+        <% if (submissions.some(s => s.isUrgent)) { %>
+            <div class="stats-item">
+                <span class="stats-number" style="color: #dc3545;">
+                    <%= submissions.filter(s => s.isUrgent).length %>
+                </span> 件の緊急納期（3日以内）
+            </div>
+        <% } %>
+    </div>
+
+    <div class="actions">
+        <a href="/submissions" class="btn btn-secondary">全入稿一覧に戻る</a>
+        <a href="/books" class="btn">書籍一覧から入稿作成</a>
+    </div>
+
+    <% if (submissions.length > 0) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>書籍名</th>
+                    <th>印刷所</th>
+                    <th>ステータス</th>
+                    <th>入稿日</th>
+                    <th>納期予定日</th>
+                    <th>部数</th>
+                    <th>搬入先</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% submissions.forEach(submission => { %>
+                    <tr<%= submission.isUrgent ? ' class="urgent-row"' : '' %>>
+                        <td>
+                            <div class="book-title"><%= submission.bookTitle %></div>
+                            <% if (submission.bookSubtitle) { %>
+                                <div class="book-subtitle"><%= submission.bookSubtitle %></div>
+                            <% } %>
+                        </td>
+                        <td><%= submission.printingCompanyName %></td>
+                        <td>
+                            <span class="status-<%= submission.status.includes('入稿済み') ? 'submitted' : 'printing' %>">
+                                <%= submission.status %>
+                            </span>
+                        </td>
+                        <td><%= submission.submissionDate %></td>
+                        <td>
+                            <span class="<%= submission.isUrgent ? 'urgent-date' : 'normal-date' %>">
+                                <%= submission.expectedDeliveryDate %>
+                                <% if (submission.isUrgent && submission.expectedDeliveryDate !== '-') { %>
+                                    <span style="font-size: 0.8em;">⚠️</span>
+                                <% } %>
+                            </span>
+                        </td>
+                        <td><%= submission.quantity %>部</td>
+                        <td><%= submission.deliveryDestination %></td>
+                        <td class="actions-cell">
+                            <a href="<%= submission.detailUrl %>" class="action-link">詳細</a>
+                            <a href="<%= submission.editUrl %>" class="action-link">編集</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 8px; font-size: 0.9em;">
+            <strong>表示ルール:</strong><br>
+            • 入稿済み・印刷中ステータスのみ表示<br>
+            • 納期予定日の昇順でソート<br>
+            • 納期まで3日以内の入稿は背景色で強調表示
+        </div>
+    <% } else { %>
+        <div class="empty-message">
+            <p>進行中の入稿がありません。</p>
+            <p>入稿済み・印刷中ステータスの入稿が表示されます。</p>
+            <a href="/submissions" class="btn btn-secondary">入稿一覧に戻る</a>
+        </div>
+    <% } %>
+</body>
+</html>

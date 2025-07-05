@@ -1,0 +1,220 @@
+<style>
+    .exhibit-info { margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; }
+    .exhibit-info h2 { margin: 0; font-size: 18px; color: #333; }
+    .exhibit-meta { margin-top: 8px; font-size: 14px; color: #666; }
+    
+    .book-info { margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 4px; }
+    .book-info h3 { margin: 0 0 8px 0; font-size: 18px; color: #333; }
+    .book-subtitle { margin: 0 0 8px 0; font-size: 14px; color: #666; }
+    .book-meta { font-size: 14px; color: #666; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+    .form-control:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); }
+    .form-text { font-size: 14px; color: #666; margin-top: 5px; }
+    
+    .error-message { color: #dc3545; font-size: 14px; margin-top: 5px; }
+    .error .form-control { border-color: #dc3545; }
+    
+    .btn { display: inline-block; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; text-decoration: none; cursor: pointer; text-align: center; }
+    .btn-primary { background-color: #007bff; color: white; }
+    .btn-primary:hover { background-color: #0056b3; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-secondary:hover { background-color: #545b62; }
+    
+    .form-actions { margin-top: 30px; display: flex; gap: 15px; }
+    
+    .revenue-preview { margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: 14px; color: #666; }
+    .revenue-preview strong { color: #333; }
+    
+    /* レスポンシブ対応 */
+    @media (max-width: 768px) {
+        .form-actions { flex-direction: column; }
+    }
+</style>
+
+<div class="page-header">
+    <h1><%= title %></h1>
+    <%- include('../shared/breadcrumbs', { breadcrumbs: breadcrumbs.map(b => ({ name: b.name, url: b.url, isLast: !b.url })) }) %>
+</div>
+
+    <div class="form-container">
+            <div class="exhibit-info">
+                <h2>出展申込情報</h2>
+                <div class="exhibit-meta">
+                    ステータス: <%= exhibit.status %> | 
+                    スペース番号: <%= exhibit.spaceNumber %> | 
+                    スペース種別: <%= exhibit.spaceType %>
+                </div>
+            </div>
+
+            <div class="book-info">
+                <h3><%= edition.versionName %></h3>
+                <div class="book-meta">
+                    定価: <%= edition.formattedBasePrice %> | 
+                    ページ数: <%= edition.pageCount ? `${edition.pageCount}ページ` : '-' %>
+                </div>
+            </div>
+
+            <form method="POST" action="<%= updateUrl %>">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <div class="form-group <%= errors.plannedQuantity ? 'error' : '' %>">
+                    <label for="plannedQuantity" class="form-label">頒布予定数 *</label>
+                    <input 
+                        type="number" 
+                        id="plannedQuantity" 
+                        name="plannedQuantity" 
+                        class="form-control" 
+                        value="<%= formData.plannedQuantity %>"
+                        min="0"
+                        step="1"
+                        required
+                        onchange="updateRevenuePreview()"
+                    >
+                    <% if (errors.plannedQuantity) { %>
+                        <div class="error-message"><%= errors.plannedQuantity %></div>
+                    <% } %>
+                    <div class="form-text">何冊頒布する予定ですか？</div>
+                </div>
+
+                <div class="form-group <%= errors.actualQuantity ? 'error' : '' %>">
+                    <label for="actualQuantity" class="form-label">実際持込数</label>
+                    <input 
+                        type="number" 
+                        id="actualQuantity" 
+                        name="actualQuantity" 
+                        class="form-control" 
+                        value="<%= formData.actualQuantity %>"
+                        min="0"
+                        step="1"
+                        onchange="updateRevenuePreview()"
+                    >
+                    <% if (errors.actualQuantity) { %>
+                        <div class="error-message"><%= errors.actualQuantity %></div>
+                    <% } %>
+                    <div class="form-text">イベント当日の実際の持ち込み数</div>
+                </div>
+
+                <div class="form-group <%= errors.soldQuantity ? 'error' : '' %>">
+                    <label for="soldQuantity" class="form-label">売上数</label>
+                    <input 
+                        type="number" 
+                        id="soldQuantity" 
+                        name="soldQuantity" 
+                        class="form-control" 
+                        value="<%= formData.soldQuantity %>"
+                        min="0"
+                        step="1"
+                        onchange="updateRevenuePreview()"
+                    >
+                    <% if (errors.soldQuantity) { %>
+                        <div class="error-message"><%= errors.soldQuantity %></div>
+                    <% } %>
+                    <div class="form-text">実際に販売した数</div>
+                </div>
+
+                <div class="form-group <%= errors.remainingQuantity ? 'error' : '' %>">
+                    <label for="remainingQuantity" class="form-label">残数</label>
+                    <input 
+                        type="number" 
+                        id="remainingQuantity" 
+                        name="remainingQuantity" 
+                        class="form-control" 
+                        value="<%= formData.remainingQuantity %>"
+                        min="0"
+                        step="1"
+                        readonly
+                        style="background-color: #f8f9fa;"
+                    >
+                    <% if (errors.remainingQuantity) { %>
+                        <div class="error-message"><%= errors.remainingQuantity %></div>
+                    <% } %>
+                    <div class="form-text">実際持込数 - 売上数 (自動計算)</div>
+                </div>
+
+                <div class="form-group <%= errors.price ? 'error' : '' %>">
+                    <label for="price" class="form-label">販売価格 *</label>
+                    <input 
+                        type="number" 
+                        id="price" 
+                        name="price" 
+                        class="form-control" 
+                        value="<%= formData.price %>"
+                        min="0"
+                        step="1"
+                        required
+                        onchange="updateRevenuePreview()"
+                    >
+                    <% if (errors.price) { %>
+                        <div class="error-message"><%= errors.price %></div>
+                    <% } %>
+                    <div class="form-text">円（実際の販売価格・税込）</div>
+                </div>
+
+                <div class="form-group <%= errors.displayOrder ? 'error' : '' %>">
+                    <label for="displayOrder" class="form-label">表示順序</label>
+                    <input 
+                        type="number" 
+                        id="displayOrder" 
+                        name="displayOrder" 
+                        class="form-control" 
+                        value="<%= formData.displayOrder %>"
+                        min="0"
+                        step="1"
+                    >
+                    <% if (errors.displayOrder) { %>
+                        <div class="error-message"><%= errors.displayOrder %></div>
+                    <% } %>
+                    <div class="form-text">書籍の表示順序を指定します</div>
+                </div>
+
+                <div id="revenuePreview" class="revenue-preview">
+                    <strong>予想売上: </strong><span id="revenueAmount">¥0</span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">更新する</button>
+                    <a href="<%= backUrl %>" class="btn btn-secondary">キャンセル</a>
+                </div>
+            </form>
+    </div>
+
+<script>
+    function updateRevenuePreview() {
+        const plannedQuantity = parseInt(document.getElementById('plannedQuantity').value) || 0;
+        const actualQuantity = parseInt(document.getElementById('actualQuantity').value) || 0;
+        const soldQuantity = parseInt(document.getElementById('soldQuantity').value) || 0;
+        const price = parseInt(document.getElementById('price').value) || 0;
+        
+        // 残数を自動計算
+        const remainingInput = document.getElementById('remainingQuantity');
+        if (actualQuantity > 0) {
+            const remaining = actualQuantity - soldQuantity;
+            remainingInput.value = Math.max(0, remaining);
+        } else {
+            remainingInput.value = '';
+        }
+        
+        // 売上予想計算
+        const plannedRevenue = plannedQuantity * price;
+        const actualRevenue = soldQuantity * price;
+        
+        const revenueAmount = document.getElementById('revenueAmount');
+        let revenueText = `¥${plannedRevenue.toLocaleString('ja-JP')}`;
+        if (soldQuantity > 0) {
+            revenueText += ` (実売上: ¥${actualRevenue.toLocaleString('ja-JP')})`;
+        }
+        revenueAmount.innerHTML = revenueText;
+    }
+
+    // 初期表示時に実行
+    document.addEventListener('DOMContentLoaded', function() {
+        updateRevenuePreview();
+        
+        // 売上数が変更されたら残数も更新
+        document.getElementById('actualQuantity').addEventListener('input', updateRevenuePreview);
+        document.getElementById('soldQuantity').addEventListener('input', updateRevenuePreview);
+    });
+</script>

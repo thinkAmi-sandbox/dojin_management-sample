@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { margin-bottom: 20px; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-primary { background: #007bff; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-info { background: #17a2b8; }
+        .btn-info:hover { background: #138496; }
+        .btn-sm { padding: 4px 8px; font-size: 0.875rem; }
+        
+        .settlement-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }
+        .summary-card h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #495057; }
+        .big-number { font-size: 1.8em; font-weight: bold; color: #212529; margin: 10px 0; }
+        .summary-card small { color: #6c757d; }
+        
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; font-weight: bold; }
+        .table tr:hover { background: #f8f9fa; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .status-reported { background: #ffc107; color: #000; }
+        .status-confirmed { background: #17a2b8; color: #fff; }
+        .status-adjusted { background: #fd7e14; color: #fff; }
+        .status-settled { background: #28a745; color: #fff; }
+        
+        .action-buttons { display: flex; gap: 5px; }
+        .empty-state { text-align: center; padding: 40px 0; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><%= title %></h1>
+        </div>
+
+        <!-- 精算サマリー -->
+        <div class="settlement-summary">
+            <div class="summary-card">
+                <h3>総売上金額</h3>
+                <p class="big-number">¥<%= settlementSummary.totalSalesAmount.toLocaleString() %></p>
+                <small>手数料率: <%= consignment.commissionRate %>%</small>
+            </div>
+            <div class="summary-card">
+                <h3>精算済み金額</h3>
+                <p class="big-number">¥<%= settlementSummary.settledAmount.toLocaleString() %></p>
+                <small>支払済み</small>
+            </div>
+            <div class="summary-card">
+                <h3>未精算金額</h3>
+                <p class="big-number">¥<%= settlementSummary.unsettledAmount.toLocaleString() %></p>
+                <small>支払待ち</small>
+            </div>
+        </div>
+
+        <!-- アクション -->
+        <div class="actions">
+            <a href="/consignments/<%= consignment.id %>/reports/new" class="btn btn-primary">
+                新規販売報告
+            </a>
+            <a href="/consignments/<%= consignment.id %>" class="btn btn-secondary">
+                ← 委託契約詳細
+            </a>
+        </div>
+
+        <% if (salesReports.length === 0) { %>
+            <div class="empty-state">
+                <p>販売報告がまだありません。</p>
+                <p>「新規販売報告」ボタンから報告を作成してください。</p>
+            </div>
+        <% } else { %>
+            <!-- 販売報告一覧 -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>報告期間</th>
+                        <th>売上金額</th>
+                        <th>手数料</th>
+                        <th>純額</th>
+                        <th>ステータス</th>
+                        <th>報告日</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% salesReports.forEach(report => { %>
+                    <tr>
+                        <td>
+                            <%= new Date(report.reportPeriodStart).toLocaleDateString('ja-JP') %> 〜<br>
+                            <%= new Date(report.reportPeriodEnd).toLocaleDateString('ja-JP') %>
+                        </td>
+                        <td>¥<%= report.totalSalesAmount.toLocaleString() %></td>
+                        <td>¥<%= report.commissionAmount.toLocaleString() %></td>
+                        <td>¥<%= report.netAmount.toLocaleString() %></td>
+                        <td>
+                            <span class="status-badge status-<%= report.status %>">
+                                <% if (report.status === 'reported') { %>報告済み<% } %>
+                                <% if (report.status === 'confirmed') { %>確認済み<% } %>
+                                <% if (report.status === 'adjusted') { %>調整済み<% } %>
+                                <% if (report.status === 'settled') { %>精算済み<% } %>
+                            </span>
+                        </td>
+                        <td><%= new Date(report.reportedAt).toLocaleDateString('ja-JP') %></td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="/consignments/<%= consignment.id %>/reports/<%= report.id %>" class="btn btn-sm btn-info">
+                                    詳細
+                                </a>
+                                <% if (report.status === 'reported') { %>
+                                    <button class="btn btn-sm btn-success" onclick="confirmSales(<%= report.id %>)">
+                                        確認
+                                    </button>
+                                <% } %>
+                                <% if (['confirmed', 'adjusted'].includes(report.status)) { %>
+                                    <button class="btn btn-sm btn-warning" onclick="adjustSales(<%= report.id %>)">
+                                        調整
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="settleSales(<%= report.id %>)">
+                                        精算
+                                    </button>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+
+    <script>
+        function confirmSales(reportId) {
+            const notes = prompt('確認コメントを入力してください（任意）:')
+            if (notes !== null) {
+                const form = document.createElement('form')
+                form.method = 'POST'
+                form.action = `/consignments/<%= consignment.id %>/reports/${reportId}/confirm`
+                
+                const notesInput = document.createElement('input')
+                notesInput.type = 'hidden'
+                notesInput.name = 'notes'
+                notesInput.value = notes
+                form.appendChild(notesInput)
+                
+                document.body.appendChild(form)
+                form.submit()
+            }
+        }
+
+        function adjustSales(reportId) {
+            const reason = prompt('調整理由を入力してください:')
+            if (reason) {
+                const adjustedAmount = prompt('調整後金額を入力してください（空白の場合は金額変更なし）:')
+                
+                const form = document.createElement('form')
+                form.method = 'POST'
+                form.action = `/consignments/<%= consignment.id %>/reports/${reportId}/adjust`
+                
+                const reasonInput = document.createElement('input')
+                reasonInput.type = 'hidden'
+                reasonInput.name = 'adjustmentReason'
+                reasonInput.value = reason
+                form.appendChild(reasonInput)
+                
+                if (adjustedAmount && !isNaN(adjustedAmount)) {
+                    const amountInput = document.createElement('input')
+                    amountInput.type = 'hidden'
+                    amountInput.name = 'adjustedSalesAmount'
+                    amountInput.value = parseInt(adjustedAmount)
+                    form.appendChild(amountInput)
+                }
+                
+                document.body.appendChild(form)
+                form.submit()
+            }
+        }
+
+        function settleSales(reportId) {
+            const method = prompt('精算方法を入力してください（bank_transfer, cash等）:', 'bank_transfer')
+            if (method) {
+                const notes = prompt('精算時のコメントを入力してください（任意）:')
+                
+                const form = document.createElement('form')
+                form.method = 'POST'
+                form.action = `/consignments/<%= consignment.id %>/reports/${reportId}/settle`
+                
+                const methodInput = document.createElement('input')
+                methodInput.type = 'hidden'
+                methodInput.name = 'settlementMethod'
+                methodInput.value = method
+                form.appendChild(methodInput)
+                
+                if (notes) {
+                    const notesInput = document.createElement('input')
+                    notesInput.type = 'hidden'
+                    notesInput.name = 'notes'
+                    notesInput.value = notes
+                    form.appendChild(notesInput)
+                }
+                
+                document.body.appendChild(form)
+                form.submit()
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            margin: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .header { 
+            margin-bottom: 30px; 
+            padding-bottom: 15px; 
+            border-bottom: 2px solid #007bff; 
+        }
+        
+        /* イベント情報セクション */
+        .event-info { 
+            background: #e3f2fd; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 30px; 
+        }
+        .event-info h2 { 
+            margin: 0 0 15px 0; 
+            color: #1565c0; 
+        }
+        .event-details { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+        }
+        .event-detail-item { 
+            display: flex; 
+            align-items: center; 
+        }
+        .event-detail-label { 
+            font-weight: bold; 
+            min-width: 100px; 
+            margin-right: 10px; 
+        }
+        
+        /* フォームスタイル */
+        .form-section { 
+            margin-bottom: 30px; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+        }
+        .form-section h3 { 
+            margin: 0 0 20px 0; 
+            color: #333; 
+        }
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        label { 
+            display: block; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            color: #333; 
+        }
+        .required { 
+            color: #e74c3c; 
+        }
+        input[type="text"], 
+        select, 
+        textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 16px; 
+            box-sizing: border-box; 
+        }
+        input[type="text"]:focus, 
+        select:focus, 
+        textarea:focus { 
+            outline: none; 
+            border-color: #007bff; 
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); 
+        }
+        textarea { 
+            resize: vertical; 
+            min-height: 100px; 
+        }
+        select { 
+            cursor: pointer; 
+        }
+        
+        /* ボタンスタイル */
+        .button-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 30px; 
+            flex-wrap: wrap; 
+        }
+        .btn { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+            text-align: center; 
+            transition: background-color 0.3s; 
+        }
+        .btn-primary { 
+            background: #007bff; 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: #0056b3; 
+        }
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        
+        /* ヘルプテキスト */
+        .help-text { 
+            font-size: 0.9em; 
+            color: #666; 
+            margin-top: 5px; 
+        }
+        
+        /* 注意事項 */
+        .notice { 
+            background: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            border-radius: 4px; 
+            padding: 15px; 
+            margin-bottom: 20px; 
+        }
+        .notice h4 { 
+            margin: 0 0 10px 0; 
+            color: #856404; 
+        }
+        .notice ul { 
+            margin: 10px 0 0 20px; 
+            color: #856404; 
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container { 
+                margin: 10px; 
+                padding: 20px; 
+            }
+            .event-details { 
+                grid-template-columns: 1fr; 
+            }
+            .button-group { 
+                flex-direction: column; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><%= title %></h1>
+        </div>
+
+        <!-- イベント情報 -->
+        <div class="event-info">
+            <h2>📅 <%= event.name %></h2>
+            <div class="event-details">
+                <div class="event-detail-item">
+                    <span class="event-detail-label">開催日:</span>
+                    <span><%= event.formattedEventDate %></span>
+                </div>
+                <div class="event-detail-item">
+                    <span class="event-detail-label">会場:</span>
+                    <span><%= event.venue %></span>
+                </div>
+                <div class="event-detail-item">
+                    <span class="event-detail-label">申込締切:</span>
+                    <span><%= event.formattedApplicationEndDate %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 注意事項 -->
+        <div class="notice">
+            <h4>⚠️ 申込前の確認事項</h4>
+            <ul>
+                <li>申込内容は後から変更可能です</li>
+                <li>スペース情報は抽選結果発表後に設定されます</li>
+                <li>申込備考欄には特別な要望があれば記載してください</li>
+                <li>申込後のキャンセルは管理画面から行えます</li>
+            </ul>
+        </div>
+
+        <!-- エラー表示 -->
+        <% if (typeof errors !== 'undefined' && Object.keys(errors).length > 0) { %>
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0;">⚠️ 入力エラーがあります</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <% Object.values(errors).forEach(error => { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+            </div>
+        <% } %>
+
+        <!-- 申込フォーム -->
+        <form action="/events/<%= event.id %>/exhibits" method="POST">
+            <!-- サークル情報 -->
+            <div class="form-section">
+                <h3>🎪 サークル情報</h3>
+                
+                <div class="form-group">
+                    <label for="circleId">
+                        申込サークル <span class="required">*</span>
+                    </label>
+                    <select id="circleId" name="circleId" required style="<%= (typeof errors !== 'undefined' && errors.circleId) ? 'border-color: #dc3545;' : '' %>">
+                        <option value="">サークルを選択してください</option>
+                        <% circles.forEach(circle => { %>
+                            <option value="<%= circle.id %>" <%= (typeof circleId !== 'undefined' && circleId == circle.id) ? 'selected' : '' %>>
+                                <%= circle.name %> (<%= circle.representativeName %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                    <% if (typeof errors !== 'undefined' && errors.circleId) { %>
+                        <div style="color: #dc3545; font-size: 0.9em; margin-top: 5px;"><%= errors.circleId %></div>
+                    <% } %>
+                    <div class="help-text">
+                        出展するサークルを選択してください。新しいサークルを作成する場合は、
+                        <a href="/circles/new" target="_blank" style="color: #007bff;">こちら</a>から先に登録してください。
+                    </div>
+                </div>
+            </div>
+
+            <!-- 申込情報 -->
+            <div class="form-section">
+                <h3>📝 申込情報</h3>
+                
+                <div class="form-group">
+                    <label for="spaceType">
+                        希望スペースタイプ
+                    </label>
+                    <select id="spaceType" name="spaceType" style="<%= (typeof errors !== 'undefined' && errors.spaceType) ? 'border-color: #dc3545;' : '' %>">
+                        <option value="">指定なし</option>
+                        <option value="壁" <%= (typeof spaceType !== 'undefined' && spaceType === '壁') ? 'selected' : '' %>>壁際スペース</option>
+                        <option value="島" <%= (typeof spaceType !== 'undefined' && spaceType === '島') ? 'selected' : '' %>>島中スペース</option>
+                        <option value="角" <%= (typeof spaceType !== 'undefined' && spaceType === '角') ? 'selected' : '' %>>角スペース</option>
+                    </select>
+                    <% if (typeof errors !== 'undefined' && errors.spaceType) { %>
+                        <div style="color: #dc3545; font-size: 0.9em; margin-top: 5px;"><%= errors.spaceType %></div>
+                    <% } %>
+                    <div class="help-text">
+                        スペースタイプの希望があれば選択してください（確約されるものではありません）
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="applicationNotes">
+                        申込備考
+                    </label>
+                    <textarea id="applicationNotes" name="applicationNotes" placeholder="特別な要望やお知らせしたいことがあれば記載してください" style="<%= (typeof errors !== 'undefined' && errors.applicationNotes) ? 'border-color: #dc3545;' : '' %>"><%= (typeof applicationNotes !== 'undefined') ? applicationNotes : '' %></textarea>
+                    <% if (typeof errors !== 'undefined' && errors.applicationNotes) { %>
+                        <div style="color: #dc3545; font-size: 0.9em; margin-top: 5px;"><%= errors.applicationNotes %></div>
+                    <% } %>
+                    <div class="help-text">
+                        アクセシビリティ配慮、隣接サークルの希望など、運営に伝えたいことがあれば記載してください
+                    </div>
+                </div>
+            </div>
+
+            <!-- ボタン -->
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">
+                    📝 出展申込を送信
+                </button>
+                <a href="/events/<%= event.id %>/exhibits" class="btn btn-secondary">
+                    🔙 キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // フォーム送信時の確認
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const circleId = document.getElementById('circleId').value;
+            if (!circleId) {
+                alert('サークルを選択してください。');
+                e.preventDefault();
+                return;
+            }
+            
+            const confirmMessage = `
+「<%= event.name %>」への出展申込を送信しますか？
+
+- 申込内容は後から変更可能です
+- 申込後、抽選結果をお待ちください
+            `.trim();
+            
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

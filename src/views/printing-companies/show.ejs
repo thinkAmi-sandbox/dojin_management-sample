@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .header { margin-bottom: 20px; }
+        .breadcrumbs { margin-bottom: 20px; color: #666; }
+        .breadcrumbs a { color: #007bff; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 12px; }
+        .detail-table th { background-color: #f2f2f2; width: 150px; text-align: left; }
+        .website-link { color: #007bff; text-decoration: none; }
+        .website-link:hover { text-decoration: underline; }
+        .notes { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumbs">
+        <% breadcrumbs.forEach((breadcrumb, index) => { %>
+            <% if (index > 0) { %> &gt; <% } %>
+            <% if (breadcrumb.url) { %>
+                <a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a>
+            <% } else { %>
+                <%= breadcrumb.name %>
+            <% } %>
+        <% }) %>
+    </div>
+
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="<%= printingCompany.editUrl %>" class="btn">編集</a>
+        <a href="/printing-companies" class="btn" style="background: #6c757d;">一覧に戻る</a>
+        <form style="display: inline;" onsubmit="return confirm('「<%= printingCompany.name %>」を削除してもよろしいですか？\n\nこの操作は元に戻せません。')" action="/printing-companies/<%= printingCompany.id %>" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <table class="detail-table">
+        <tr>
+            <th>印刷所名</th>
+            <td><%= printingCompany.name %></td>
+        </tr>
+        <tr>
+            <th>公式サイト</th>
+            <td>
+                <% if (printingCompany.websiteUrl) { %>
+                    <a href="<%= printingCompany.websiteUrl %>" target="_blank" class="website-link">
+                        <%= printingCompany.websiteUrl %>
+                    </a>
+                <% } else { %>
+                    未設定
+                <% } %>
+            </td>
+        </tr>
+        <tr>
+            <th>備考</th>
+            <td class="notes"><%= printingCompany.notes %></td>
+        </tr>
+        <tr>
+            <th>登録日</th>
+            <td><%= printingCompany.formattedCreatedAt %></td>
+        </tr>
+        <tr>
+            <th>更新日</th>
+            <td><%= printingCompany.formattedUpdatedAt %></td>
+        </tr>
+    </table>
+
+    <!-- 将来的に入稿履歴をここに表示 -->
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 4px;">
+        <h3>入稿履歴</h3>
+        <p style="color: #666;">入稿機能の実装後に履歴が表示されます。</p>
+    </div>
+</body>
+</html>

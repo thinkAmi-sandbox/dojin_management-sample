@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .header { margin-bottom: 20px; }
+        .breadcrumbs { margin-bottom: 20px; color: #666; }
+        .breadcrumbs a { color: #007bff; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .actions { margin-bottom: 20px; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 8px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        /* 詳細情報セクション */
+        .detail-section { margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: #333; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .detail-item { display: flex; margin-bottom: 10px; }
+        .detail-label { font-weight: bold; min-width: 150px; color: #555; }
+        .detail-value { flex: 1; }
+        
+        /* 在庫数量表示 */
+        .stock-number { font-weight: bold; font-size: 1.1em; }
+        .stock-total { color: #155724; }
+        .stock-reserved { color: #856404; }
+        .stock-available { color: #0c5460; }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .actions { text-align: center; }
+            .btn { display: block; margin: 5px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="breadcrumbs">
+        <a href="/stocks">在庫一覧</a> &gt; 
+        <span>ID: <%= stock.id %></span>
+    </div>
+
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="<%= listUrl %>" class="btn btn-secondary">一覧に戻る</a>
+        <a href="<%= editUrl %>" class="btn">編集</a>
+        <form style="display: inline;" onsubmit="return confirm('この在庫データを削除してもよろしいですか？\n\nこの操作は元に戻せません。')" action="<%= deleteUrl %>" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+    </div>
+
+    <!-- 基本情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">📚 基本情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">在庫ID:</span>
+                <span class="detail-value"><%= stock.id %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">版:</span>
+                <span class="detail-value"><%= stock.editionName %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">保管場所:</span>
+                <span class="detail-value"><%= stock.locationName %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">最終確認日:</span>
+                <span class="detail-value"><%= stock.lastCheckedAt %></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在庫数量セクション -->
+    <div class="detail-section">
+        <div class="section-title">📊 在庫数量</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">総在庫数:</span>
+                <span class="detail-value stock-number stock-total"><%= stock.quantity %>冊</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">予約済み:</span>
+                <span class="detail-value stock-number stock-reserved"><%= stock.reservedQuantity %>冊</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">販売可能:</span>
+                <span class="detail-value stock-number stock-available"><%= stock.availableQuantity %>冊</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">計算確認:</span>
+                <span class="detail-value">
+                    <% if (stock.quantity === stock.reservedQuantity + stock.availableQuantity) { %>
+                        <span style="color: #28a745;">✓ 整合性OK</span>
+                    <% } else { %>
+                        <span style="color: #dc3545;">⚠ 数量不整合</span>
+                    <% } %>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 備考セクション -->
+    <div class="detail-section">
+        <div class="section-title">📝 備考</div>
+        <div class="detail-item">
+            <span class="detail-value" style="white-space: pre-wrap;"><%= stock.notes %></span>
+        </div>
+    </div>
+
+    <!-- 管理情報セクション -->
+    <div class="detail-section">
+        <div class="section-title">🕐 管理情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">作成日時:</span>
+                <span class="detail-value"><%= stock.createdAt %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">更新日時:</span>
+                <span class="detail-value"><%= stock.updatedAt %></span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

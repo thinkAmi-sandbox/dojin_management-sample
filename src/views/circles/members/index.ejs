@@ -1,0 +1,203 @@
+<%- contentFor('body') %>
+<div class="header">
+    <h1><%= title %></h1>
+    
+    <!-- ブレッドクラム -->
+    <nav class="breadcrumb">
+        <% breadcrumbs.forEach((crumb, index) => { %>
+            <% if (crumb.url) { %>
+                <a href="<%= crumb.url %>"><%= crumb.name %></a>
+            <% } else { %>
+                <span><%= crumb.name %></span>
+            <% } %>
+            <% if (index < breadcrumbs.length - 1) { %>
+                <span class="separator">></span>
+            <% } %>
+        <% }); %>
+    </nav>
+</div>
+
+<div class="actions">
+    <a href="/circles/<%= circle.id %>" class="btn btn-secondary">🔙 サークル詳細に戻る</a>
+    <a href="/circles/<%= circle.id %>/members/add" class="btn btn-primary">➕ メンバー追加</a>
+</div>
+
+<!-- サークル情報セクション -->
+<div class="detail-section">
+    <div class="section-title">サークル情報</div>
+    <div class="detail-item">
+        <span class="detail-label">サークル名:</span>
+        <span class="detail-value"><%= circle.name %></span>
+    </div>
+    <div class="detail-item">
+        <span class="detail-label">代表者名:</span>
+        <span class="detail-value"><%= circle.representativeName %></span>
+    </div>
+</div>
+
+<!-- メンバー一覧セクション -->
+<div class="detail-section">
+    <div class="section-title">メンバー一覧 (<%= members.length %>名)</div>
+    
+    <% if (members.length === 0) { %>
+        <p class="no-data">メンバーが登録されていません。</p>
+    <% } else { %>
+        <div class="members-grid">
+            <% members.forEach(member => { %>
+                <div class="member-card <%= member.isActive ? '' : 'inactive' %>">
+                    <div class="member-header">
+                        <h3 class="member-name">
+                            <%= member.name %>
+                            <span class="role-badge role-<%= member.role %>">
+                                <%= member.roleDisplay %>
+                            </span>
+                        </h3>
+                        <% if (!member.isActive) { %>
+                            <span class="status-badge inactive">退会済み</span>
+                        <% } %>
+                    </div>
+                    
+                    <div class="member-details">
+                        <div class="detail-item">
+                            <span class="detail-label">メール:</span>
+                            <span class="detail-value"><%= member.email || '-' %></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">プロフィール:</span>
+                            <span class="detail-value"><%= member.bio || '-' %></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">参加日:</span>
+                            <span class="detail-value"><%= member.joinedAt %></span>
+                        </div>
+                        <% if (member.leftAt) { %>
+                            <div class="detail-item">
+                                <span class="detail-label">退会日:</span>
+                                <span class="detail-value"><%= member.leftAt %></span>
+                            </div>
+                        <% } %>
+                        <% if (member.notes) { %>
+                            <div class="detail-item">
+                                <span class="detail-label">備考:</span>
+                                <span class="detail-value"><%= member.notes %></span>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <div class="member-actions">
+                        <a href="/circles/<%= circle.id %>/members/<%= member.id %>/edit" 
+                           class="btn btn-small btn-secondary" title="編集">
+                            ✏️ 編集
+                        </a>
+                        <% if (member.isActive) { %>
+                            <form method="POST" 
+                                  action="/circles/<%= circle.id %>/members/<%= member.id %>" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('このメンバーをサークルから退会させますか？')">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="btn btn-small btn-danger" title="退会">
+                                    ❌ 退会
+                                </button>
+                            </form>
+                        <% } %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } %>
+</div>
+
+<style>
+    /* 共通スタイル */
+    body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+    .header { margin-bottom: 20px; }
+    .breadcrumb { font-size: 0.9em; color: #666; margin-top: 10px; }
+    .breadcrumb a { color: #007bff; text-decoration: none; }
+    .breadcrumb .separator { margin: 0 8px; }
+    .actions { margin-bottom: 20px; }
+    .btn { 
+        background: #007bff; color: white; padding: 8px 16px; 
+        text-decoration: none; border-radius: 4px; margin-right: 8px;
+        border: none; cursor: pointer; display: inline-block;
+    }
+    .btn-secondary { background: #6c757d; }
+    .btn-primary { background: #007bff; }
+    .btn-danger { background: #dc3545; }
+    .btn-small { padding: 4px 8px; font-size: 0.85em; }
+    .btn:hover { opacity: 0.9; }
+    
+    /* セクション構造 */
+    .detail-section { 
+        margin-bottom: 30px; background: #f8f9fa; 
+        padding: 20px; border-radius: 8px; 
+    }
+    .section-title { 
+        font-size: 1.2em; font-weight: bold; 
+        margin-bottom: 15px; border-bottom: 2px solid #007bff; 
+        padding-bottom: 5px;
+    }
+    .detail-item { display: flex; margin-bottom: 10px; }
+    .detail-label { font-weight: bold; min-width: 120px; }
+    .detail-value { flex: 1; }
+    .no-data { 
+        padding: 20px; text-align: center; 
+        color: #666; font-style: italic; 
+    }
+    
+    /* メンバーグリッド */
+    .members-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+        gap: 20px; 
+    }
+    .member-card { 
+        border: 1px solid #ddd; border-radius: 8px; 
+        padding: 15px; background: white; 
+        transition: box-shadow 0.2s;
+    }
+    .member-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .member-card.inactive { opacity: 0.7; background: #f8f9fa; }
+    
+    .member-header { 
+        display: flex; justify-content: space-between; 
+        align-items: center; margin-bottom: 10px; 
+    }
+    .member-name { 
+        margin: 0; font-size: 1.1em; 
+        display: flex; align-items: center; gap: 8px;
+    }
+    
+    /* バッジ */
+    .role-badge, .status-badge { 
+        padding: 2px 8px; border-radius: 12px; 
+        font-size: 0.75em; font-weight: bold;
+    }
+    .role-representative { background: #ffd700; color: #333; }
+    .role-member { background: #007bff; color: white; }
+    .role-guest { background: #28a745; color: white; }
+    .status-badge.inactive { background: #dc3545; color: white; }
+    
+    .member-details { margin-bottom: 15px; }
+    .member-details .detail-item { margin-bottom: 5px; }
+    .member-details .detail-label { min-width: 80px; font-size: 0.9em; }
+    .member-details .detail-value { font-size: 0.9em; }
+    
+    .member-actions { 
+        display: flex; gap: 8px; 
+        padding-top: 10px; border-top: 1px solid #eee; 
+    }
+    
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+        .members-grid { grid-template-columns: 1fr; }
+        .member-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+        .member-actions { flex-wrap: wrap; }
+        .btn { margin-bottom: 5px; }
+    }
+    
+    @media (max-width: 480px) {
+        body { margin: 10px; }
+        .detail-item { flex-direction: column; }
+        .detail-label { min-width: auto; margin-bottom: 2px; }
+    }
+</style>

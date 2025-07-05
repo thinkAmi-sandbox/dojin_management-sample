@@ -1,0 +1,58 @@
+<style>
+    .header { margin-bottom: 20px; }
+    .actions { margin-bottom: 20px; }
+    .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; }
+    .btn:hover { background: #0056b3; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .actions-cell { white-space: nowrap; }
+    .action-link { margin-right: 8px; text-decoration: none; }
+    .empty-message { text-align: center; padding: 40px; color: #666; }
+    .date-cell { white-space: nowrap; }
+</style>
+
+<div class="header">
+    <h1><%= title %></h1>
+</div>
+
+<div class="actions">
+    <a href="/events/new" class="btn">新規登録</a>
+</div>
+
+<% if (events.length > 0) { %>
+    <table>
+        <thead>
+            <tr>
+                <th>イベント名</th>
+                <th>開催日</th>
+                <th>会場</th>
+                <th>申込期間</th>
+                <th>説明</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% events.forEach(event => { %>
+                <tr>
+                    <td><%= event.name %></td>
+                    <td class="date-cell"><%= event.formattedEventDate %></td>
+                    <td><%= event.venue %></td>
+                    <td class="date-cell">
+                        <%= event.formattedApplicationStartDate %> 〜 <%= event.formattedApplicationEndDate %>
+                    </td>
+                    <td title="<%= event.fullDescription %>"><%= event.description %></td>
+                    <td class="actions-cell">
+                        <a href="/events/<%= event.id %>" class="action-link">詳細</a>
+                        <a href="/events/<%= event.id %>/edit" class="action-link">編集</a>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+<% } else { %>
+    <div class="empty-message">
+        <p>イベントが登録されていません。</p>
+        <a href="/events/new" class="btn">最初のイベントを登録する</a>
+    </div>
+<% } %>

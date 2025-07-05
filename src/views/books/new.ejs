@@ -1,0 +1,98 @@
+<div class="page-header">
+  <h1><%= title %></h1>
+  <%- include('../shared/breadcrumbs', { 
+    breadcrumbs: [
+      { label: '書籍一覧', href: '/books' },
+      { label: '新規書籍作成', href: null }
+    ] 
+  }) %>
+</div>
+
+<div class="form-container" style="max-width: 600px;">
+  <form action="/books" method="post" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    
+    <div class="form-group" style="margin-bottom: 20px;">
+      <label for="title" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">
+        タイトル <span style="color: #dc3545;">*</span>
+      </label>
+      <input 
+        type="text" 
+        id="title" 
+        name="title" 
+        value="<%= book.title %>"
+        required
+        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;"
+        placeholder="書籍のタイトルを入力してください"
+      >
+      <% if (errors.title) { %>
+        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;"><%= errors.title %></div>
+      <% } %>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 20px;">
+      <label for="subtitle" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">
+        サブタイトル
+      </label>
+      <input 
+        type="text" 
+        id="subtitle" 
+        name="subtitle" 
+        value="<%= book.subtitle %>"
+        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;"
+        placeholder="サブタイトル（任意）"
+      >
+      <% if (errors.subtitle) { %>
+        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;"><%= errors.subtitle %></div>
+      <% } %>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 20px;">
+      <label for="description" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">
+        説明
+      </label>
+      <textarea 
+        id="description" 
+        name="description" 
+        rows="4"
+        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; resize: vertical;"
+        placeholder="書籍の説明（任意）"
+      ><%= book.description %></textarea>
+      <% if (errors.description) { %>
+        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;"><%= errors.description %></div>
+      <% } %>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 30px;">
+      <label for="pageCount" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">
+        ページ数
+      </label>
+      <input 
+        type="number" 
+        id="pageCount" 
+        name="pageCount" 
+        value="<%= book.pageCount %>"
+        min="1"
+        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;"
+        placeholder="ページ数（任意）"
+      >
+      <% if (errors.pageCount) { %>
+        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;"><%= errors.pageCount %></div>
+      <% } %>
+    </div>
+
+    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+      <a 
+        href="/books" 
+        style="display: inline-block; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer;"
+      >
+        キャンセル
+      </a>
+      <button 
+        type="submit"
+        style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;"
+      >
+        書籍を作成
+      </button>
+    </div>
+  </form>
+</div>

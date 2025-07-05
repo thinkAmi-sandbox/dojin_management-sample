@@ -1,0 +1,264 @@
+<style>
+    .header { margin-bottom: 20px; }
+    .actions { margin-bottom: 20px; }
+    .btn { 
+        background: #007bff; 
+        color: white; 
+        padding: 8px 16px; 
+        text-decoration: none; 
+        border-radius: 4px; 
+        display: inline-block;
+        margin-right: 8px;
+        border: none;
+        cursor: pointer;
+    }
+    .btn:hover { background: #0056b3; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #545b62; }
+    
+    .detail-section { 
+        margin-bottom: 30px; 
+        background: #f8f9fa; 
+        padding: 20px; 
+        border-radius: 8px; 
+    }
+    .section-title { 
+        font-size: 1.2em; 
+        font-weight: bold; 
+        margin-bottom: 15px; 
+        color: #333;
+    }
+    .detail-grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 15px; 
+    }
+    .detail-item { 
+        display: flex; 
+        margin-bottom: 10px; 
+    }
+    .detail-label { 
+        font-weight: bold; 
+        min-width: 150px; 
+        color: #555;
+    }
+    .detail-value { 
+        flex: 1; 
+    }
+    .active-badge { 
+        background: #28a745; 
+        color: white; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 0.9em; 
+    }
+    .inactive-badge { 
+        background: #6c757d; 
+        color: white; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 0.9em; 
+    }
+    .commission-rate {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #dc3545;
+    }
+    
+    /* 在庫状況セクション */
+    .stock-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 15px;
+    }
+    .stock-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+    }
+    .stock-card h3 {
+        margin: 0 0 10px 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .stock-card .value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #333;
+    }
+    .stock-card .unit {
+        font-size: 0.8em;
+        color: #666;
+    }
+    
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+        .detail-grid { grid-template-columns: 1fr; }
+        .stock-summary { grid-template-columns: 1fr; }
+    }
+</style>
+    <div class="header">
+        <h1><%= title %></h1>
+    </div>
+
+    <div class="actions">
+        <a href="/consignments/<%= consignment.id %>/edit" class="btn btn-warning">編集</a>
+        <form style="display: inline;" method="POST" action="/consignments/<%= consignment.id %>" onsubmit="return confirm('本当に削除しますか？');">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+        <a href="/consignments" class="btn btn-secondary">一覧に戻る</a>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="detail-section">
+        <div class="section-title">基本情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">店舗名:</span>
+                <span class="detail-value"><%= consignment.storeName %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">保管場所:</span>
+                <span class="detail-value">
+                    <%= consignment.locationName %>
+                    <% if (consignment.locationAddress) { %>
+                        <br><small style="color: #666;"><%= consignment.locationAddress %></small>
+                    <% } %>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">手数料率:</span>
+                <span class="detail-value commission-rate"><%= consignment.commissionRate %>%</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">精算サイクル:</span>
+                <span class="detail-value"><%= consignment.settlementCycle || '-' %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">契約開始日:</span>
+                <span class="detail-value"><%= consignment.contractStartDate.toLocaleDateString('ja-JP') %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">契約終了日:</span>
+                <span class="detail-value">
+                    <%= consignment.contractEndDate ? consignment.contractEndDate.toLocaleDateString('ja-JP') : '-' %>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">状態:</span>
+                <span class="detail-value">
+                    <% if (consignment.isActive) { %>
+                        <span class="active-badge">有効</span>
+                    <% } else { %>
+                        <span class="inactive-badge">無効</span>
+                    <% } %>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 連絡先情報 -->
+    <div class="detail-section">
+        <div class="section-title">連絡先情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">担当者名:</span>
+                <span class="detail-value"><%= consignment.contactPerson || '-' %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">メールアドレス:</span>
+                <span class="detail-value">
+                    <% if (consignment.contactEmail) { %>
+                        <a href="mailto:<%= consignment.contactEmail %>"><%= consignment.contactEmail %></a>
+                    <% } else { %>
+                        -
+                    <% } %>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">電話番号:</span>
+                <span class="detail-value">
+                    <% if (consignment.contactPhone) { %>
+                        <a href="tel:<%= consignment.contactPhone %>"><%= consignment.contactPhone %></a>
+                    <% } else { %>
+                        -
+                    <% } %>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支払情報 -->
+    <% if (consignment.paymentInfo) { %>
+    <div class="detail-section">
+        <div class="section-title">支払情報</div>
+        <div class="detail-item">
+            <span class="detail-value" style="white-space: pre-wrap;"><%= consignment.paymentInfo %></span>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- 契約条件 -->
+    <% if (consignment.contractTerms) { %>
+    <div class="detail-section">
+        <div class="section-title">契約条件</div>
+        <div class="detail-item">
+            <span class="detail-value" style="white-space: pre-wrap;"><%= consignment.contractTerms %></span>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- 委託在庫状況 -->
+    <div class="detail-section">
+        <div class="section-title">委託在庫状況</div>
+        <div class="stock-summary">
+            <div class="stock-card">
+                <h3>種類数</h3>
+                <div class="value"><%= consignment.stockStatus.totalBooks %></div>
+                <div class="unit">種類</div>
+            </div>
+            <div class="stock-card">
+                <h3>総在庫数</h3>
+                <div class="value"><%= consignment.stockStatus.totalQuantity %></div>
+                <div class="unit">冊</div>
+            </div>
+            <div class="stock-card">
+                <h3>総在庫金額</h3>
+                <div class="value">¥<%= consignment.stockStatus.totalValue.toLocaleString() %></div>
+                <div class="unit">（定価ベース）</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 備考 -->
+    <% if (consignment.notes) { %>
+    <div class="detail-section">
+        <div class="section-title">備考</div>
+        <div class="detail-item">
+            <span class="detail-value" style="white-space: pre-wrap;"><%= consignment.notes %></span>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- システム情報 -->
+    <div class="detail-section">
+        <div class="section-title">システム情報</div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">作成日時:</span>
+                <span class="detail-value"><%= consignment.createdAt.toLocaleString('ja-JP') %></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">更新日時:</span>
+                <span class="detail-value"><%= consignment.updatedAt.toLocaleString('ja-JP') %></span>
+            </div>
+        </div>
+    </div>
