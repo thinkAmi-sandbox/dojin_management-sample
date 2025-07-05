@@ -4,7 +4,7 @@ import * as schema from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import { EditionsService } from '../editions/editions.service'
 
-@Controller()
+@Controller('consignments')
 export class ConsignmentAnalyticsController {
   constructor(
     private readonly drizzleService: DrizzleService,
@@ -12,7 +12,7 @@ export class ConsignmentAnalyticsController {
   ) {}
 
   // 委託先別収益ランキング
-  @Get('consignments/analytics/revenue-ranking')
+  @Get('analytics/revenue-ranking')
   async getRevenueRanking(
     @Query('periodStart') periodStart: string,
     @Query('periodEnd') periodEnd: string,
@@ -46,12 +46,14 @@ export class ConsignmentAnalyticsController {
   }
 
   // 委託先別販売トレンド
-  @Get('consignments/:id/analytics/sales-trend')
+  @Get(':id/analytics/sales-trend')
   async getSalesTrend(
-    @Param('id', ParseIntPipe) consignmentId: number,
-    @Query('year', ParseIntPipe) year: number,
+    @Param('id') consignmentId: string,
+    @Query('year') year: string,
     @Query('groupBy') groupBy: string,
   ) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const yearNum = parseInt(year, 10)
     const salesData = await this.drizzleService.db
       .select({
         month: sql<number>`CAST(EXTRACT(MONTH FROM ${schema.consignmentSales.reportPeriodEnd}) AS INTEGER)`,
@@ -60,9 +62,9 @@ export class ConsignmentAnalyticsController {
       .from(schema.consignmentSales)
       .where(
         and(
-          eq(schema.consignmentSales.consignmentId, consignmentId),
+          eq(schema.consignmentSales.consignmentId, consignmentIdNum),
           eq(schema.consignmentSales.status, 'settled'),
-          sql`EXTRACT(YEAR FROM ${schema.consignmentSales.reportPeriodEnd}) = ${year}`,
+          sql`EXTRACT(YEAR FROM ${schema.consignmentSales.reportPeriodEnd}) = ${yearNum}`,
         ),
       )
       .groupBy(
@@ -91,11 +93,13 @@ export class ConsignmentAnalyticsController {
   }
 
   // 版別売上ランキング
-  @Get('consignments/:id/analytics/edition-ranking')
+  @Get(':id/analytics/edition-ranking')
   async getEditionRanking(
-    @Param('id', ParseIntPipe) consignmentId: number,
-    @Query('limit', ParseIntPipe) limit: number = 10,
+    @Param('id') consignmentId: string,
+    @Query('limit') limit: string = '10',
   ) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const limitNum = parseInt(limit, 10)
     const editionSales = await this.drizzleService.db
       .select({
         editionId: schema.consignmentSalesDetails.editionId,
@@ -119,7 +123,7 @@ export class ConsignmentAnalyticsController {
       .innerJoin(schema.books, eq(schema.editions.bookId, schema.books.id))
       .where(
         and(
-          eq(schema.consignmentSales.consignmentId, consignmentId),
+          eq(schema.consignmentSales.consignmentId, consignmentIdNum),
           eq(schema.consignmentSales.status, 'settled'),
         ),
       )
@@ -129,16 +133,17 @@ export class ConsignmentAnalyticsController {
         schema.books.title,
       )
       .orderBy(desc(sql`SUM(${schema.consignmentSalesDetails.subtotal})`))
-      .limit(limit)
+      .limit(limitNum)
 
     return { editions: editionSales }
   }
 
   // 版別委託先パフォーマンス
-  @Get('editions/:id/consignment-performance')
+  @Get('analytics/editions/:id/consignment-performance')
   async getEditionConsignmentPerformance(
-    @Param('id', ParseIntPipe) editionId: number,
+    @Param('id') editionId: string,
   ) {
+    const editionIdNum = parseInt(editionId, 10)
     const performanceData = await this.drizzleService.db
       .select({
         consignmentId: schema.consignmentSales.consignmentId,
@@ -160,7 +165,7 @@ export class ConsignmentAnalyticsController {
       )
       .where(
         and(
-          eq(schema.consignmentSalesDetails.editionId, editionId),
+          eq(schema.consignmentSalesDetails.editionId, editionIdNum),
           eq(schema.consignmentSales.status, 'settled'),
         ),
       )
@@ -185,10 +190,11 @@ export class ConsignmentAnalyticsController {
   }
 
   // 精算効率分析
-  @Get('consignments/:id/analytics/settlement-efficiency')
+  @Get(':id/analytics/settlement-efficiency')
   async getSettlementEfficiency(
-    @Param('id', ParseIntPipe) consignmentId: number,
+    @Param('id') consignmentId: string,
   ) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
     const reports = await this.drizzleService.db
       .select({
         id: schema.consignmentSales.id,
@@ -198,7 +204,7 @@ export class ConsignmentAnalyticsController {
         settledAt: schema.consignmentSales.settledAt,
       })
       .from(schema.consignmentSales)
-      .where(eq(schema.consignmentSales.consignmentId, consignmentId))
+      .where(eq(schema.consignmentSales.consignmentId, consignmentIdNum))
 
     const settledReports = reports.filter((r) => r.status === 'settled')
     const pendingReports = reports.filter((r) => r.status !== 'settled')
@@ -246,7 +252,7 @@ export class ConsignmentAnalyticsController {
   }
 
   // 手数料率影響分析
-  @Get('consignments/analytics/commission-analysis')
+  @Get('analytics/commission-analysis')
   async getCommissionAnalysis(
     @Query('simulateRates') simulateRates: string,
     @Query('periodStart') periodStart: string,
@@ -287,7 +293,7 @@ export class ConsignmentAnalyticsController {
   }
 
   // ダッシュボードサマリー
-  @Get('consignments/analytics/dashboard-summary')
+  @Get('analytics/dashboard-summary')
   async getDashboardSummary() {
     const summary = await this.drizzleService.db
       .select({
@@ -344,8 +350,9 @@ export class ConsignmentAnalyticsController {
   }
 
   // 委託先別KPI
-  @Get('consignments/:id/analytics/kpi')
-  async getConsignmentKpi(@Param('id', ParseIntPipe) consignmentId: number) {
+  @Get(':id/analytics/kpi')
+  async getConsignmentKpi(@Param('id') consignmentId: string) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
     const salesData = await this.drizzleService.db
       .select({
         totalSales: sql<number>`CAST(SUM(${schema.consignmentSales.totalSalesAmount}) AS INTEGER)`,
@@ -355,7 +362,7 @@ export class ConsignmentAnalyticsController {
       .from(schema.consignmentSales)
       .where(
         and(
-          eq(schema.consignmentSales.consignmentId, consignmentId),
+          eq(schema.consignmentSales.consignmentId, consignmentIdNum),
           eq(schema.consignmentSales.status, 'settled'),
         ),
       )
@@ -382,7 +389,7 @@ export class ConsignmentAnalyticsController {
         schema.editions,
         eq(schema.consignmentSalesDetails.editionId, schema.editions.id),
       )
-      .where(eq(schema.consignmentSales.consignmentId, consignmentId))
+      .where(eq(schema.consignmentSales.consignmentId, consignmentIdNum))
       .groupBy(
         schema.consignmentSalesDetails.editionId,
         schema.editions.versionName,

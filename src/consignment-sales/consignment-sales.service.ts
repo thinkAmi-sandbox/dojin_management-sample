@@ -329,17 +329,15 @@ export class ConsignmentSalesService {
   ): Promise<number> {
     return await this.drizzleService.db.transaction(async (tx) => {
       // 指定期間内の未精算レポートを取得
+
       const reportsToSettle = await tx
         .select()
         .from(schema.consignmentSales)
         .where(
           and(
             eq(schema.consignmentSales.consignmentId, consignmentId),
-            between(
-              schema.consignmentSales.reportPeriodEnd,
-              periodStart,
-              periodEnd,
-            ),
+            gte(schema.consignmentSales.reportPeriodEnd, periodStart),
+            lte(schema.consignmentSales.reportPeriodEnd, periodEnd),
             ne(schema.consignmentSales.status, 'settled'),
           ),
         )
@@ -379,10 +377,9 @@ export class ConsignmentSalesService {
     year: number,
     month: number,
   ): Promise<MonthlySummary> {
-    console.log('getMonthlySummary service called:', { consignmentId, year, month })
+    // dateフィールドなので、時刻部分は不要
     const startDate = new Date(year, month - 1, 1)
-    const endDate = new Date(year, month, 0)
-    console.log('Date range:', { startDate, endDate })
+    const endDate = new Date(year, month, 0) // 月末
 
     const result = await this.drizzleService.db
       .select({
@@ -395,12 +392,11 @@ export class ConsignmentSalesService {
       .where(
         and(
           eq(schema.consignmentSales.consignmentId, consignmentId),
-          between(schema.consignmentSales.reportPeriodEnd, startDate, endDate),
+          gte(schema.consignmentSales.reportPeriodEnd, startDate),
+          lte(schema.consignmentSales.reportPeriodEnd, endDate),
         ),
       )
 
-    console.log('Query result:', result)
-    
     if (!result || result.length === 0) {
       return {
         totalSales: 0,
@@ -409,7 +405,7 @@ export class ConsignmentSalesService {
         reportCount: 0,
       }
     }
-    
+
     return {
       totalSales: result[0].totalSales || 0,
       totalCommission: result[0].totalCommission || 0,
@@ -468,11 +464,8 @@ export class ConsignmentSalesService {
 
     if (period) {
       whereConditions.push(
-        between(
-          schema.consignmentSales.reportPeriodEnd,
-          period.start,
-          period.end,
-        ),
+        gte(schema.consignmentSales.reportPeriodEnd, period.start),
+        lte(schema.consignmentSales.reportPeriodEnd, period.end)
       )
     }
 
@@ -504,6 +497,7 @@ export class ConsignmentSalesService {
     periodStart: Date,
     periodEnd: Date,
   ): Promise<Record<string, unknown>[]> {
+
     const reports = await this.drizzleService.db
       .select({
         reportPeriod: sql<string>`TO_CHAR(${schema.consignmentSales.reportPeriodStart}, 'YYYY-MM-DD') || ' 〜 ' || TO_CHAR(${schema.consignmentSales.reportPeriodEnd}, 'YYYY-MM-DD')`,
@@ -519,11 +513,8 @@ export class ConsignmentSalesService {
       .where(
         and(
           eq(schema.consignmentSales.consignmentId, consignmentId),
-          between(
-            schema.consignmentSales.reportPeriodEnd,
-            periodStart,
-            periodEnd,
-          ),
+          gte(schema.consignmentSales.reportPeriodEnd, periodStart),
+          lte(schema.consignmentSales.reportPeriodEnd, periodEnd),
         ),
       )
       .orderBy(desc(schema.consignmentSales.reportPeriodEnd))

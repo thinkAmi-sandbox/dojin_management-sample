@@ -23,7 +23,7 @@ import { ConfirmConsignmentSalesDto } from './dto/confirm-consignment-sales.dto'
 import { CreateConsignmentSalesDto } from './dto/create-consignment-sales.dto'
 import { SettleConsignmentSalesDto } from './dto/settle-consignment-sales.dto'
 
-@Controller('consignments')
+@Controller('consignments/:consignmentId/reports')
 export class ConsignmentReportsController {
   constructor(
     private readonly consignmentSalesService: ConsignmentSalesService,
@@ -31,7 +31,13 @@ export class ConsignmentReportsController {
     private readonly editionsService: EditionsService,
   ) {}
 
-  @Get(':consignmentId/reports')
+  // テスト用エンドポイント
+  @Get('test')
+  async test() {
+    return { message: 'Test endpoint works' }
+  }
+
+  @Get()
   @Render('consignment-reports/index')
   async findAll(@Param('consignmentId') consignmentId: string) {
     const consignmentIdNum = parseInt(consignmentId, 10)
@@ -61,12 +67,11 @@ export class ConsignmentReportsController {
     }
   }
 
-  @Get(':consignmentId/reports/new')
+  @Get('new')
   @Render('consignment-reports/new')
-  async renderNewForm(
-    @Param('consignmentId') consignmentId: number,
-  ) {
-    const consignment = await this.consignmentsService.findOne(consignmentId)
+  async renderNewForm(@Param('consignmentId') consignmentId: string) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const consignment = await this.consignmentsService.findOne(consignmentIdNum)
     const availableEditions = await this.editionsService.findByLocation(
       consignment.locationId,
     )
@@ -80,27 +85,30 @@ export class ConsignmentReportsController {
     }
   }
 
-  @Post(':consignmentId/reports')
+  @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   @Redirect()
   async create(
-    @Param('consignmentId') consignmentId: number,
+    @Param('consignmentId') consignmentId: string,
     @Body() reportSalesDto: CreateConsignmentSalesDto,
   ) {
-    reportSalesDto.consignmentId = consignmentId
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    reportSalesDto.consignmentId = consignmentIdNum
     await this.consignmentSalesService.reportSales(reportSalesDto)
-    return { url: `/consignments/${consignmentId}/reports` }
+    return { url: `/consignments/${consignmentIdNum}/reports` }
   }
 
-  @Get(':consignmentId/reports/:id')
+  @Get(':id')
   @Render('consignment-reports/show')
   async findOne(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
   ) {
-    const consignment = await this.consignmentsService.findOne(consignmentId)
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const idNum = parseInt(id, 10)
+    const consignment = await this.consignmentsService.findOne(consignmentIdNum)
     const salesReport =
-      await this.consignmentSalesService.findOneWithDetails(id)
+      await this.consignmentSalesService.findOneWithDetails(idNum)
 
     // ステータスの日本語変換
     const statusMap = {
@@ -120,114 +128,137 @@ export class ConsignmentReportsController {
     }
   }
 
-  @Post(':consignmentId/reports/:id/confirm')
+  @Post(':id/confirm')
   @UsePipes(new ValidationPipe({ transform: true }))
   @Redirect()
   async confirm(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
     @Body() confirmDto: ConfirmConsignmentSalesDto,
   ) {
-    await this.consignmentSalesService.confirmSales(id, confirmDto)
-    return { url: `/consignments/${consignmentId}/reports/${id}` }
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const idNum = parseInt(id, 10)
+    await this.consignmentSalesService.confirmSales(idNum, confirmDto)
+    return { url: `/consignments/${consignmentIdNum}/reports/${idNum}` }
   }
 
-  @Post(':consignmentId/reports/:id/adjust')
+  @Post(':id/adjust')
   @UsePipes(new ValidationPipe({ transform: true }))
   @Redirect()
   async adjust(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
     @Body() adjustDto: AdjustConsignmentSalesDto,
   ) {
-    await this.consignmentSalesService.adjustSales(id, adjustDto)
-    return { url: `/consignments/${consignmentId}/reports/${id}` }
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const idNum = parseInt(id, 10)
+    await this.consignmentSalesService.adjustSales(idNum, adjustDto)
+    return { url: `/consignments/${consignmentIdNum}/reports/${idNum}` }
   }
 
-  @Post(':consignmentId/reports/:id/settle')
+  @Post(':id/settle')
   @UsePipes(new ValidationPipe({ transform: true }))
   @Redirect()
   async settle(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
     @Body() settleDto: SettleConsignmentSalesDto,
   ) {
-    await this.consignmentSalesService.settleSales(id, settleDto)
-    return { url: `/consignments/${consignmentId}/reports/${id}` }
+    const consignmentIdNum = parseInt(consignmentId, 10)
+    const idNum = parseInt(id, 10)
+    await this.consignmentSalesService.settleSales(idNum, settleDto)
+    return { url: `/consignments/${consignmentIdNum}/reports/${idNum}` }
   }
 
   // 一括精算
-  @Post(':consignmentId/reports/bulk-settle')
+  @Post('bulk-settle')
   @UsePipes(new ValidationPipe({ transform: true }))
   @Redirect()
   async bulkSettle(
-    @Param('consignmentId') consignmentId: number,
+    @Param('consignmentId') consignmentId: string,
     @Body() bulkSettleDto: BulkSettleConsignmentSalesDto,
   ) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
     await this.consignmentSalesService.bulkSettle(
-      consignmentId,
+      consignmentIdNum,
       new Date(bulkSettleDto.periodStart),
       new Date(bulkSettleDto.periodEnd),
       bulkSettleDto.settlementMethod,
       bulkSettleDto.notes,
     )
-    return { url: `/consignments/${consignmentId}/reports` }
+    return { url: `/consignments/${consignmentIdNum}/reports` }
   }
 
   // 月次精算サマリー
-  @Get(':consignmentId/reports/monthly-summary')
+  @Get('monthly-summary')
   async getMonthlySummary(
     @Param('consignmentId') consignmentId: string,
     @Query() query: { year: string; month: string },
+    @Res() res: Response,
   ) {
-    console.log('getMonthlySummary called with:', { consignmentId, query })
-    const consignmentIdNum = parseInt(consignmentId, 10)
-    const year = parseInt(query.year, 10)
-    const month = parseInt(query.month, 10)
-    
-    console.log('Parsed values:', { consignmentIdNum, year, month })
-    
-    if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(month)) {
-      throw new BadRequestException('Invalid parameters')
-    }
-    
     try {
+      const consignmentIdNum = parseInt(consignmentId, 10)
+      const year = parseInt(query.year, 10)
+      const month = parseInt(query.month, 10)
+
+      if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(month)) {
+        throw new BadRequestException('Invalid parameters')
+      }
+
       const result = await this.consignmentSalesService.getMonthlySummary(
         consignmentIdNum,
         year,
         month,
       )
-      console.log('Service result:', result)
-      return result
+      
+      res.json(result)
     } catch (error) {
-      console.error('Error in getMonthlySummary:', error)
-      throw error
+      console.error('Monthly summary error:', error)
+      res.status(500).json({
+        statusCode: 500,
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+      })
     }
   }
 
   // 四半期別精算レポート
-  @Get(':consignmentId/reports/quarterly-summary')
+  @Get('quarterly-summary')
   async getQuarterlySummary(
     @Param('consignmentId') consignmentId: string,
     @Query() query: { year: string; quarter: string },
+    @Res() res: Response,
   ) {
-    const consignmentIdNum = parseInt(consignmentId, 10)
-    const year = parseInt(query.year, 10)
-    const quarter = parseInt(query.quarter, 10)
-    
-    if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(quarter)) {
-      throw new BadRequestException('Invalid parameters')
+    try {
+      const consignmentIdNum = parseInt(consignmentId, 10)
+      const year = parseInt(query.year, 10)
+      const quarter = parseInt(query.quarter, 10)
+
+      if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(quarter)) {
+        throw new BadRequestException('Invalid parameters')
+      }
+
+      const result = await this.consignmentSalesService.getQuarterlySummary(
+        consignmentIdNum,
+        year,
+        quarter,
+      )
+      
+      res.json(result)
+    } catch (error) {
+      console.error('Quarterly summary error:', error)
+      res.status(500).json({
+        statusCode: 500,
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+      })
     }
-    
-    return await this.consignmentSalesService.getQuarterlySummary(
-      consignmentIdNum,
-      year,
-      quarter,
-    )
   }
 
   // CSVエクスポート
-  @Get(':consignmentId/reports/export')
+  @Get('export')
   @Header('Content-Type', 'text/csv')
   @Header('Content-Disposition', 'attachment; filename="settlement-report.csv"')
   async exportCsv(
@@ -236,37 +267,53 @@ export class ConsignmentReportsController {
     @Res() res: Response,
   ) {
     const consignmentIdNum = parseInt(consignmentId, 10)
-    
+
     if (isNaN(consignmentIdNum)) {
       throw new BadRequestException('Invalid consignment ID')
     }
-    
-    const data = await this.consignmentSalesService.getExportData(
-      consignmentIdNum,
-      new Date(query.periodStart),
-      new Date(query.periodEnd),
-    )
 
-    // CSV生成（簡易版）
-    const headers = Object.keys(data[0] || {})
-    const csvData = [
-      headers.join(','),
-      ...data.map((row) => headers.map((h) => row[h]).join(',')),
-    ].join('\n')
+    try {
+      const data = await this.consignmentSalesService.getExportData(
+        consignmentIdNum,
+        new Date(query.periodStart),
+        new Date(query.periodEnd),
+      )
 
-    res.send(csvData)
+      // CSV生成（簡易版）
+      if (!data || data.length === 0) {
+        res.send(
+          '報告期間,売上金額,手数料,純額,ステータス,報告日,精算日,精算方法\n',
+        )
+        return
+      }
+
+      const headers = Object.keys(data[0])
+      const csvData = [
+        headers.join(','),
+        ...data.map((row) => headers.map((h) => row[h]).join(',')),
+      ].join('\n')
+
+      res.send(csvData)
+    } catch (error) {
+      res.status(500).json({
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+        statusCode: 500,
+      })
+    }
   }
 
   // 精算明細書PDF生成（仮実装）
-  @Get(':consignmentId/reports/:id/statement')
+  @Get(':id/statement')
   @Header('Content-Type', 'application/pdf')
   @Header(
     'Content-Disposition',
     'attachment; filename="settlement-statement.pdf"',
   )
   async generateStatement(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
     @Res() res: Response,
   ) {
     // PDF生成は実際にはPDFライブラリを使用しますが、ここでは仮実装
@@ -274,10 +321,10 @@ export class ConsignmentReportsController {
   }
 
   // 精算明細書メール送信（仮実装）
-  @Post(':consignmentId/reports/:id/send-statement')
+  @Post(':id/send-statement')
   async sendStatement(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
     @Body() body: { email: string; subject: string; message: string },
   ) {
     // メール送信は実際にはメールサービスを使用しますが、ここでは仮実装
@@ -288,10 +335,10 @@ export class ConsignmentReportsController {
   }
 
   // 支払予定登録（仮実装）
-  @Post(':consignmentId/reports/:id/payment-schedule')
+  @Post(':id/payment-schedule')
   async createPaymentSchedule(
-    @Param('consignmentId') consignmentId: number,
-    @Param('id') id: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('id') id: string,
     @Body() body: {
       scheduledDate: string
       amount: number
@@ -304,7 +351,7 @@ export class ConsignmentReportsController {
     res.status(201)
     return {
       id: 1,
-      consignmentSalesId: id,
+      consignmentSalesId: parseInt(id, 10),
       scheduledDate: body.scheduledDate,
       amount: body.amount,
       paymentMethod: body.paymentMethod,
@@ -314,10 +361,10 @@ export class ConsignmentReportsController {
   }
 
   // 支払完了記録（仮実装）
-  @Post(':consignmentId/reports/payment-schedules/:scheduleId/complete')
+  @Post('payment-schedules/:scheduleId/complete')
   async completePayment(
-    @Param('consignmentId') consignmentId: number,
-    @Param('scheduleId') scheduleId: number,
+    @Param('consignmentId') consignmentId: string,
+    @Param('scheduleId') scheduleId: string,
     @Body() body: {
       actualDate: string
       actualAmount: number
@@ -329,7 +376,7 @@ export class ConsignmentReportsController {
     // 支払完了記録は将来的に実装
     res.status(201)
     return {
-      id: scheduleId,
+      id: parseInt(scheduleId, 10),
       consignmentSalesId: 1,
       scheduledDate: body.actualDate,
       actualDate: body.actualDate,
@@ -341,9 +388,9 @@ export class ConsignmentReportsController {
   }
 
   // 未精算レポート通知（仮実装）
-  @Post(':consignmentId/reports/send-reminder')
+  @Post('send-reminder')
   async sendReminder(
-    @Param('consignmentId') consignmentId: number,
+    @Param('consignmentId') consignmentId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     // 通知機能は将来的に実装
@@ -355,16 +402,16 @@ export class ConsignmentReportsController {
   }
 
   // 精算期限アラート設定（仮実装）
-  @Post(':consignmentId/reports/settlement-alerts')
+  @Post('settlement-alerts')
   async createSettlementAlerts(
-    @Param('consignmentId') consignmentId: number,
+    @Param('consignmentId') consignmentId: string,
     @Body() body: { alertDays: number[]; enabled: boolean },
     @Res({ passthrough: true }) res: Response,
   ) {
     // アラート機能は将来的に実装
     res.status(201)
     return {
-      consignmentId,
+      consignmentId: parseInt(consignmentId, 10),
       alertDays: body.alertDays,
       enabled: body.enabled,
     }
