@@ -30,6 +30,28 @@ export class SalesService {
     createSalesTransactionDto: CreateSalesTransactionDto,
   ) {
     return await this.drizzleService.db.transaction(async (tx) => {
+      // 委託販売の場合のバリデーション
+      if (
+        createSalesTransactionDto.transactionType === 'consignment' &&
+        createSalesTransactionDto.locationId
+      ) {
+        const [location] = await tx
+          .select()
+          .from(storageLocations)
+          .where(eq(storageLocations.id, createSalesTransactionDto.locationId))
+          .limit(1)
+
+        if (!location) {
+          throw new NotFoundException('保管場所が見つかりません')
+        }
+
+        if (!location.isConsignment) {
+          throw new BadRequestException(
+            '委託販売は委託先保管場所でのみ可能です',
+          )
+        }
+      }
+
       // 1. 販売取引レコード作成
       const [transaction] = await tx
         .insert(salesTransactions)

@@ -520,3 +520,32 @@ export const pricingRules = pgTable('PricingRule', {
 
 export type PricingRule = typeof pricingRules.$inferSelect
 export type NewPricingRule = typeof pricingRules.$inferInsert
+
+export const consignments = pgTable('Consignment', {
+  id: serial('id').primaryKey(),
+  locationId: integer('locationId')
+    .notNull()
+    .references(() => storageLocations.id),
+  storeName: varchar('storeName', { length: 255 }).notNull(),
+  commissionRate: integer('commissionRate').notNull(), // パーセンテージ（例: 30 = 30%）
+  settlementCycle: varchar('settlementCycle', { length: 50 }), // monthly, quarterly, custom
+  contractStartDate: date('contractStartDate', { mode: 'date' }).notNull(),
+  contractEndDate: date('contractEndDate', { mode: 'date' }),
+  contactPerson: varchar('contactPerson', { length: 255 }),
+  contactEmail: varchar('contactEmail', { length: 255 }),
+  contactPhone: varchar('contactPhone', { length: 50 }),
+  paymentInfo: text('paymentInfo'), // 振込先情報など
+  contractTerms: text('contractTerms'), // 契約条件詳細
+  notes: text('notes'),
+  isActive: boolean('isActive').notNull().default(true),
+  createdAt: timestamp('createdAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+export type Consignment = typeof consignments.$inferSelect
+export type NewConsignment = typeof consignments.$inferInsert

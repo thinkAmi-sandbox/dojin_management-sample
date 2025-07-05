@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -164,7 +165,8 @@ export class SalesController {
     res.status(404).send('Not Found')
   }
 
-  async remove(id: number, res: Response) {
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
     try {
       if (id <= 0 || Number.isNaN(id)) {
         return res.status(400).send('無効なIDです')

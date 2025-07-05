@@ -212,6 +212,30 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.priority = error
         } else if (error.includes('アクティブ状態')) {
           errors.isActive = error
+        } else if (error.includes('保管場所は必須です') || error.includes('保管場所ID')) {
+          errors.locationId = error
+        } else if (error.includes('店舗名')) {
+          errors.storeName = error
+        } else if (error.includes('手数料率')) {
+          errors.commissionRate = error
+        } else if (error.includes('精算サイクル')) {
+          errors.settlementCycle = error
+        } else if (error.includes('契約開始日')) {
+          errors.contractStartDate = error
+        } else if (error.includes('契約終了日')) {
+          errors.contractEndDate = error
+        } else if (error.includes('担当者')) {
+          errors.contactPerson = error
+        } else if (error.includes('連絡先メールアドレス')) {
+          errors.contactEmail = error
+        } else if (error.includes('電話番号')) {
+          errors.contactPhone = error
+        } else if (error.includes('支払情報')) {
+          errors.paymentInfo = error
+        } else if (error.includes('契約条件')) {
+          errors.contractTerms = error
+        } else if (error.includes('アクティブフラグ')) {
+          errors.isActive = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -335,6 +359,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /authors/:id (PUT via _method)
           templatePath = 'authors/edit'
           title = '執筆者編集'
+        }
+      } else if (path.includes('/consignments')) {
+        if (path.includes('/edit')) {
+          templatePath = 'consignments/edit'
+          title = '委託契約編集'
+        } else if (path.endsWith('/consignments')) {
+          templatePath = 'consignments/new'
+          title = '新規委託契約'
+        } else if (path.match(/\/consignments\/\d+$/)) {
+          // POST /consignments/:id (PUT via _method)
+          templatePath = 'consignments/edit'
+          title = '委託契約編集'
         }
       } else if (path.includes('/submissions')) {
         if (path.includes('/edit')) {
@@ -498,6 +534,18 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /sales/:id (PUT via _method)
           templatePath = 'sales/edit'
           title = '販売記録編集'
+        }
+      } else if (path.includes('/consignments')) {
+        if (path.includes('/edit')) {
+          templatePath = 'consignments/edit'
+          title = '委託契約編集'
+        } else if (path.endsWith('/consignments')) {
+          templatePath = 'consignments/new'
+          title = '新規委託契約'
+        } else if (path.match(/\/consignments\/\d+$/)) {
+          // POST /consignments/:id (PUT via _method)
+          templatePath = 'consignments/edit'
+          title = '委託契約編集'
         }
       }
 
@@ -873,6 +921,39 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           { name: '締切一覧', url: '#' },
           { name: '編集', url: null },
         ],
+      }
+    } else if (path.includes('/consignments')) {
+      // パスからIDを抽出 (例: /consignments/1 -> 1)
+      const idMatch = path.match(/\/consignments\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      // 新規作成の場合
+      if (path === '/consignments') {
+        return {
+          formData: formData,
+          availableLocations: [], // 保管場所リストは取得困難
+        }
+      }
+
+      // 編集の場合
+      return {
+        consignment: {
+          id,
+          locationId: formData.locationId || '',
+          storeName: formData.storeName || '',
+          commissionRate: formData.commissionRate || '',
+          settlementCycle: formData.settlementCycle || '',
+          contractStartDate: formData.contractStartDate || '',
+          contractEndDate: formData.contractEndDate || '',
+          contactPerson: formData.contactPerson || '',
+          contactEmail: formData.contactEmail || '',
+          contactPhone: formData.contactPhone || '',
+          paymentInfo: formData.paymentInfo || '',
+          contractTerms: formData.contractTerms || '',
+          notes: formData.notes || '',
+          isActive: formData.isActive || true,
+        },
+        formData: formData,
       }
     } else if (path.includes('/submissions')) {
       // パスからIDを抽出 (例: /submissions/1 -> 1)
@@ -1512,6 +1593,69 @@ export class ValidationExceptionFilter implements ExceptionFilter {
               { name: '編集', url: null },
             ]
           : [],
+      }
+    } else if (path.includes('/consignments')) {
+      // 委託契約関連パス
+      const idMatch = path.match(/\/consignments\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1], 10) : null
+
+      if (path === '/consignments') {
+        // 新規委託契約
+        return {
+          formData: {
+            locationId: formData.locationId || '',
+            storeName: formData.storeName || '',
+            commissionRate: formData.commissionRate || '',
+            settlementCycle: formData.settlementCycle || '',
+            contractStartDate: formData.contractStartDate || '',
+            contractEndDate: formData.contractEndDate || '',
+            contactPerson: formData.contactPerson || '',
+            contactEmail: formData.contactEmail || '',
+            contactPhone: formData.contactPhone || '',
+            paymentInfo: formData.paymentInfo || '',
+            contractTerms: formData.contractTerms || '',
+            notes: formData.notes || '',
+          },
+          availableLocations: [
+            { id: 1, name: 'ダミー保管場所', address: 'ダミー住所' },
+          ],
+        }
+      }
+
+      // 編集の場合
+      return {
+        consignment: {
+          id,
+          locationId: formData.locationId || '',
+          locationName: 'ダミー保管場所',
+          storeName: formData.storeName || '',
+          commissionRate: formData.commissionRate || '',
+          settlementCycle: formData.settlementCycle || '',
+          contractStartDate: formData.contractStartDate ? new Date(formData.contractStartDate as string) : new Date(),
+          contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate as string) : null,
+          contactPerson: formData.contactPerson || '',
+          contactEmail: formData.contactEmail || '',
+          contactPhone: formData.contactPhone || '',
+          paymentInfo: formData.paymentInfo || '',
+          contractTerms: formData.contractTerms || '',
+          notes: formData.notes || '',
+          isActive: formData.isActive || false,
+        },
+        formData: {
+          locationId: formData.locationId || '',
+          storeName: formData.storeName || '',
+          commissionRate: formData.commissionRate || '',
+          settlementCycle: formData.settlementCycle || '',
+          contractStartDate: formData.contractStartDate ? new Date(formData.contractStartDate as string) : new Date(),
+          contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate as string) : null,
+          contactPerson: formData.contactPerson || '',
+          contactEmail: formData.contactEmail || '',
+          contactPhone: formData.contactPhone || '',
+          paymentInfo: formData.paymentInfo || '',
+          contractTerms: formData.contractTerms || '',
+          notes: formData.notes || '',
+          isActive: formData.isActive || false,
+        },
       }
     }
 

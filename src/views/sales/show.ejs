@@ -31,7 +31,17 @@
               background-color: #27ae60;
             <% } %>
           ">
-            <%= salesTransaction.transactionTypeLabel %>
+            <% if (salesTransaction.transactionType === 'event') { %>
+              イベント販売
+            <% } else if (salesTransaction.transactionType === 'online') { %>
+              オンライン販売
+            <% } else if (salesTransaction.transactionType === 'consignment') { %>
+              委託販売
+            <% } else if (salesTransaction.transactionType === 'direct') { %>
+              直接販売
+            <% } else { %>
+              <%= salesTransaction.transactionType %>
+            <% } %>
           </span>
         </div>
 
@@ -40,7 +50,15 @@
 
         <div style="font-weight: bold;">イベント:</div>
         <div>
-          <% if (salesTransaction.event) { %>
+          <% if (salesTransaction.eventName) { %>
+            <% if (salesTransaction.eventId) { %>
+              <a href="/events/<%= salesTransaction.eventId %>" style="color: #007bff; text-decoration: none;">
+                <%= salesTransaction.eventName %>
+              </a>
+            <% } else { %>
+              <%= salesTransaction.eventName %>
+            <% } %>
+          <% } else if (salesTransaction.event) { %>
             <a href="/events/<%= salesTransaction.event.id %>" style="color: #007bff; text-decoration: none;">
               <%= salesTransaction.event.name %>
             </a>
@@ -51,7 +69,9 @@
 
         <div style="font-weight: bold;">販売場所:</div>
         <div>
-          <% if (salesTransaction.location) { %>
+          <% if (salesTransaction.locationName) { %>
+            <%= salesTransaction.locationName %>
+          <% } else if (salesTransaction.location) { %>
             <%= salesTransaction.location.name %>
           <% } else { %>
             <span style="color: #999;">-</span>
@@ -92,18 +112,44 @@
           <span style="font-weight: bold;">¥<%= salesTransaction.totalAmount.toLocaleString() %></span>
         </div>
 
-        <div style="font-weight: bold;">割引金額:</div>
+        <div style="font-weight: bold;">
+          <% if (salesTransaction.transactionType === 'consignment') { %>
+            手数料:
+          <% } else { %>
+            割引金額:
+          <% } %>
+        </div>
         <div style="color: #e74c3c;">
           <% if (salesTransaction.discountAmount && salesTransaction.discountAmount > 0) { %>
-            -¥<%= salesTransaction.discountAmount.toLocaleString() %>
+            <% if (salesTransaction.transactionType === 'consignment') { %>
+              手数料: ¥<%= salesTransaction.discountAmount.toLocaleString() %>
+            <% } else { %>
+              -¥<%= salesTransaction.discountAmount.toLocaleString() %>
+            <% } %>
           <% } else { %>
-            <span style="color: #999;">割引なし</span>
+            <span style="color: #999;">
+              <% if (salesTransaction.transactionType === 'consignment') { %>
+                手数料なし
+              <% } else { %>
+                割引なし
+              <% } %>
+            </span>
           <% } %>
         </div>
 
-        <div style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px;">最終金額:</div>
+        <div style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px;">
+          <% if (salesTransaction.transactionType === 'consignment') { %>
+            実収入:
+          <% } else { %>
+            最終金額:
+          <% } %>
+        </div>
         <div style="font-size: 20px; font-weight: bold; color: #27ae60; border-top: 1px solid #ddd; padding-top: 10px;">
-          ¥<%= salesTransaction.finalAmount.toLocaleString() %>
+          <% if (salesTransaction.transactionType === 'consignment') { %>
+            実収入: ¥<%= salesTransaction.finalAmount.toLocaleString() %>
+          <% } else { %>
+            ¥<%= salesTransaction.finalAmount.toLocaleString() %>
+          <% } %>
         </div>
 
         <div style="font-weight: bold;">支払方法:</div>
