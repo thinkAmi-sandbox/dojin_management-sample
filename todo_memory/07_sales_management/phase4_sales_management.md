@@ -1266,115 +1266,139 @@ export class SalesReportService {
 </html>
 ```
 
-## 🗂️ Phase 4-4: 在庫連携・統合テスト（1-2日）
+## ⏳ Phase 4-4: 在庫連携・統合テスト（1-2日）
 
-### 統合テスト実装
+### 🎯 実装方針（TDD - テスト駆動開発）
+テスト駆動開発（TDD）で進めるため、まず統合テストを作成し、それを通すように実装していきます。
 
-#### 販売取引統合テスト
+### 📋 実装計画
+
+#### Step 1: 在庫連携統合テストの作成（段階的TDD）
+`test/integration/sales/sales-stock-integration.spec.ts` を新規作成
+
+##### 1-1. 基本機能テスト（3件）- 最初に作成
 ```typescript
-describe('Sales Integration Tests', () => {
-  let testEdition: Edition
-  let testLocation: StorageLocation
-  let testEvent: Event
+// テスト内容
+1. 正常な販売時の在庫減少確認
+   - 販売前: 在庫100
+   - 3冊販売
+   - 販売後: 在庫97、利用可能在庫97
 
-  beforeEach(async () => {
-    await testDbUtils.cleanupDatabase()
-    
-    // テストデータ作成
-    const testBook = await createTestBook()
-    testEdition = await createTestEdition(testBook.id)
-    testLocation = await createTestStorageLocation()
-    testEvent = await createTestEvent()
-    
-    // 初期在庫設定
-    await createTestStock({
-      editionId: testEdition.id,
-      locationId: testLocation.id,
-      quantity: 100,
-      availableQuantity: 100,
-    })
-  })
+2. 在庫移動履歴の記録確認
+   - 販売取引作成
+   - stockMovementsテーブルに記録確認
+   - movementType='sale', referenceType='sale'
 
-  it('should create sales transaction and update stock', async () => {
-    const salesData = {
-      transactionType: 'event',
-      eventId: testEvent.id,
-      locationId: testLocation.id,
-      customerName: 'テスト顧客',
-      totalAmount: 3000,
-      finalAmount: 3000,
-      paymentMethod: 'cash',
-      details: [{
-        editionId: testEdition.id,
-        quantity: 3,
-        unitPrice: 1000,
-      }]
-    }
-
-    const response = await request(app.getHttpServer())
-      .post('/sales')
-      .send(salesData)
-      .expect(302)
-
-    // 在庫確認
-    const updatedStock = await stocksService.findByEditionAndLocation(
-      testEdition.id, 
-      testLocation.id
-    )
-    expect(updatedStock.quantity).toBe(97) // 100 - 3
-    expect(updatedStock.availableQuantity).toBe(97)
-
-    // 在庫移動履歴確認
-    const movements = await stockMovementsService.findByEdition(testEdition.id)
-    expect(movements).toHaveLength(1)
-    expect(movements[0].movementType).toBe('sale')
-    expect(movements[0].quantity).toBe(3)
-  })
-
-  it('should prevent sale when insufficient stock', async () => {
-    const salesData = {
-      transactionType: 'event',
-      locationId: testLocation.id,
-      totalAmount: 10100,
-      finalAmount: 10100,
-      details: [{
-        editionId: testEdition.id,
-        quantity: 101, // 在庫不足
-        unitPrice: 1000,
-      }]
-    }
-
-    const response = await request(app.getHttpServer())
-      .post('/sales')
-      .send(salesData)
-      .expect(400)
-
-    expect(response.body.message).toContain('在庫が不足')
-
-    // 在庫が変化していないことを確認
-    const stock = await stocksService.findByEditionAndLocation(
-      testEdition.id, 
-      testLocation.id
-    )
-    expect(stock.quantity).toBe(100) // 変更なし
-  })
-
-  it('should generate accurate sales report', async () => {
-    // 複数の販売データを作成
-    await createMultipleSalesTransactions()
-
-    const reportData = await salesReportService.generateSalesReport({
-      startDate: '2025-01-01',
-      endDate: '2025-12-31',
-    })
-
-    expect(reportData.summary.totalTransactions).toBeGreaterThan(0)
-    expect(reportData.summary.totalAmount).toBeGreaterThan(0)
-    expect(reportData.byEdition).toHaveLength(1)
-    expect(reportData.byEdition[0].editionId).toBe(testEdition.id)
-  })
-})
+3. 複数版同時販売の処理
+   - 複数明細での販売
+   - 各版の在庫が正しく減少
 ```
+
+##### 1-2. エラーハンドリングテスト（3件）- 基本テスト成功後
+```typescript
+4. 在庫不足時のエラー処理
+   - 在庫10に対して15冊販売試行
+   - 400エラー「在庫が不足しています」
+
+5. トランザクションロールバック確認
+   - 複数明細で一部在庫不足
+   - 全ての処理がロールバック
+
+6. 在庫なし（0）での販売エラー
+   - 在庫0の状態で販売試行
+   - 適切なエラーメッセージ
+```
+
+##### 1-3. 境界条件・削除テスト（3件）- 全基本機能実装後
+```typescript
+7. 販売取引削除時の在庫復元
+   - 販売後に取引を削除
+   - 在庫が元に戻る
+   - 返品移動履歴の記録
+
+8. 予約在庫との整合性
+   - reservedQuantityの考慮
+   - availableQuantityのみ減少
+
+9. 同一版・複数場所の在庫処理
+   - locationIdによる在庫識別
+   - 正しい場所の在庫が減少
+```
+
+#### Step 2: テストを通すための実装
+
+##### 2-1. SalesServiceの拡張
+```typescript
+// src/sales/sales.service.ts の修正
+
+1. StocksService, StockMovementsServiceの注入
+2. createSalesTransactionメソッドの修正
+   - 在庫チェック処理追加
+   - 在庫減少処理追加
+   - 移動履歴記録追加
+3. removeメソッドの修正
+   - 削除前の明細取得
+   - 在庫復元処理
+   - 返品履歴記録
+```
+
+##### 2-2. 在庫チェック・更新ロジック
+```typescript
+// 版・場所による在庫検索メソッド追加
+async findStockByEditionAndLocation(
+  editionId: number,
+  locationId: number
+): Promise<Stock>
+
+// 在庫更新処理（トランザクション内）
+- availableQuantity >= quantity のチェック
+- quantity, availableQuantityの減算
+- エラー時の詳細メッセージ（書籍名含む）
+```
+
+#### Step 3: 既存テストの修正
+
+##### 3-1. 販売基本テストの修正
+- 在庫データの事前準備追加
+- StocksServiceのモック設定
+
+##### 3-2. バリデーションテストの調整
+- 在庫関連のエラーケース考慮
+
+#### Step 4: 実装の検証とリファクタリング
+
+##### 4-1. パフォーマンステスト
+- 大量明細での処理時間測定
+- N+1問題の回避確認
+
+##### 4-2. エッジケース対応
+- 並行実行時の在庫整合性
+- デッドロック回避
+
+### 🚀 実装手順
+
+1. **統合テストファイル作成**（1時間）
+   - 段階的に9件のテストを作成
+   - 最初は3件の基本テストから開始
+
+2. **実装**（3時間）
+   - テストを1つずつ通していく
+   - リファクタリングを適宜実施
+
+3. **既存テスト修正**（30分）
+   - 在庫データの準備を追加
+
+4. **最終確認**（30分）
+   - 全テスト実行
+   - 型チェック・Lint実行
+
+### 期待される成果
+- 販売と在庫の完全な同期
+- トランザクション保証による整合性
+- 在庫移動の完全な追跡可能性
+- TDDによる高品質な実装
+
+実装時間見積もり: 約5時間
 
 ## 📊 Phase 4 完了条件
 
