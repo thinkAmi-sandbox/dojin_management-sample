@@ -85,6 +85,134 @@ export class ConsignmentReportsController {
     }
   }
 
+  // 月次精算サマリー（:idより前に移動）
+  @Get('monthly-summary')
+  async getMonthlySummary(
+    @Param('consignmentId') consignmentId: string,
+    @Query() query: { year: string; month: string },
+    @Res() res: Response,
+  ) {
+    try {
+      const consignmentIdNum = parseInt(consignmentId, 10)
+      const year = parseInt(query.year, 10)
+      const month = parseInt(query.month, 10)
+
+      if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(month)) {
+        throw new BadRequestException('Invalid parameters')
+      }
+
+      const result = await this.consignmentSalesService.getMonthlySummary(
+        consignmentIdNum,
+        year,
+        month,
+      )
+
+      res.json(result)
+    } catch (error) {
+      console.error('[Controller] Monthly summary error:', error)
+      console.error('[Controller] Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      })
+      res.status(500).json({
+        statusCode: 500,
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        details:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                name: error.name,
+                code: error.code,
+                stack: error.stack,
+              }
+            : undefined,
+      })
+    }
+  }
+
+  // 四半期別精算レポート（:idより前に移動）
+  @Get('quarterly-summary')
+  async getQuarterlySummary(
+    @Param('consignmentId') consignmentId: string,
+    @Query() query: { year: string; quarter: string },
+    @Res() res: Response,
+  ) {
+    try {
+      const consignmentIdNum = parseInt(consignmentId, 10)
+      const year = parseInt(query.year, 10)
+      const quarter = parseInt(query.quarter, 10)
+
+      if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(quarter)) {
+        throw new BadRequestException('Invalid parameters')
+      }
+
+      const result = await this.consignmentSalesService.getQuarterlySummary(
+        consignmentIdNum,
+        year,
+        quarter,
+      )
+
+      res.json(result)
+    } catch (error) {
+      console.error('Quarterly summary error:', error)
+      res.status(500).json({
+        statusCode: 500,
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+      })
+    }
+  }
+
+  // CSVエクスポート（:idより前に移動）
+  @Get('export')
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="settlement-report.csv"')
+  async exportCsv(
+    @Param('consignmentId') consignmentId: string,
+    @Query() query: { format: string; periodStart: string; periodEnd: string },
+    @Res() res: Response,
+  ) {
+    const consignmentIdNum = parseInt(consignmentId, 10)
+
+    if (isNaN(consignmentIdNum)) {
+      throw new BadRequestException('Invalid consignment ID')
+    }
+
+    try {
+      const data = await this.consignmentSalesService.getExportData(
+        consignmentIdNum,
+        new Date(query.periodStart),
+        new Date(query.periodEnd),
+      )
+
+      // CSV生成（簡易版）
+      if (!data || data.length === 0) {
+        res.send(
+          '報告期間,売上金額,手数料,純額,ステータス,報告日,精算日,精算方法\n',
+        )
+        return
+      }
+
+      const headers = Object.keys(data[0])
+      const csvData = [
+        headers.join(','),
+        ...data.map((row) => headers.map((h) => row[h]).join(',')),
+      ].join('\n')
+
+      res.send(csvData)
+    } catch (error) {
+      res.status(500).json({
+        message: 'Internal server error',
+        error: error.message || 'Unknown error',
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+        statusCode: 500,
+      })
+    }
+  }
+
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   @Redirect()
@@ -187,131 +315,6 @@ export class ConsignmentReportsController {
       bulkSettleDto.notes,
     )
     return { url: `/consignments/${consignmentIdNum}/reports` }
-  }
-
-  // 月次精算サマリー
-  @Get('monthly-summary')
-  async getMonthlySummary(
-    @Param('consignmentId') consignmentId: string,
-    @Query() query: { year: string; month: string },
-    @Res() res: Response,
-  ) {
-    try {
-      const consignmentIdNum = parseInt(consignmentId, 10)
-      const year = parseInt(query.year, 10)
-      const month = parseInt(query.month, 10)
-
-      if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(month)) {
-        throw new BadRequestException('Invalid parameters')
-      }
-
-      const result = await this.consignmentSalesService.getMonthlySummary(
-        consignmentIdNum,
-        year,
-        month,
-      )
-      
-      res.json(result)
-    } catch (error) {
-      console.error('[Controller] Monthly summary error:', error)
-      console.error('[Controller] Error details:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-      })
-      res.status(500).json({
-        statusCode: 500,
-        message: 'Internal server error',
-        error: error.message || 'Unknown error',
-        details: process.env.NODE_ENV !== 'production' ? {
-          name: error.name,
-          code: error.code,
-          stack: error.stack,
-        } : undefined,
-      })
-    }
-  }
-
-  // 四半期別精算レポート
-  @Get('quarterly-summary')
-  async getQuarterlySummary(
-    @Param('consignmentId') consignmentId: string,
-    @Query() query: { year: string; quarter: string },
-    @Res() res: Response,
-  ) {
-    try {
-      const consignmentIdNum = parseInt(consignmentId, 10)
-      const year = parseInt(query.year, 10)
-      const quarter = parseInt(query.quarter, 10)
-
-      if (isNaN(consignmentIdNum) || isNaN(year) || isNaN(quarter)) {
-        throw new BadRequestException('Invalid parameters')
-      }
-
-      const result = await this.consignmentSalesService.getQuarterlySummary(
-        consignmentIdNum,
-        year,
-        quarter,
-      )
-      
-      res.json(result)
-    } catch (error) {
-      console.error('Quarterly summary error:', error)
-      res.status(500).json({
-        statusCode: 500,
-        message: 'Internal server error',
-        error: error.message || 'Unknown error',
-        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
-      })
-    }
-  }
-
-  // CSVエクスポート
-  @Get('export')
-  @Header('Content-Type', 'text/csv')
-  @Header('Content-Disposition', 'attachment; filename="settlement-report.csv"')
-  async exportCsv(
-    @Param('consignmentId') consignmentId: string,
-    @Query() query: { format: string; periodStart: string; periodEnd: string },
-    @Res() res: Response,
-  ) {
-    const consignmentIdNum = parseInt(consignmentId, 10)
-
-    if (isNaN(consignmentIdNum)) {
-      throw new BadRequestException('Invalid consignment ID')
-    }
-
-    try {
-      const data = await this.consignmentSalesService.getExportData(
-        consignmentIdNum,
-        new Date(query.periodStart),
-        new Date(query.periodEnd),
-      )
-
-      // CSV生成（簡易版）
-      if (!data || data.length === 0) {
-        res.send(
-          '報告期間,売上金額,手数料,純額,ステータス,報告日,精算日,精算方法\n',
-        )
-        return
-      }
-
-      const headers = Object.keys(data[0])
-      const csvData = [
-        headers.join(','),
-        ...data.map((row) => headers.map((h) => row[h]).join(',')),
-      ].join('\n')
-
-      res.send(csvData)
-    } catch (error) {
-      res.status(500).json({
-        message: 'Internal server error',
-        error: error.message || 'Unknown error',
-        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
-        statusCode: 500,
-      })
-    }
   }
 
   // 精算明細書PDF生成（仮実装）

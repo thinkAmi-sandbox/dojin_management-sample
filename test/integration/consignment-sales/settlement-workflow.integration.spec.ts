@@ -253,7 +253,7 @@ describe('Settlement Workflow Integration Tests', () => {
   })
 
   describe('精算レポート機能', () => {
-    it.skip('月次精算サマリーを取得できること（環境固有エラーのためスキップ）', async () => {
+    it('月次精算サマリーを取得できること', async () => {
       // 複数月のデータを作成
       await testDbUtils.createTestConsignmentSalesReport({
         consignmentId: testConsignment.id,
@@ -292,7 +292,7 @@ describe('Settlement Workflow Integration Tests', () => {
       expect(response.body).toHaveProperty('reportCount', 1)
     })
 
-    it.skip('四半期別精算レポートを取得できること（環境固有エラーのためスキップ）', async () => {
+    it('四半期別精算レポートを取得できること', async () => {
       const response = await request(app.getHttpServer())
         .get(`/consignments/${testConsignment.id}/reports/quarterly-summary`)
         .query({ year: 2025, quarter: 1 })
@@ -304,7 +304,7 @@ describe('Settlement Workflow Integration Tests', () => {
       expect(response.body.months).toHaveLength(3)
     })
 
-    it.skip('精算データをCSVエクスポートできること（環境固有エラーのためスキップ）', async () => {
+    it('精算データをCSVエクスポートできること', async () => {
       const response = await request(app.getHttpServer())
         .get(`/consignments/${testConsignment.id}/reports/export`)
         .query({

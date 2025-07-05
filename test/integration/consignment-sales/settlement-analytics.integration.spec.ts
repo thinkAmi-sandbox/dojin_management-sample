@@ -218,7 +218,9 @@ describe('Settlement Analytics Integration Tests', () => {
         ])
 
       const response = await request(app.getHttpServer())
-        .get(`/consignments/analytics/editions/${testEdition.id}/consignment-performance`)
+        .get(
+          `/consignments/analytics/editions/${testEdition.id}/consignment-performance`,
+        )
         .expect(200)
 
       expect(response.body.consignments).toHaveLength(2)

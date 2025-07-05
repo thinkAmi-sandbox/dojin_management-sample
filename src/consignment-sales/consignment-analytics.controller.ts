@@ -140,9 +140,7 @@ export class ConsignmentAnalyticsController {
 
   // 版別委託先パフォーマンス
   @Get('analytics/editions/:id/consignment-performance')
-  async getEditionConsignmentPerformance(
-    @Param('id') editionId: string,
-  ) {
+  async getEditionConsignmentPerformance(@Param('id') editionId: string) {
     const editionIdNum = parseInt(editionId, 10)
     const performanceData = await this.drizzleService.db
       .select({
@@ -191,9 +189,7 @@ export class ConsignmentAnalyticsController {
 
   // 精算効率分析
   @Get(':id/analytics/settlement-efficiency')
-  async getSettlementEfficiency(
-    @Param('id') consignmentId: string,
-  ) {
+  async getSettlementEfficiency(@Param('id') consignmentId: string) {
     const consignmentIdNum = parseInt(consignmentId, 10)
     const reports = await this.drizzleService.db
       .select({
