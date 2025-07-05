@@ -336,8 +336,8 @@ export class ConsignmentSalesService {
         .where(
           and(
             eq(schema.consignmentSales.consignmentId, consignmentId),
-            gte(schema.consignmentSales.reportPeriodEnd, periodStart),
-            lte(schema.consignmentSales.reportPeriodEnd, periodEnd),
+            sql`${schema.consignmentSales.reportPeriodEnd} >= ${periodStart.toISOString().split('T')[0]}::date`,
+            sql`${schema.consignmentSales.reportPeriodEnd} <= ${periodEnd.toISOString().split('T')[0]}::date`,
             ne(schema.consignmentSales.status, 'settled'),
           ),
         )
@@ -377,9 +377,14 @@ export class ConsignmentSalesService {
     year: number,
     month: number,
   ): Promise<MonthlySummary> {
-    // dateフィールドなので、時刻部分は不要
-    const startDate = new Date(year, month - 1, 1)
-    const endDate = new Date(year, month, 0) // 月末
+    console.log(`[getMonthlySummary] 実行開始: consignmentId=${consignmentId}, year=${year}, month=${month}`)
+    
+    try {
+      // dateフィールドなので、文字列形式で比較
+      const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`
+      const endDateStr = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`
+      
+      console.log(`[getMonthlySummary] 日付範囲: ${startDateStr} 〜 ${endDateStr}`)
 
     const result = await this.drizzleService.db
       .select({
@@ -392,10 +397,12 @@ export class ConsignmentSalesService {
       .where(
         and(
           eq(schema.consignmentSales.consignmentId, consignmentId),
-          gte(schema.consignmentSales.reportPeriodEnd, startDate),
-          lte(schema.consignmentSales.reportPeriodEnd, endDate),
+          sql`${schema.consignmentSales.reportPeriodEnd} >= ${startDateStr}::date`,
+          sql`${schema.consignmentSales.reportPeriodEnd} <= ${endDateStr}::date`,
         ),
       )
+      
+      console.log(`[getMonthlySummary] クエリ実行完了: result.length=${result.length}`)
 
     if (!result || result.length === 0) {
       return {
@@ -406,11 +413,24 @@ export class ConsignmentSalesService {
       }
     }
 
-    return {
+    const response = {
       totalSales: result[0].totalSales || 0,
       totalCommission: result[0].totalCommission || 0,
       netAmount: result[0].netAmount || 0,
       reportCount: result[0].reportCount || 0,
+    }
+    
+    console.log(`[getMonthlySummary] 結果:`, response)
+    return response
+    } catch (error) {
+      console.error(`[getMonthlySummary] エラー発生:`, error)
+      console.error(`[getMonthlySummary] エラー詳細:`, {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code,
+      })
+      throw error
     }
   }
 
@@ -420,21 +440,25 @@ export class ConsignmentSalesService {
     year: number,
     quarter: number,
   ): Promise<QuarterlySummary> {
-    const startMonth = (quarter - 1) * 3 + 1
-    const months = []
+    console.log(`[getQuarterlySummary] 実行開始: consignmentId=${consignmentId}, year=${year}, quarter=${quarter}`)
+    
+    try {
+      const startMonth = (quarter - 1) * 3 + 1
+      const months = []
 
-    for (let i = 0; i < 3; i++) {
-      const month = startMonth + i
-      const monthSummary = await this.getMonthlySummary(
-        consignmentId,
-        year,
-        month,
-      )
-      months.push({
-        month,
-        ...monthSummary,
-      })
-    }
+      for (let i = 0; i < 3; i++) {
+        const month = startMonth + i
+        console.log(`[getQuarterlySummary] ${month}月のデータ取得中...`)
+        const monthSummary = await this.getMonthlySummary(
+          consignmentId,
+          year,
+          month,
+        )
+        months.push({
+          month,
+          ...monthSummary,
+        })
+      }
 
     const totalSales = months.reduce((sum, m) => sum + m.totalSales, 0)
     const totalCommission = months.reduce(
@@ -443,13 +467,26 @@ export class ConsignmentSalesService {
     )
     const netAmount = months.reduce((sum, m) => sum + m.netAmount, 0)
 
-    return {
+    const response = {
       quarter,
       year,
       months,
       totalSales,
       totalCommission,
       netAmount,
+    }
+    
+    console.log(`[getQuarterlySummary] 結果:`, response)
+    return response
+    } catch (error) {
+      console.error(`[getQuarterlySummary] エラー発生:`, error)
+      console.error(`[getQuarterlySummary] エラー詳細:`, {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code,
+      })
+      throw error
     }
   }
 
@@ -464,8 +501,8 @@ export class ConsignmentSalesService {
 
     if (period) {
       whereConditions.push(
-        gte(schema.consignmentSales.reportPeriodEnd, period.start),
-        lte(schema.consignmentSales.reportPeriodEnd, period.end)
+        sql`${schema.consignmentSales.reportPeriodEnd} >= ${period.start.toISOString().split('T')[0]}::date`,
+        sql`${schema.consignmentSales.reportPeriodEnd} <= ${period.end.toISOString().split('T')[0]}::date`
       )
     }
 
@@ -497,10 +534,15 @@ export class ConsignmentSalesService {
     periodStart: Date,
     periodEnd: Date,
   ): Promise<Record<string, unknown>[]> {
+    console.log(`[getExportData] 実行開始: consignmentId=${consignmentId}`)
+    console.log(`[getExportData] 期間: ${periodStart.toISOString()} 〜 ${periodEnd.toISOString()}`)
+    
+    try {
 
     const reports = await this.drizzleService.db
       .select({
-        reportPeriod: sql<string>`TO_CHAR(${schema.consignmentSales.reportPeriodStart}, 'YYYY-MM-DD') || ' 〜 ' || TO_CHAR(${schema.consignmentSales.reportPeriodEnd}, 'YYYY-MM-DD')`,
+        reportPeriodStart: schema.consignmentSales.reportPeriodStart,
+        reportPeriodEnd: schema.consignmentSales.reportPeriodEnd,
         totalSalesAmount: schema.consignmentSales.totalSalesAmount,
         commissionAmount: schema.consignmentSales.commissionAmount,
         netAmount: schema.consignmentSales.netAmount,
@@ -513,14 +555,16 @@ export class ConsignmentSalesService {
       .where(
         and(
           eq(schema.consignmentSales.consignmentId, consignmentId),
-          gte(schema.consignmentSales.reportPeriodEnd, periodStart),
-          lte(schema.consignmentSales.reportPeriodEnd, periodEnd),
+          sql`${schema.consignmentSales.reportPeriodEnd} >= ${periodStart.toISOString().split('T')[0]}::date`,
+          sql`${schema.consignmentSales.reportPeriodEnd} <= ${periodEnd.toISOString().split('T')[0]}::date`,
         ),
       )
       .orderBy(desc(schema.consignmentSales.reportPeriodEnd))
+      
+    console.log(`[getExportData] クエリ実行完了: reports.length=${reports.length}`)
 
-    return reports.map((r) => ({
-      報告期間: r.reportPeriod,
+    const exportData = reports.map((r) => ({
+      報告期間: `${r.reportPeriodStart.toISOString().split('T')[0]} 〜 ${r.reportPeriodEnd.toISOString().split('T')[0]}`,
       売上金額: r.totalSalesAmount,
       手数料: r.commissionAmount,
       純額: r.netAmount,
@@ -529,6 +573,19 @@ export class ConsignmentSalesService {
       精算日: r.settledAt?.toLocaleDateString('ja-JP') || '',
       精算方法: r.settlementMethod || '',
     }))
+    
+    console.log(`[getExportData] エクスポートデータ作成完了: ${exportData.length}件`)
+    return exportData
+    } catch (error) {
+      console.error(`[getExportData] エラー発生:`, error)
+      console.error(`[getExportData] エラー詳細:`, {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code,
+      })
+      throw error
+    }
   }
 
   private getStatusLabel(

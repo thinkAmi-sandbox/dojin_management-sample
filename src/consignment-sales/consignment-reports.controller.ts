@@ -213,12 +213,22 @@ export class ConsignmentReportsController {
       
       res.json(result)
     } catch (error) {
-      console.error('Monthly summary error:', error)
+      console.error('[Controller] Monthly summary error:', error)
+      console.error('[Controller] Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      })
       res.status(500).json({
         statusCode: 500,
         message: 'Internal server error',
         error: error.message || 'Unknown error',
-        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+        details: process.env.NODE_ENV !== 'production' ? {
+          name: error.name,
+          code: error.code,
+          stack: error.stack,
+        } : undefined,
       })
     }
   }
