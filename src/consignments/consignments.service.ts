@@ -10,11 +10,11 @@ import { CreateConsignmentDto, UpdateConsignmentDto } from './dto'
 
 @Injectable()
 export class ConsignmentsService {
-  constructor(
-    private readonly drizzleService: DrizzleService,
-  ) {}
+  constructor(private readonly drizzleService: DrizzleService) {}
 
-  async create(createConsignmentDto: CreateConsignmentDto): Promise<schema.Consignment> {
+  async create(
+    createConsignmentDto: CreateConsignmentDto,
+  ): Promise<schema.Consignment> {
     // 保管場所が委託可能かチェック
     const location = await this.drizzleService.db
       .select()
@@ -38,8 +38,8 @@ export class ConsignmentsService {
         commissionRate: createConsignmentDto.commissionRate,
         settlementCycle: createConsignmentDto.settlementCycle,
         contractStartDate: new Date(createConsignmentDto.contractStartDate),
-        contractEndDate: createConsignmentDto.contractEndDate 
-          ? new Date(createConsignmentDto.contractEndDate) 
+        contractEndDate: createConsignmentDto.contractEndDate
+          ? new Date(createConsignmentDto.contractEndDate)
           : null,
         contactPerson: createConsignmentDto.contactPerson,
         contactEmail: createConsignmentDto.contactEmail,
@@ -69,7 +69,10 @@ export class ConsignmentsService {
         createdAt: schema.consignments.createdAt,
       })
       .from(schema.consignments)
-      .innerJoin(schema.storageLocations, eq(schema.consignments.locationId, schema.storageLocations.id))
+      .innerJoin(
+        schema.storageLocations,
+        eq(schema.consignments.locationId, schema.storageLocations.id),
+      )
       .orderBy(desc(schema.consignments.createdAt))
   }
 
@@ -96,7 +99,10 @@ export class ConsignmentsService {
         updatedAt: schema.consignments.updatedAt,
       })
       .from(schema.consignments)
-      .innerJoin(schema.storageLocations, eq(schema.consignments.locationId, schema.storageLocations.id))
+      .innerJoin(
+        schema.storageLocations,
+        eq(schema.consignments.locationId, schema.storageLocations.id),
+      )
       .where(eq(schema.consignments.id, id))
       .limit(1)
 
@@ -105,7 +111,9 @@ export class ConsignmentsService {
     }
 
     // 委託先の在庫状況も取得
-    const stockStatus = await this.getConsignmentStockStatus(result[0].locationId)
+    const stockStatus = await this.getConsignmentStockStatus(
+      result[0].locationId,
+    )
 
     return {
       ...result[0],
@@ -113,7 +121,10 @@ export class ConsignmentsService {
     }
   }
 
-  async update(id: number, updateConsignmentDto: UpdateConsignmentDto): Promise<schema.Consignment> {
+  async update(
+    id: number,
+    updateConsignmentDto: UpdateConsignmentDto,
+  ): Promise<schema.Consignment> {
     // 存在確認
     await this.findOne(id)
 
@@ -123,8 +134,8 @@ export class ConsignmentsService {
         storeName: updateConsignmentDto.storeName,
         commissionRate: updateConsignmentDto.commissionRate,
         settlementCycle: updateConsignmentDto.settlementCycle,
-        contractEndDate: updateConsignmentDto.contractEndDate 
-          ? new Date(updateConsignmentDto.contractEndDate) 
+        contractEndDate: updateConsignmentDto.contractEndDate
+          ? new Date(updateConsignmentDto.contractEndDate)
           : null,
         contactPerson: updateConsignmentDto.contactPerson,
         contactEmail: updateConsignmentDto.contactEmail,
@@ -144,7 +155,7 @@ export class ConsignmentsService {
   async remove(id: number): Promise<void> {
     // 存在確認
     const consignment = await this.findOne(id)
-    
+
     // 未精算の販売報告がないかチェック（将来実装予定）
     // const unsettledSales = await this.checkUnsettledSales(id)
     // if (unsettledSales > 0) {
@@ -162,7 +173,9 @@ export class ConsignmentsService {
       .where(eq(schema.consignments.id, id))
   }
 
-  private async getConsignmentStockStatus(locationId: number): Promise<ConsignmentStockStatus> {
+  private async getConsignmentStockStatus(
+    locationId: number,
+  ): Promise<ConsignmentStockStatus> {
     const stockData = await this.drizzleService.db
       .select({
         totalBooks: sql<number>`COUNT(DISTINCT ${schema.stocks.editionId})`,
@@ -170,7 +183,10 @@ export class ConsignmentsService {
         totalValue: sql<number>`COALESCE(SUM(${schema.stocks.quantity} * ${schema.editions.basePrice}), 0)`,
       })
       .from(schema.stocks)
-      .innerJoin(schema.editions, eq(schema.stocks.editionId, schema.editions.id))
+      .innerJoin(
+        schema.editions,
+        eq(schema.stocks.editionId, schema.editions.id),
+      )
       .where(eq(schema.stocks.locationId, locationId))
 
     return stockData[0] || { totalBooks: 0, totalQuantity: 0, totalValue: 0 }
@@ -178,7 +194,9 @@ export class ConsignmentsService {
 
   private async checkConsignmentStock(locationId: number): Promise<number> {
     const result = await this.drizzleService.db
-      .select({ count: sql<number>`COALESCE(SUM(${schema.stocks.quantity}), 0)` })
+      .select({
+        count: sql<number>`COALESCE(SUM(${schema.stocks.quantity}), 0)`,
+      })
       .from(schema.stocks)
       .where(eq(schema.stocks.locationId, locationId))
 

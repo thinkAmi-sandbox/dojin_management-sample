@@ -1,10 +1,13 @@
 import { join } from 'path'
-import { INestApplication, ValidationPipe } from '@nestjs/common'
+import { INestApplication, ValidationPipe, Logger } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { ValidationExceptionFilter } from '../../src/common/filters/validation-exception.filter'
 
 export function setupTestApp(app: INestApplication): void {
   const expressApp = app as NestExpressApplication
+
+  // テスト環境ではログを無効化
+  app.useLogger(false)
 
   // グローバルバリデーション設定
   expressApp.useGlobalPipes(

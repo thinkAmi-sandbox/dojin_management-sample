@@ -17,7 +17,10 @@ import {
 import type { Response } from 'express'
 import { StorageLocationsService } from '../storage-locations/storage-locations.service'
 import { ConsignmentsService } from './consignments.service'
-import type { ConsignmentWithLocation, ConsignmentDetail } from './consignments.service'
+import type {
+  ConsignmentDetail,
+  ConsignmentWithLocation,
+} from './consignments.service'
 import { CreateConsignmentDto, UpdateConsignmentDto } from './dto'
 
 @Controller('consignments')
@@ -31,7 +34,7 @@ export class ConsignmentsController {
   @Render('consignments/index')
   async findAll() {
     const consignments = await this.consignmentsService.findAll()
-    
+
     return {
       title: '委託契約一覧',
       consignments,
@@ -43,9 +46,9 @@ export class ConsignmentsController {
   async renderNewForm() {
     const storageLocations = await this.storageLocationsService.findAll()
     const availableLocations = storageLocations.filter(
-      location => location.isConsignment && location.type === 'consignment'
+      (location) => location.isConsignment && location.type === 'consignment',
     )
-    
+
     return {
       title: '新規委託契約',
       availableLocations,
@@ -65,10 +68,10 @@ export class ConsignmentsController {
   @Render('consignments/show')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const consignment = await this.consignmentsService.findOne(id)
-    
+
     // 委託先の売上実績も取得（将来実装予定）
     // const salesHistory = await this.consignmentSalesService.findByConsignmentId(id)
-    
+
     return {
       title: '委託契約詳細',
       consignment,
@@ -80,7 +83,7 @@ export class ConsignmentsController {
   @Render('consignments/edit')
   async renderEditForm(@Param('id', ParseIntPipe) id: number) {
     const consignment = await this.consignmentsService.findOne(id)
-    
+
     return {
       title: '委託契約編集',
       consignment,

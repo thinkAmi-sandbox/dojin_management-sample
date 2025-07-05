@@ -60,16 +60,42 @@ Phase 5では、委託販売の包括的な管理機能を実装します。委�
   - ビルド成功確認
   - 型チェック成功確認
 
-### ⏳ Phase 5-2: 委託販売報告システム実装（2-3日）
-- [ ] 委託販売報告の統合テスト作成（失敗するテストを先に書く）
-- [ ] ConsignmentSales/ConsignmentSalesDetailsテーブルのスキーマ実装
-  - **⚠️ 注意**: Enum追加による対話式プロンプト発生時はユーザーを呼び出すこと
-  - consignmentSalesStatusEnumの追加で対話式プロンプトが発生する可能性大
-- [ ] ConsignmentSalesServiceの実装（テストが通るように実装）
-- [ ] ConsignmentReportsControllerの実装
-- [ ] 販売報告関連DTOの実装
-- [ ] 販売報告管理用ビューファイルの作成
-- [ ] 全統合テストがグリーンになることを確認
+### ✅ Phase 5-2: 委託販売報告システム実装（完了：2025年7月5日）
+- [x] 委託販売報告の統合テスト作成（失敗するテストを先に書く）
+  - 基本機能テスト3件作成
+  - バリデーションテスト9件作成
+  - ワークフローテスト5件作成
+  - 合計17件の統合テスト全て成功
+- [x] ConsignmentSales/ConsignmentSalesDetailsテーブルのスキーマ実装
+  - consignmentSalesStatusEnum実装（reported/confirmed/adjusted/settled）
+  - ConsignmentSalesテーブル（16フィールド）
+  - ConsignmentSalesDetailsテーブル（7フィールド）
+  - マイグレーション0021_snapshot.json生成・実行完了
+- [x] ConsignmentSalesServiceの実装（テストが通るように実装）
+  - reportSales: 販売報告作成・在庫減少・履歴記録
+  - confirmSales: 内容確認・ステータス更新
+  - adjustSales: 金額調整・手数料再計算
+  - settleSales: 精算処理・精算方法記録
+  - トランザクション保証実装
+- [x] ConsignmentReportsControllerの実装
+  - /consignments/:id/reportsパスでの管理
+  - 版情報取得・在庫確認機能
+  - ワークフロー各段階のエンドポイント実装
+  - ValidationPipe統一適用
+- [x] 販売報告関連DTOの実装
+  - CreateConsignmentSalesDto: 必須フィールド・明細配列対応
+  - ConfirmConsignmentSalesDto: 確認時メモ
+  - AdjustConsignmentSalesDto: 調整理由・金額
+  - SettleConsignmentSalesDto: 精算方法・メモ
+- [x] 販売報告管理用ビューファイルの作成
+  - index.ejs: 一覧表示・精算サマリー
+  - new.ejs: 新規作成・動的明細行・在庫チェック
+  - show.ejs: 詳細表示・ワークフロー操作
+- [x] 全統合テストがグリーンになることを確認
+  - 型チェックエラー0件
+  - Lintエラー0件
+  - ビルド成功
+  - 統合テスト17/17成功
 
 ### ⏳ Phase 5-3: 精算処理システム実装（2-3日）
 - [ ] 精算ワークフローの統合テスト作成（失敗するテストを先に書く）

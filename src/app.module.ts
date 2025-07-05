@@ -7,6 +7,7 @@ import { AuthorsModule } from './authors/authors.module'
 import { BookAuthorsModule } from './book-authors/book-authors.module'
 import { BooksModule } from './books/books.module'
 import { CirclesModule } from './circles/circles.module'
+import { ConsignmentSalesModule } from './consignment-sales/consignment-sales.module'
 import { ConsignmentsModule } from './consignments/consignments.module'
 import { DeadlinesModule } from './deadlines/deadlines.module'
 import { DrizzleModule } from './drizzle/drizzle.module'
@@ -80,6 +81,7 @@ import { SubmissionsModule } from './submissions/submissions.module'
     AuthorsModule,
     BookAuthorsModule,
     CirclesModule,
+    ConsignmentSalesModule,
     ConsignmentsModule,
     EditionsModule,
     EventsModule,

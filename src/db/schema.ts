@@ -552,15 +552,17 @@ export type NewConsignment = typeof consignments.$inferInsert
 
 // 委託販売報告のステータス
 export const consignmentSalesStatusEnum = pgEnum('consignment_sales_status', [
-  'reported',     // 報告済み
-  'confirmed',    // 確認済み
-  'adjusted',     // 調整済み
-  'settled',      // 精算済み
+  'reported', // 報告済み
+  'confirmed', // 確認済み
+  'adjusted', // 調整済み
+  'settled', // 精算済み
 ])
 
 export const consignmentSales = pgTable('ConsignmentSales', {
   id: serial('id').primaryKey(),
-  consignmentId: integer('consignmentId').notNull().references(() => consignments.id),
+  consignmentId: integer('consignmentId')
+    .notNull()
+    .references(() => consignments.id),
   reportPeriodStart: date('reportPeriodStart', { mode: 'date' }).notNull(),
   reportPeriodEnd: date('reportPeriodEnd', { mode: 'date' }).notNull(),
   totalSalesAmount: integer('totalSalesAmount').notNull(),
@@ -593,7 +595,9 @@ export const consignmentSalesDetails = pgTable('ConsignmentSalesDetail', {
   consignmentSalesId: integer('consignmentSalesId')
     .notNull()
     .references(() => consignmentSales.id, { onDelete: 'cascade' }),
-  editionId: integer('editionId').notNull().references(() => editions.id),
+  editionId: integer('editionId')
+    .notNull()
+    .references(() => editions.id),
   quantity: integer('quantity').notNull(),
   unitPrice: integer('unitPrice').notNull(),
   subtotal: integer('subtotal').notNull(),
@@ -603,4 +607,5 @@ export const consignmentSalesDetails = pgTable('ConsignmentSalesDetail', {
 })
 
 export type ConsignmentSalesDetail = typeof consignmentSalesDetails.$inferSelect
-export type NewConsignmentSalesDetail = typeof consignmentSalesDetails.$inferInsert
+export type NewConsignmentSalesDetail =
+  typeof consignmentSalesDetails.$inferInsert

@@ -210,26 +210,25 @@ export class TestDbUtils {
       .insert(schema.authors)
       .values({
         name: data?.name || 'テスト著者',
-        nameKana: data?.nameKana || 'テストチョシャ',
-        role: data?.role || 'author',
         email: data?.email || 'test@example.com',
-        isActive: data?.isActive ?? true,
+        bio: data?.bio || 'テスト著者の紹介',
         ...data,
       })
       .returning()
     return author
   }
 
-  async createTestBook(authorId: number, data?: Partial<schema.NewBook>) {
+  async createTestBook(data?: Partial<schema.NewBook>) {
     const [book] = await this.db
       .insert(schema.books)
       .values({
         title: data?.title || 'テスト書籍',
-        titleKana: data?.titleKana || 'テストショセキ',
-        mainAuthorId: authorId,
+        subtitle: data?.subtitle,
+        description: data?.description,
+        genre: data?.genre,
+        seriesName: data?.seriesName,
+        seriesNumber: data?.seriesNumber,
         status: data?.status || 'planning',
-        pageCount: data?.pageCount || 100,
-        genre: data?.genre || 'comic',
         ...data,
       })
       .returning()
@@ -257,10 +256,10 @@ export class TestDbUtils {
       .values({
         name: data?.name || 'テスト保管場所',
         type: data?.type || 'home',
-        capacity: data?.capacity || 1000,
-        currentOccupancy: data?.currentOccupancy || 0,
         isConsignment: data?.isConsignment ?? false,
-        isActive: data?.isActive ?? true,
+        address: data?.address,
+        contactInfo: data?.contactInfo,
+        notes: data?.notes,
         ...data,
       })
       .returning()
@@ -288,10 +287,7 @@ export class TestDbUtils {
     quantity: number
     availableQuantity: number
   }) {
-    const [stock] = await this.db
-      .insert(schema.stocks)
-      .values(data)
-      .returning()
+    const [stock] = await this.db.insert(schema.stocks).values(data).returning()
     return stock
   }
 
@@ -314,13 +310,17 @@ export class TestDbUtils {
         netAmount,
         reportPeriodStart: data.reportPeriodStart || new Date('2025-01-01'),
         reportPeriodEnd: data.reportPeriodEnd || new Date('2025-01-31'),
-        status: data.status || 'reported',
+        status: (data.status || 'reported') as
+          | 'reported'
+          | 'confirmed'
+          | 'adjusted'
+          | 'settled',
       })
       .returning()
     return salesReport
   }
 
-  get db() {
+  get drizzleDb() {
     return this.db
   }
 }

@@ -54,9 +54,7 @@
         "Author_email_unique": {
           "name": "Author_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -86,12 +84,8 @@
           "name": "BookAuthor_bookId_Book_id_fk",
           "tableFrom": "BookAuthor",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -99,12 +93,8 @@
           "name": "BookAuthor_authorId_Author_id_fk",
           "tableFrom": "BookAuthor",
           "tableTo": "Author",
-          "columnsFrom": [
-            "authorId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["authorId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -112,10 +102,7 @@
       "compositePrimaryKeys": {
         "BookAuthor_bookId_authorId_pk": {
           "name": "BookAuthor_bookId_authorId_pk",
-          "columns": [
-            "bookId",
-            "authorId"
-          ]
+          "columns": ["bookId", "authorId"]
         }
       },
       "uniqueConstraints": {},
@@ -264,12 +251,8 @@
           "name": "CircleAuthor_circleId_Circle_id_fk",
           "tableFrom": "CircleAuthor",
           "tableTo": "Circle",
-          "columnsFrom": [
-            "circleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["circleId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -277,12 +260,8 @@
           "name": "CircleAuthor_authorId_Author_id_fk",
           "tableFrom": "CircleAuthor",
           "tableTo": "Author",
-          "columnsFrom": [
-            "authorId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["authorId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -290,10 +269,7 @@
       "compositePrimaryKeys": {
         "CircleAuthor_circleId_authorId_pk": {
           "name": "CircleAuthor_circleId_authorId_pk",
-          "columns": [
-            "circleId",
-            "authorId"
-          ]
+          "columns": ["circleId", "authorId"]
         }
       },
       "uniqueConstraints": {},
@@ -468,12 +444,8 @@
           "name": "Consignment_locationId_StorageLocation_id_fk",
           "tableFrom": "Consignment",
           "tableTo": "StorageLocation",
-          "columnsFrom": [
-            "locationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["locationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -539,12 +511,8 @@
           "name": "Deadline_bookId_Book_id_fk",
           "tableFrom": "Deadline",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -661,12 +629,8 @@
           "name": "Edition_bookId_Book_id_fk",
           "tableFrom": "Edition",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -676,9 +640,7 @@
         "Edition_isbn_unique": {
           "name": "Edition_isbn_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "isbn"
-          ]
+          "columns": ["isbn"]
         }
       },
       "policies": {},
@@ -830,12 +792,8 @@
           "name": "ExhibitBook_exhibitId_Exhibit_id_fk",
           "tableFrom": "ExhibitBook",
           "tableTo": "Exhibit",
-          "columnsFrom": [
-            "exhibitId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exhibitId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -843,12 +801,8 @@
           "name": "ExhibitBook_editionId_Edition_id_fk",
           "tableFrom": "ExhibitBook",
           "tableTo": "Edition",
-          "columnsFrom": [
-            "editionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["editionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -856,10 +810,7 @@
       "compositePrimaryKeys": {
         "ExhibitBook_exhibitId_editionId_pk": {
           "name": "ExhibitBook_exhibitId_editionId_pk",
-          "columns": [
-            "exhibitId",
-            "editionId"
-          ]
+          "columns": ["exhibitId", "editionId"]
         }
       },
       "uniqueConstraints": {},
@@ -955,12 +906,8 @@
           "name": "Exhibit_eventId_Event_id_fk",
           "tableFrom": "Exhibit",
           "tableTo": "Event",
-          "columnsFrom": [
-            "eventId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eventId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -968,12 +915,8 @@
           "name": "Exhibit_circleId_Circle_id_fk",
           "tableFrom": "Exhibit",
           "tableTo": "Circle",
-          "columnsFrom": [
-            "circleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["circleId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1084,12 +1027,8 @@
           "name": "PricingRule_editionId_Edition_id_fk",
           "tableFrom": "PricingRule",
           "tableTo": "Edition",
-          "columnsFrom": [
-            "editionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["editionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1097,12 +1036,8 @@
           "name": "PricingRule_eventId_Event_id_fk",
           "tableFrom": "PricingRule",
           "tableTo": "Event",
-          "columnsFrom": [
-            "eventId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eventId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1231,12 +1166,8 @@
           "name": "SalesDetail_transactionId_SalesTransaction_id_fk",
           "tableFrom": "SalesDetail",
           "tableTo": "SalesTransaction",
-          "columnsFrom": [
-            "transactionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["transactionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1244,12 +1175,8 @@
           "name": "SalesDetail_editionId_Edition_id_fk",
           "tableFrom": "SalesDetail",
           "tableTo": "Edition",
-          "columnsFrom": [
-            "editionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["editionId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1366,12 +1293,8 @@
           "name": "SalesTransaction_eventId_Event_id_fk",
           "tableFrom": "SalesTransaction",
           "tableTo": "Event",
-          "columnsFrom": [
-            "eventId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eventId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1379,12 +1302,8 @@
           "name": "SalesTransaction_exhibitId_Exhibit_id_fk",
           "tableFrom": "SalesTransaction",
           "tableTo": "Exhibit",
-          "columnsFrom": [
-            "exhibitId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["exhibitId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1392,12 +1311,8 @@
           "name": "SalesTransaction_locationId_StorageLocation_id_fk",
           "tableFrom": "SalesTransaction",
           "tableTo": "StorageLocation",
-          "columnsFrom": [
-            "locationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["locationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1494,12 +1409,8 @@
           "name": "StockMovement_editionId_Edition_id_fk",
           "tableFrom": "StockMovement",
           "tableTo": "Edition",
-          "columnsFrom": [
-            "editionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["editionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1507,12 +1418,8 @@
           "name": "StockMovement_fromLocationId_StorageLocation_id_fk",
           "tableFrom": "StockMovement",
           "tableTo": "StorageLocation",
-          "columnsFrom": [
-            "fromLocationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fromLocationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1520,12 +1427,8 @@
           "name": "StockMovement_toLocationId_StorageLocation_id_fk",
           "tableFrom": "StockMovement",
           "tableTo": "StorageLocation",
-          "columnsFrom": [
-            "toLocationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["toLocationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1612,12 +1515,8 @@
           "name": "Stock_editionId_Edition_id_fk",
           "tableFrom": "Stock",
           "tableTo": "Edition",
-          "columnsFrom": [
-            "editionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["editionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1625,12 +1524,8 @@
           "name": "Stock_locationId_StorageLocation_id_fk",
           "tableFrom": "Stock",
           "tableTo": "StorageLocation",
-          "columnsFrom": [
-            "locationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["locationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1846,12 +1741,8 @@
           "name": "Submission_bookId_Book_id_fk",
           "tableFrom": "Submission",
           "tableTo": "Book",
-          "columnsFrom": [
-            "bookId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1859,12 +1750,8 @@
           "name": "Submission_printingCompanyId_PrintingCompany_id_fk",
           "tableFrom": "Submission",
           "tableTo": "PrintingCompany",
-          "columnsFrom": [
-            "printingCompanyId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["printingCompanyId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1880,41 +1767,22 @@
     "public.circle_role": {
       "name": "circle_role",
       "schema": "public",
-      "values": [
-        "representative",
-        "member",
-        "guest"
-      ]
+      "values": ["representative", "member", "guest"]
     },
     "public.exhibit_status": {
       "name": "exhibit_status",
       "schema": "public",
-      "values": [
-        "applied",
-        "accepted",
-        "rejected",
-        "cancelled"
-      ]
+      "values": ["applied", "accepted", "rejected", "cancelled"]
     },
     "public.pricing_rule_type": {
       "name": "pricing_rule_type",
       "schema": "public",
-      "values": [
-        "event_discount",
-        "bulk_discount",
-        "early_bird",
-        "consignment"
-      ]
+      "values": ["event_discount", "bulk_discount", "early_bird", "consignment"]
     },
     "public.sales_transaction_type": {
       "name": "sales_transaction_type",
       "schema": "public",
-      "values": [
-        "event",
-        "consignment",
-        "online",
-        "direct"
-      ]
+      "values": ["event", "consignment", "online", "direct"]
     },
     "public.stock_movement_type": {
       "name": "stock_movement_type",
@@ -1932,22 +1800,12 @@
     "public.storage_location_type": {
       "name": "storage_location_type",
       "schema": "public",
-      "values": [
-        "home",
-        "warehouse",
-        "consignment",
-        "event"
-      ]
+      "values": ["home", "warehouse", "consignment", "event"]
     },
     "public.writing_status": {
       "name": "writing_status",
       "schema": "public",
-      "values": [
-        "planning",
-        "writing",
-        "editing",
-        "completed"
-      ]
+      "values": ["planning", "writing", "editing", "completed"]
     }
   },
   "schemas": {},

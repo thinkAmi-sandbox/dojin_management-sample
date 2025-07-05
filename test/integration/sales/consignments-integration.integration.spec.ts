@@ -1,14 +1,7 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
-import request from 'supertest'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -69,7 +62,7 @@ describe('Consignments Integration Tests', () => {
           status: 'completed',
         })
         .returning()
-        
+
       const [edition] = await drizzleService.db
         .insert(schema.editions)
         .values({
@@ -99,14 +92,12 @@ describe('Consignments Integration Tests', () => {
         })
         .returning()
 
-      await drizzleService.db
-        .insert(schema.stocks)
-        .values({
-          editionId: edition.id,
-          locationId: location.id,
-          quantity: 50,
-          availableQuantity: 50,
-        })
+      await drizzleService.db.insert(schema.stocks).values({
+        editionId: edition.id,
+        locationId: location.id,
+        quantity: 50,
+        availableQuantity: 50,
+      })
 
       const response = await request(app.getHttpServer())
         .get(`/consignments/${consignment.id}`)
@@ -289,7 +280,7 @@ describe('Consignments Integration Tests', () => {
           status: 'completed',
         })
         .returning()
-        
+
       const [edition] = await drizzleService.db
         .insert(schema.editions)
         .values({
@@ -300,14 +291,12 @@ describe('Consignments Integration Tests', () => {
         })
         .returning()
 
-      await drizzleService.db
-        .insert(schema.stocks)
-        .values({
-          editionId: edition.id,
-          locationId: location.id,
-          quantity: 10,
-          availableQuantity: 10,
-        })
+      await drizzleService.db.insert(schema.stocks).values({
+        editionId: edition.id,
+        locationId: location.id,
+        quantity: 10,
+        availableQuantity: 10,
+      })
 
       const response = await request(app.getHttpServer())
         .delete(`/consignments/${consignment.id}`)

@@ -212,7 +212,10 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.priority = error
         } else if (error.includes('アクティブ状態')) {
           errors.isActive = error
-        } else if (error.includes('保管場所は必須です') || error.includes('保管場所ID')) {
+        } else if (
+          error.includes('保管場所は必須です') ||
+          error.includes('保管場所ID')
+        ) {
           errors.locationId = error
         } else if (error.includes('店舗名')) {
           errors.storeName = error
@@ -236,6 +239,22 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           errors.contractTerms = error
         } else if (error.includes('アクティブフラグ')) {
           errors.isActive = error
+        } else if (error.includes('報告期間開始日')) {
+          errors.reportPeriodStart = error
+        } else if (error.includes('報告期間終了日')) {
+          errors.reportPeriodEnd = error
+        } else if (error.includes('総売上金額')) {
+          errors.totalSalesAmount = error
+        } else if (error.includes('手数料金額')) {
+          errors.commissionAmount = error
+        } else if (error.includes('純額')) {
+          errors.netAmount = error
+        } else if (error.includes('調整理由')) {
+          errors.adjustmentReason = error
+        } else if (error.includes('調整後売上金額')) {
+          errors.adjustedSalesAmount = error
+        } else if (error.includes('精算方法')) {
+          errors.settlementMethod = error
         } else {
           // 英語メッセージの場合は従来のロジック
           const fieldMatch = error.match(/^(\w+)/)
@@ -459,6 +478,24 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           // POST /circles/:circleId/members (新規メンバー追加)
           templatePath = 'circles/members/add'
           title = 'メンバー追加'
+        }
+      } else if (path.match(/\/consignments\/\d+\/reports/)) {
+        // 委託販売報告関連パス
+        if (path.match(/\/consignments\/\d+\/reports\/new/)) {
+          templatePath = 'consignment-reports/new'
+          title = '新規販売報告'
+        } else if (path.match(/\/consignments\/\d+\/reports$/)) {
+          // POST /consignments/:consignmentId/reports (新規作成)
+          templatePath = 'consignment-reports/new'
+          title = '新規販売報告'
+        } else if (
+          path.match(
+            /\/consignments\/\d+\/reports\/\d+\/(confirm|adjust|settle)$/,
+          )
+        ) {
+          // POST /consignments/:consignmentId/reports/:id/confirm|adjust|settle
+          templatePath = 'consignment-reports/show'
+          title = '販売報告詳細'
         }
       } else if (path.includes('/storage-locations')) {
         if (path.includes('/edit')) {
@@ -921,6 +958,37 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           { name: '締切一覧', url: '#' },
           { name: '編集', url: null },
         ],
+      }
+    } else if (path.match(/\/consignments\/\d+\/reports/)) {
+      // 委託販売報告関連パス
+      const consignmentIdMatch = path.match(/\/consignments\/(\d+)\/reports/)
+      const consignmentId = consignmentIdMatch
+        ? parseInt(consignmentIdMatch[1], 10)
+        : null
+
+      if (path.match(/\/consignments\/\d+\/reports\/new/)) {
+        return {
+          formData: formData,
+          consignment: {
+            id: consignmentId,
+            storeName: '委託先',
+            commissionRate: 30,
+          },
+          availableEditions: [],
+          errors: {},
+        }
+      } else if (path.match(/\/consignments\/\d+\/reports$/)) {
+        // POST /consignments/:consignmentId/reports
+        return {
+          formData: formData,
+          consignment: {
+            id: consignmentId,
+            storeName: '委託先',
+            commissionRate: 30,
+          },
+          availableEditions: [],
+          errors: {},
+        }
       }
     } else if (path.includes('/consignments')) {
       // パスからIDを抽出 (例: /consignments/1 -> 1)
@@ -1631,8 +1699,12 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           storeName: formData.storeName || '',
           commissionRate: formData.commissionRate || '',
           settlementCycle: formData.settlementCycle || '',
-          contractStartDate: formData.contractStartDate ? new Date(formData.contractStartDate as string) : new Date(),
-          contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate as string) : null,
+          contractStartDate: formData.contractStartDate
+            ? new Date(formData.contractStartDate as string)
+            : new Date(),
+          contractEndDate: formData.contractEndDate
+            ? new Date(formData.contractEndDate as string)
+            : null,
           contactPerson: formData.contactPerson || '',
           contactEmail: formData.contactEmail || '',
           contactPhone: formData.contactPhone || '',
@@ -1646,8 +1718,12 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           storeName: formData.storeName || '',
           commissionRate: formData.commissionRate || '',
           settlementCycle: formData.settlementCycle || '',
-          contractStartDate: formData.contractStartDate ? new Date(formData.contractStartDate as string) : new Date(),
-          contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate as string) : null,
+          contractStartDate: formData.contractStartDate
+            ? new Date(formData.contractStartDate as string)
+            : new Date(),
+          contractEndDate: formData.contractEndDate
+            ? new Date(formData.contractEndDate as string)
+            : null,
           contactPerson: formData.contactPerson || '',
           contactEmail: formData.contactEmail || '',
           contactPhone: formData.contactPhone || '',

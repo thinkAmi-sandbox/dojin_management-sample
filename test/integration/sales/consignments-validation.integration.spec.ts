@@ -1,14 +1,7 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'vitest'
-import request from 'supertest'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -101,13 +94,11 @@ describe('Consignments Validation Integration Tests', () => {
     })
 
     it('should return 404 for non-existent consignment', async () => {
-      await request(app.getHttpServer())
-        .get('/consignments/99999')
-        .expect(404)
+      await request(app.getHttpServer()).get('/consignments/99999').expect(404)
     })
 
     it('should prevent deletion of consignment with unsettled sales', async () => {
-      const [location] = await drizzleService.db
+      const [_location] = await drizzleService.db
         .insert(schema.storageLocations)
         .values({
           name: 'テスト委託先',

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { eq, sum } from 'drizzle-orm'
+import { and, eq, gt, sum } from 'drizzle-orm'
 import type { NewEdition } from '../db/schema'
-import { editions, stocks, storageLocations } from '../db/schema'
+import { books, editions, stocks, storageLocations } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 import type { CreateEditionDto } from './dto/create-edition.dto'
 import type { UpdateEditionDto } from './dto/update-edition.dto'
@@ -184,5 +184,31 @@ export class EditionsService {
     await this.findOne(id)
 
     await this.drizzleService.db.delete(editions).where(eq(editions.id, id))
+  }
+
+  async findByLocation(locationId: number) {
+    // 指定保管場所に在庫がある版を取得
+    return await this.drizzleService.db
+      .select({
+        id: editions.id,
+        bookId: editions.bookId,
+        versionName: editions.versionName,
+        versionNumber: editions.versionNumber,
+        basePrice: editions.basePrice,
+        bookTitle: books.title,
+        stockQuantity: stocks.quantity,
+        availableQuantity: stocks.availableQuantity,
+      })
+      .from(editions)
+      .innerJoin(books, eq(editions.bookId, books.id))
+      .innerJoin(
+        stocks,
+        and(
+          eq(stocks.editionId, editions.id),
+          eq(stocks.locationId, locationId),
+          gt(stocks.availableQuantity, 0),
+        ),
+      )
+      .orderBy(books.title, editions.versionNumber)
   }
 }

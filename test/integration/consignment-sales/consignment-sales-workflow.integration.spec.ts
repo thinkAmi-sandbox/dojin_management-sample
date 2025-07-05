@@ -1,17 +1,17 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import request from 'supertest'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { AppModule } from '../../../src/app.module'
-import { setupTestApp } from '../setup-test-app'
-import { testDbUtils } from '../../helpers/db-utils'
-import * as schema from '../../../src/db/schema'
 import { sql } from 'drizzle-orm'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppModule } from '../../../src/app.module'
+import * as schema from '../../../src/db/schema'
+import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('ConsignmentSales Workflow Integration Tests', () => {
   let app: INestApplication
-  let testConsignment: any
-  let testEdition: any
+  let testConsignment: schema.Consignment
+  let testEdition: schema.Edition
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -32,8 +32,7 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
     await testDbUtils.cleanupDatabase()
 
     // 共通テストデータ作成
-    const author = await testDbUtils.createTestAuthor()
-    const book = await testDbUtils.createTestBook(author.id)
+    const book = await testDbUtils.createTestBook()
     testEdition = await testDbUtils.createTestEdition(book.id)
     const location = await testDbUtils.createTestStorageLocation({
       type: 'consignment',
@@ -44,7 +43,7 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
       storeName: 'テスト書店',
       commissionRate: 30,
     })
-    
+
     // 委託先在庫を作成
     await testDbUtils.createTestStock({
       editionId: testEdition.id,
@@ -61,34 +60,40 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
         reportPeriodStart: '2025-01-01',
         reportPeriodEnd: '2025-01-31',
         totalSalesAmount: 5000,
-        details: [{
-          editionId: testEdition.id,
-          quantity: 5,
-          unitPrice: 1000,
-        }],
+        details: [
+          {
+            editionId: testEdition.id,
+            quantity: 5,
+            unitPrice: 1000,
+          },
+        ],
         notes: '1月度販売報告',
       }
 
-      const createResponse = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post(`/consignments/${testConsignment.id}/reports`)
         .send(reportData)
         .expect(302)
 
       // データベースから作成された報告を取得
-      const [salesReport] = await testDbUtils.db
+      const [salesReport] = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSales)
-        .where(sql`${schema.consignmentSales.consignmentId} = ${testConsignment.id}`)
+        .where(
+          sql`${schema.consignmentSales.consignmentId} = ${testConsignment.id}`,
+        )
 
       expect(salesReport.status).toBe('reported')
 
       // 2. 内容確認
       await request(app.getHttpServer())
-        .post(`/consignments/${testConsignment.id}/reports/${salesReport.id}/confirm`)
+        .post(
+          `/consignments/${testConsignment.id}/reports/${salesReport.id}/confirm`,
+        )
         .send({ notes: '内容確認済み' })
         .expect(302)
 
-      const [confirmedReport] = await testDbUtils.db
+      const [confirmedReport] = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSales)
         .where(sql`${schema.consignmentSales.id} = ${salesReport.id}`)
@@ -98,14 +103,16 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
 
       // 3. 精算処理
       await request(app.getHttpServer())
-        .post(`/consignments/${testConsignment.id}/reports/${salesReport.id}/settle`)
-        .send({ 
+        .post(
+          `/consignments/${testConsignment.id}/reports/${salesReport.id}/settle`,
+        )
+        .send({
           settlementMethod: 'bank_transfer',
-          notes: '銀行振込にて精算完了'
+          notes: '銀行振込にて精算完了',
         })
         .expect(302)
 
-      const [settledReport] = await testDbUtils.db
+      const [settledReport] = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSales)
         .where(sql`${schema.consignmentSales.id} = ${salesReport.id}`)
@@ -125,20 +132,24 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
 
       // 2. 内容確認
       await request(app.getHttpServer())
-        .post(`/consignments/${testConsignment.id}/reports/${salesReport.id}/confirm`)
+        .post(
+          `/consignments/${testConsignment.id}/reports/${salesReport.id}/confirm`,
+        )
         .send({ notes: '内容確認済み' })
         .expect(302)
 
       // 3. 調整処理（金額変更）
       await request(app.getHttpServer())
-        .post(`/consignments/${testConsignment.id}/reports/${salesReport.id}/adjust`)
-        .send({ 
+        .post(
+          `/consignments/${testConsignment.id}/reports/${salesReport.id}/adjust`,
+        )
+        .send({
           adjustmentReason: '返品分を差し引き',
           adjustedSalesAmount: 4500,
         })
         .expect(302)
 
-      const [adjustedReport] = await testDbUtils.db
+      const [adjustedReport] = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSales)
         .where(sql`${schema.consignmentSales.id} = ${salesReport.id}`)
@@ -152,14 +163,16 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
 
       // 4. 精算処理
       await request(app.getHttpServer())
-        .post(`/consignments/${testConsignment.id}/reports/${salesReport.id}/settle`)
-        .send({ 
+        .post(
+          `/consignments/${testConsignment.id}/reports/${salesReport.id}/settle`,
+        )
+        .send({
           settlementMethod: 'cash',
-          notes: '現金にて精算'
+          notes: '現金にて精算',
         })
         .expect(302)
 
-      const [settledReport] = await testDbUtils.db
+      const [settledReport] = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSales)
         .where(sql`${schema.consignmentSales.id} = ${salesReport.id}`)
@@ -174,11 +187,13 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
         reportPeriodStart: '2025-01-01',
         reportPeriodEnd: '2025-01-31',
         totalSalesAmount: 5000,
-        details: [{
-          editionId: testEdition.id,
-          quantity: 5,
-          unitPrice: 1000,
-        }],
+        details: [
+          {
+            editionId: testEdition.id,
+            quantity: 5,
+            unitPrice: 1000,
+          },
+        ],
         notes: '1月度販売報告',
       }
 
@@ -188,7 +203,7 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
         .expect(302)
 
       // 在庫移動履歴確認
-      const [movement] = await testDbUtils.db
+      const [movement] = await testDbUtils.drizzleDb
         .select()
         .from(schema.stockMovements)
         .where(sql`${schema.stockMovements.editionId} = ${testEdition.id}`)
@@ -213,13 +228,15 @@ describe('ConsignmentSales Workflow Integration Tests', () => {
       })
 
       // 明細も作成
-      await testDbUtils.db.insert(schema.consignmentSalesDetails).values({
-        consignmentSalesId: salesReport.id,
-        editionId: testEdition.id,
-        quantity: 5,
-        unitPrice: 1000,
-        subtotal: 5000,
-      })
+      await testDbUtils.drizzleDb
+        .insert(schema.consignmentSalesDetails)
+        .values({
+          consignmentSalesId: salesReport.id,
+          editionId: testEdition.id,
+          quantity: 5,
+          unitPrice: 1000,
+          subtotal: 5000,
+        })
 
       const response = await request(app.getHttpServer())
         .get(`/consignments/${testConsignment.id}/reports/${salesReport.id}`)

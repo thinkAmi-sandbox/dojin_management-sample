@@ -1,12 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import request from 'supertest'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { AppModule } from '../../../src/app.module'
-import { setupTestApp } from '../setup-test-app'
-import { testDbUtils } from '../../helpers/db-utils'
-import * as schema from '../../../src/db/schema'
 import { sql } from 'drizzle-orm'
+import request from 'supertest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppModule } from '../../../src/app.module'
+import * as schema from '../../../src/db/schema'
+import { testDbUtils } from '../../helpers/db-utils'
+import { setupTestApp } from '../setup-test-app'
 
 describe('ConsignmentSales Basic Integration Tests', () => {
   let app: INestApplication
@@ -33,9 +33,10 @@ describe('ConsignmentSales Basic Integration Tests', () => {
   describe('POST /consignments/:consignmentId/reports (販売報告作成)', () => {
     it('委託販売報告を作成できること', async () => {
       // テストデータ作成
-      const author = await testDbUtils.createTestAuthor()
-      const book = await testDbUtils.createTestBook(author.id)
-      const edition = await testDbUtils.createTestEdition(book.id)
+      const book = await testDbUtils.createTestBook()
+      const edition = await testDbUtils.createTestEdition(book.id, {
+        versionNumber: 1,
+      })
       const location = await testDbUtils.createTestStorageLocation({
         type: 'consignment',
         isConsignment: true,
@@ -45,7 +46,7 @@ describe('ConsignmentSales Basic Integration Tests', () => {
         storeName: 'テスト書店',
         commissionRate: 30,
       })
-      
+
       // 委託先在庫を作成
       await testDbUtils.createTestStock({
         editionId: edition.id,
@@ -58,11 +59,13 @@ describe('ConsignmentSales Basic Integration Tests', () => {
         reportPeriodStart: '2025-01-01',
         reportPeriodEnd: '2025-01-31',
         totalSalesAmount: 5000,
-        details: [{
-          editionId: edition.id,
-          quantity: 5,
-          unitPrice: 1000,
-        }],
+        details: [
+          {
+            editionId: edition.id,
+            quantity: 5,
+            unitPrice: 1000,
+          },
+        ],
         notes: '1月度販売報告',
       }
 
@@ -71,13 +74,17 @@ describe('ConsignmentSales Basic Integration Tests', () => {
         .send(reportData)
         .expect(302)
 
-      expect(response.headers.location).toBe(`/consignments/${consignment.id}/reports`)
+      expect(response.headers.location).toBe(
+        `/consignments/${consignment.id}/reports`,
+      )
 
       // データベース確認
-      const [salesReport] = await testDbUtils.db
+      const [salesReport] = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSales)
-        .where(sql`${schema.consignmentSales.consignmentId} = ${consignment.id}`)
+        .where(
+          sql`${schema.consignmentSales.consignmentId} = ${consignment.id}`,
+        )
 
       expect(salesReport).toBeDefined()
       expect(salesReport.totalSalesAmount).toBe(5000)
@@ -86,20 +93,25 @@ describe('ConsignmentSales Basic Integration Tests', () => {
       expect(salesReport.status).toBe('reported')
 
       // 在庫が減少していることを確認
-      const [updatedStock] = await testDbUtils.db
+      const [updatedStock] = await testDbUtils.drizzleDb
         .select()
         .from(schema.stocks)
-        .where(sql`${schema.stocks.editionId} = ${edition.id} AND ${schema.stocks.locationId} = ${location.id}`)
+        .where(
+          sql`${schema.stocks.editionId} = ${edition.id} AND ${schema.stocks.locationId} = ${location.id}`,
+        )
 
       expect(updatedStock.quantity).toBe(45) // 50 - 5
       expect(updatedStock.availableQuantity).toBe(45)
     })
 
     it('複数の版の販売報告を作成できること', async () => {
-      const author = await testDbUtils.createTestAuthor()
-      const book = await testDbUtils.createTestBook(author.id)
-      const edition1 = await testDbUtils.createTestEdition(book.id, { number: 1 })
-      const edition2 = await testDbUtils.createTestEdition(book.id, { number: 2 })
+      const book = await testDbUtils.createTestBook()
+      const edition1 = await testDbUtils.createTestEdition(book.id, {
+        versionNumber: 1,
+      })
+      const edition2 = await testDbUtils.createTestEdition(book.id, {
+        versionNumber: 2,
+      })
       const location = await testDbUtils.createTestStorageLocation({
         type: 'consignment',
         isConsignment: true,
@@ -109,7 +121,7 @@ describe('ConsignmentSales Basic Integration Tests', () => {
         storeName: 'テスト書店',
         commissionRate: 25,
       })
-      
+
       // 各版の委託先在庫を作成
       await testDbUtils.createTestStock({
         editionId: edition1.id,
@@ -138,7 +150,7 @@ describe('ConsignmentSales Basic Integration Tests', () => {
             editionId: edition2.id,
             quantity: 5,
             unitPrice: 1100,
-          }
+          },
         ],
         notes: '2月度販売報告',
       }
@@ -149,7 +161,7 @@ describe('ConsignmentSales Basic Integration Tests', () => {
         .expect(302)
 
       // 明細確認
-      const details = await testDbUtils.db
+      const details = await testDbUtils.drizzleDb
         .select()
         .from(schema.consignmentSalesDetails)
         .orderBy(schema.consignmentSalesDetails.editionId)
