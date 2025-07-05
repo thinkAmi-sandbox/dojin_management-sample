@@ -34,11 +34,6 @@ describe('Sales Reports - Basic Functionality', () => {
   it('should display sales reports page with empty data', async () => {
     const response = await request(app.getHttpServer()).get('/sales/reports')
 
-    console.log('Response status:', response.status)
-    if (response.status !== 200) {
-      console.log('Error response body:', response.text)
-    }
-
     expect(response.status).toBe(200)
     expect(response.text).toContain('売上レポート')
     expect(response.text).toContain('売上データがありません')
