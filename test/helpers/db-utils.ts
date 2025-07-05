@@ -138,6 +138,22 @@ export class TestDbUtils {
       } catch {
         // テーブルが存在しない場合は無視
       }
+      // ConsignmentSalesテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "ConsignmentSales" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
+      // ConsignmentSalesDetailテーブルが存在する場合のみTRUNCATEを実行
+      try {
+        await this.db.execute(
+          sql`TRUNCATE TABLE "ConsignmentSalesDetail" RESTART IDENTITY CASCADE`,
+        )
+      } catch {
+        // テーブルが存在しない場合は無視
+      }
     } catch (error) {
       console.error(
         'データベースのクリーンアップでエラーが発生しました:',
@@ -185,6 +201,126 @@ export class TestDbUtils {
   }
 
   getDb() {
+    return this.db
+  }
+
+  // テストユーティリティ関数を追加
+  async createTestAuthor(data?: Partial<schema.NewAuthor>) {
+    const [author] = await this.db
+      .insert(schema.authors)
+      .values({
+        name: data?.name || 'テスト著者',
+        nameKana: data?.nameKana || 'テストチョシャ',
+        role: data?.role || 'author',
+        email: data?.email || 'test@example.com',
+        isActive: data?.isActive ?? true,
+        ...data,
+      })
+      .returning()
+    return author
+  }
+
+  async createTestBook(authorId: number, data?: Partial<schema.NewBook>) {
+    const [book] = await this.db
+      .insert(schema.books)
+      .values({
+        title: data?.title || 'テスト書籍',
+        titleKana: data?.titleKana || 'テストショセキ',
+        mainAuthorId: authorId,
+        status: data?.status || 'planning',
+        pageCount: data?.pageCount || 100,
+        genre: data?.genre || 'comic',
+        ...data,
+      })
+      .returning()
+    return book
+  }
+
+  async createTestEdition(bookId: number, data?: Partial<schema.NewEdition>) {
+    const [edition] = await this.db
+      .insert(schema.editions)
+      .values({
+        bookId,
+        versionName: data?.versionName || '初版',
+        versionNumber: data?.versionNumber || 1,
+        basePrice: data?.basePrice || 1000,
+        isActive: data?.isActive ?? true,
+        ...data,
+      })
+      .returning()
+    return edition
+  }
+
+  async createTestStorageLocation(data?: Partial<schema.NewStorageLocation>) {
+    const [location] = await this.db
+      .insert(schema.storageLocations)
+      .values({
+        name: data?.name || 'テスト保管場所',
+        type: data?.type || 'home',
+        capacity: data?.capacity || 1000,
+        currentOccupancy: data?.currentOccupancy || 0,
+        isConsignment: data?.isConsignment ?? false,
+        isActive: data?.isActive ?? true,
+        ...data,
+      })
+      .returning()
+    return location
+  }
+
+  async createTestConsignment(data?: Partial<schema.NewConsignment>) {
+    const [consignment] = await this.db
+      .insert(schema.consignments)
+      .values({
+        locationId: data?.locationId || 1,
+        storeName: data?.storeName || 'テスト書店',
+        commissionRate: data?.commissionRate || 30,
+        contractStartDate: data?.contractStartDate || new Date('2025-01-01'),
+        isActive: data?.isActive ?? true,
+        ...data,
+      })
+      .returning()
+    return consignment
+  }
+
+  async createTestStock(data: {
+    editionId: number
+    locationId: number
+    quantity: number
+    availableQuantity: number
+  }) {
+    const [stock] = await this.db
+      .insert(schema.stocks)
+      .values(data)
+      .returning()
+    return stock
+  }
+
+  async createTestConsignmentSalesReport(data: {
+    consignmentId: number
+    totalSalesAmount: number
+    reportPeriodStart?: Date
+    reportPeriodEnd?: Date
+    status?: string
+  }) {
+    const commissionAmount = Math.floor(data.totalSalesAmount * 0.3) // 30%と仮定
+    const netAmount = data.totalSalesAmount - commissionAmount
+
+    const [salesReport] = await this.db
+      .insert(schema.consignmentSales)
+      .values({
+        consignmentId: data.consignmentId,
+        totalSalesAmount: data.totalSalesAmount,
+        commissionAmount,
+        netAmount,
+        reportPeriodStart: data.reportPeriodStart || new Date('2025-01-01'),
+        reportPeriodEnd: data.reportPeriodEnd || new Date('2025-01-31'),
+        status: data.status || 'reported',
+      })
+      .returning()
+    return salesReport
+  }
+
+  get db() {
     return this.db
   }
 }
