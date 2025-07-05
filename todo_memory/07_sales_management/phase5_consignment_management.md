@@ -122,11 +122,19 @@ Phase 5では、委託販売の包括的な管理機能を実装します。委�
   - 委託販売関連36件中33件成功（91.7%）
   - 3件の環境固有エラーをスキップ
 
-### ⏳ Phase 5-4: 委託在庫管理・統合テスト（1-2日）
-- [ ] 委託在庫管理の統合テスト作成
-- [ ] 委託在庫管理機能の実装
-- [ ] 全機能統合テストの実行・確認
-- [ ] 最終確認とドキュメント更新
+### ⏳ Phase 5-4: 委託在庫管理・統合テスト（1-2日）【TDD版】
+- [ ] 統合テストの作成【RED】（0.5日）
+  - 委託在庫管理テスト作成（6件）
+  - 委託販売フロー全体テスト作成（5件）
+  - 既存スキップテストの見直し（6件）
+- [ ] プロダクションコード実装【GREEN】（0.5日）
+  - ConsignmentsControllerに在庫管理エンドポイント追加
+  - ConsignmentsServiceに在庫分析メソッド追加
+  - ビューファイル作成（stock.ejs、stock-report.ejs）
+- [ ] リファクタリング【REFACTOR】（0.5日）
+  - コード品質向上・重複除去
+  - 全統合テスト実行（471件全成功目標）
+  - ドキュメント更新
 
 ## 🗂️ Phase 5-1: 委託契約管理実装（2-3日）
 
@@ -1127,27 +1135,370 @@ export class ConsignmentReportsController {
 </html>
 ```
 
-## 🗂️ Phase 5-4: 委託在庫管理・統合テスト（1-2日）
+## 🗂️ Phase 5-4: 委託在庫管理・統合テスト（1-2日）【TDD実装】
 
-### 委託在庫管理機能
+### 🔴 RED フェーズ: 統合テスト作成
 
-#### 委託先在庫状況表示
+#### 1. 委託在庫管理テスト（consignment-inventory.integration.spec.ts）
 ```typescript
-@Get('consignments/:id/stock')
+describe('Consignment Inventory Management Tests', () => {
+  it('委託先別在庫一覧が正しく表示される', async () => {
+    // GET /consignments/:id/stock のテスト
+    const response = await request(app.getHttpServer())
+      .get(`/consignments/${testConsignment.id}/stock`)
+      .expect(200)
+    
+    expect(response.text).toContain('在庫状況')
+    expect(response.text).toContain('版別在庫数量')
+    expect(response.text).toContain('在庫評価額')
+  })
+
+  it('在庫評価額が正しく計算される', async () => {
+    // 在庫評価額 = 数量 × 基本価格の合計
+    const response = await request(app.getHttpServer())
+      .get(`/consignments/${testConsignment.id}/stock`)
+      .expect(200)
+    
+    expect(response.text).toContain('¥50,000') // 50冊 × ¥1,000
+  })
+
+  it('在庫移動履歴が表示される', async () => {
+    // 入庫・販売・返品の履歴表示
+    const response = await request(app.getHttpServer())
+      .get(`/consignments/${testConsignment.id}/stock`)
+      .expect(200)
+    
+    expect(response.text).toContain('移動履歴')
+    expect(response.text).toContain('入庫')
+    expect(response.text).toContain('販売')
+  })
+
+  it('在庫回転率が計算される', async () => {
+    // GET /consignments/:id/stock/report のテスト
+    const response = await request(app.getHttpServer())
+      .get(`/consignments/${testConsignment.id}/stock/report`)
+      .expect(200)
+    
+    expect(response.text).toContain('在庫回転率')
+    expect(response.text).toContain('1.2回/月') // 計算値例
+  })
+
+  it('長期滞留在庫が検出される', async () => {
+    // 90日以上動きがない在庫の検出
+    const response = await request(app.getHttpServer())
+      .get(`/consignments/${testConsignment.id}/stock/report`)
+      .expect(200)
+    
+    expect(response.text).toContain('長期滞留在庫')
+    expect(response.text).toContain('90日以上')
+  })
+
+  it('CSVエクスポートができる', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/consignments/${testConsignment.id}/stock/export`)
+      .expect(200)
+    
+    expect(response.headers['content-type']).toContain('text/csv')
+    expect(response.headers['content-disposition']).toContain('attachment')
+  })
+})
+```
+
+#### 2. 委託販売フロー全体テスト（consignment-workflow.integration.spec.ts）
+```typescript
+describe('Consignment Workflow E2E Tests', () => {
+  it('契約作成→在庫預託→販売報告→精算の完全フロー', async () => {
+    // 1. 委託契約作成
+    const contractResponse = await request(app.getHttpServer())
+      .post('/consignments')
+      .send(contractData)
+      .expect(302)
+
+    // 2. 在庫預託（在庫移動）
+    const stockMoveResponse = await request(app.getHttpServer())
+      .post('/stock-movements')
+      .send(stockMoveData)
+      .expect(302)
+
+    // 3. 販売報告作成
+    const salesReportResponse = await request(app.getHttpServer())
+      .post(`/consignments/${consignmentId}/reports`)
+      .send(salesReportData)
+      .expect(302)
+
+    // 4. 精算処理
+    const settlementResponse = await request(app.getHttpServer())
+      .post(`/consignments/${consignmentId}/reports/${reportId}/settle`)
+      .send(settlementData)
+      .expect(302)
+
+    // 全体の状態確認
+    const finalStock = await stocksService.findByLocation(locationId)
+    expect(finalStock.quantity).toBe(45) // 50 - 5（販売分）
+  })
+
+  it('在庫不足時のエラーハンドリング', async () => {
+    // 在庫以上の販売報告でエラー
+    const response = await request(app.getHttpServer())
+      .post(`/consignments/${testConsignment.id}/reports`)
+      .send({
+        details: [{
+          editionId: testEdition.id,
+          quantity: 100, // 在庫50に対して100を販売
+          unitPrice: 1000,
+        }]
+      })
+      .expect(400)
+
+    expect(response.body.message).toContain('在庫が不足しています')
+  })
+
+  it('未精算での契約削除防止', async () => {
+    // 未精算の販売報告がある状態で削除試行
+    await createTestConsignmentSalesReport({
+      consignmentId: testConsignment.id,
+      status: 'confirmed',
+    })
+
+    const response = await request(app.getHttpServer())
+      .delete(`/consignments/${testConsignment.id}`)
+      .expect(400)
+
+    expect(response.text).toContain('未精算の販売報告があるため削除できません')
+  })
+
+  it('複数版の同時処理', async () => {
+    // 複数版の販売報告を一度に処理
+    const multipleEditionsReport = {
+      consignmentId: testConsignment.id,
+      details: [
+        { editionId: edition1.id, quantity: 5, unitPrice: 1000 },
+        { editionId: edition2.id, quantity: 3, unitPrice: 1500 },
+        { editionId: edition3.id, quantity: 10, unitPrice: 800 },
+      ]
+    }
+
+    const response = await request(app.getHttpServer())
+      .post(`/consignments/${testConsignment.id}/reports`)
+      .send(multipleEditionsReport)
+      .expect(302)
+
+    // 各版の在庫確認
+    const stock1 = await stocksService.findByEditionAndLocation(edition1.id, locationId)
+    const stock2 = await stocksService.findByEditionAndLocation(edition2.id, locationId)
+    const stock3 = await stocksService.findByEditionAndLocation(edition3.id, locationId)
+
+    expect(stock1.quantity).toBe(45) // 50 - 5
+    expect(stock2.quantity).toBe(47) // 50 - 3
+    expect(stock3.quantity).toBe(40) // 50 - 10
+  })
+
+  it('トランザクションロールバック確認', async () => {
+    // 途中でエラーが発生した場合のロールバック
+    const invalidReport = {
+      consignmentId: testConsignment.id,
+      details: [
+        { editionId: edition1.id, quantity: 5, unitPrice: 1000 },
+        { editionId: 999999, quantity: 3, unitPrice: 1500 }, // 存在しない版ID
+      ]
+    }
+
+    await request(app.getHttpServer())
+      .post(`/consignments/${testConsignment.id}/reports`)
+      .send(invalidReport)
+      .expect(400)
+
+    // edition1の在庫が変更されていないことを確認
+    const stock1 = await stocksService.findByEditionAndLocation(edition1.id, locationId)
+    expect(stock1.quantity).toBe(50) // 元の在庫数のまま
+  })
+})
+```
+
+### 🟢 GREEN フェーズ: プロダクションコード実装
+
+#### ConsignmentsControllerに追加
+```typescript
+// 委託在庫状況表示
+@Get(':id/stock')
 @Render('consignments/stock')
-async getConsignmentStock(@Param('id', ParseIntPipe) id: number) {
-  const consignment = await this.consignmentsService.findOne(id)
-  const stockStatus = await this.stocksService.findByLocation(consignment.locationId)
+async getConsignmentStock(@Param('id') id: string) {
+  const consignmentId = parseInt(id, 10)
+  const consignment = await this.consignmentsService.findOne(consignmentId)
+  const stockDetails = await this.consignmentsService.getConsignmentStockDetails(consignmentId)
   const stockMovements = await this.stockMovementsService.findByLocation(consignment.locationId)
   
   return {
     title: `${consignment.storeName} - 在庫状況`,
     consignment,
-    stockStatus,
+    stockDetails,
     stockMovements,
+    totalValue: stockDetails.reduce((sum, item) => sum + item.value, 0),
   }
 }
+
+// 在庫レポート
+@Get(':id/stock/report')
+@Render('consignments/stock-report')
+async getStockReport(@Param('id') id: string) {
+  const consignmentId = parseInt(id, 10)
+  const consignment = await this.consignmentsService.findOne(consignmentId)
+  const turnoverRate = await this.consignmentsService.calculateStockTurnover(consignmentId)
+  const staledStock = await this.consignmentsService.detectStaledStock(consignmentId)
+  
+  return {
+    title: `${consignment.storeName} - 在庫レポート`,
+    consignment,
+    turnoverRate,
+    staledStock,
+  }
+}
+
+// 在庫レポートCSVエクスポート
+@Get(':id/stock/export')
+async exportStockReport(@Param('id') id: string, @Res() res: Response) {
+  const consignmentId = parseInt(id, 10)
+  const consignment = await this.consignmentsService.findOne(consignmentId)
+  const reportData = await this.consignmentsService.generateStockReport(consignmentId)
+  
+  const csv = this.convertToCSV(reportData)
+  
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename="stock_report_${consignment.storeName}_${new Date().toISOString().split('T')[0]}.csv"`)
+  res.send('\uFEFF' + csv) // BOM付きUTF-8
+}
 ```
+
+#### ConsignmentsServiceに追加
+```typescript
+// 委託在庫詳細情報取得
+async getConsignmentStockDetails(consignmentId: number): Promise<StockDetail[]> {
+  const consignment = await this.findOne(consignmentId)
+  
+  return await this.drizzleService.db
+    .select({
+      editionId: stocks.editionId,
+      bookTitle: books.title,
+      editionName: editions.editionName,
+      quantity: stocks.quantity,
+      basePrice: editions.basePrice,
+      value: sql<number>`${stocks.quantity} * ${editions.basePrice}`,
+      lastMovementDate: sql<Date>`(
+        SELECT MAX(created_at) FROM StockMovement 
+        WHERE edition_id = ${stocks.editionId} 
+        AND (from_location_id = ${consignment.locationId} OR to_location_id = ${consignment.locationId})
+      )`,
+    })
+    .from(stocks)
+    .innerJoin(editions, eq(stocks.editionId, editions.id))
+    .innerJoin(books, eq(editions.bookId, books.id))
+    .where(eq(stocks.locationId, consignment.locationId))
+    .orderBy(desc(stocks.quantity))
+}
+
+// 在庫回転率計算
+async calculateStockTurnover(consignmentId: number): Promise<number> {
+  const consignment = await this.findOne(consignmentId)
+  
+  // 過去3ヶ月の販売数量を取得
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+  
+  const salesData = await this.drizzleService.db
+    .select({
+      totalSold: sql<number>`SUM(${consignmentSalesDetails.quantity})`,
+    })
+    .from(consignmentSalesDetails)
+    .innerJoin(consignmentSales, eq(consignmentSalesDetails.consignmentSalesId, consignmentSales.id))
+    .where(
+      and(
+        eq(consignmentSales.consignmentId, consignmentId),
+        gte(consignmentSales.reportPeriodEnd, threeMonthsAgo),
+      )
+    )
+  
+  const currentStock = await this.getConsignmentStockStatus(consignmentId)
+  const averageStock = currentStock.totalQuantity // 簡易計算
+  
+  if (!averageStock || averageStock === 0) return 0
+  
+  const monthlyTurnover = (salesData[0]?.totalSold || 0) / 3 / averageStock
+  return Math.round(monthlyTurnover * 10) / 10 // 小数点1位まで
+}
+
+// 長期滞留在庫検出
+async detectStaledStock(consignmentId: number): Promise<StaledStock[]> {
+  const consignment = await this.findOne(consignmentId)
+  const ninetyDaysAgo = new Date()
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+  
+  return await this.drizzleService.db
+    .select({
+      editionId: stocks.editionId,
+      bookTitle: books.title,
+      editionName: editions.editionName,
+      quantity: stocks.quantity,
+      daysSinceLastMovement: sql<number>`
+        EXTRACT(DAY FROM NOW() - COALESCE(
+          (SELECT MAX(created_at) FROM StockMovement 
+           WHERE edition_id = ${stocks.editionId} 
+           AND (from_location_id = ${consignment.locationId} OR to_location_id = ${consignment.locationId})),
+          ${stocks.createdAt}
+        ))
+      `,
+    })
+    .from(stocks)
+    .innerJoin(editions, eq(stocks.editionId, editions.id))
+    .innerJoin(books, eq(editions.bookId, books.id))
+    .where(
+      and(
+        eq(stocks.locationId, consignment.locationId),
+        gt(stocks.quantity, 0),
+      )
+    )
+    .having(sql`daysSinceLastMovement > 90`)
+}
+
+// 在庫レポート生成
+async generateStockReport(consignmentId: number): Promise<StockReportData[]> {
+  const stockDetails = await this.getConsignmentStockDetails(consignmentId)
+  const turnoverRate = await this.calculateStockTurnover(consignmentId)
+  const staledStock = await this.detectStaledStock(consignmentId)
+  
+  return stockDetails.map(stock => ({
+    書籍名: stock.bookTitle,
+    版名: stock.editionName,
+    在庫数: stock.quantity,
+    基本価格: stock.basePrice,
+    評価額: stock.value,
+    最終移動日: stock.lastMovementDate?.toLocaleDateString('ja-JP') || '',
+    滞留日数: staledStock.find(s => s.editionId === stock.editionId)?.daysSinceLastMovement || 0,
+    在庫回転率: turnoverRate,
+  }))
+}
+```
+
+### 🔵 REFACTOR フェーズ: コード品質向上
+
+#### 1. パフォーマンス最適化
+- N+1問題の解決（JOINの適切な使用）
+- インデックスの確認と追加
+- 大量データでのページネーション実装
+
+#### 2. コード重複の除去
+- 共通の在庫計算ロジックを抽出
+- エラーハンドリングパターンの統一
+- ビューファイルの共通パーツ化
+
+#### 3. 既存スキップテストの解決
+- 環境固有エラーの根本原因調査
+- テスト環境の整備
+- 471件全テスト成功を目指す
+
+#### 4. ドキュメント更新
+- `project-history.md` にPhase 5完了を記録
+- 実装の振り返りと改善提案
+- 今後の拡張ポイントの記載
 
 ### 統合テスト実装
 
