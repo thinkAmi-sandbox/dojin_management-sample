@@ -14,11 +14,14 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
-import type { Response } from 'express'
 import { eq } from 'drizzle-orm'
-import { DrizzleService } from '../drizzle/drizzle.service'
+import type { Response } from 'express'
 import { editions, pricingRules } from '../db/schema'
-import { CalculatePriceDto, PriceSimulationDto } from './dto/calculate-price.dto'
+import { DrizzleService } from '../drizzle/drizzle.service'
+import {
+  CalculatePriceDto,
+  PriceSimulationDto,
+} from './dto/calculate-price.dto'
 import { CreatePricingRuleDto } from './dto/create-pricing-rule.dto'
 import { UpdatePricingRuleDto } from './dto/update-pricing-rule.dto'
 import { PricingService } from './pricing.service'
@@ -33,7 +36,10 @@ export class PricingController {
   // 価格計算API
   @Post('api/pricing/calculate')
   @UsePipes(ValidationPipe)
-  async calculatePrice(@Body() calculatePriceDto: CalculatePriceDto, @Res() res: Response) {
+  async calculatePrice(
+    @Body() calculatePriceDto: CalculatePriceDto,
+    @Res() res: Response,
+  ) {
     const result = await this.pricingService.calculatePrice(
       calculatePriceDto.editionId,
       calculatePriceDto.quantity || 1,
@@ -45,9 +51,12 @@ export class PricingController {
   // 価格シミュレーションAPI
   @Post('api/pricing/simulate')
   @UsePipes(ValidationPipe)
-  async simulatePrice(@Body() priceSimulationDto: PriceSimulationDto, @Res() res: Response) {
+  async simulatePrice(
+    @Body() priceSimulationDto: PriceSimulationDto,
+    @Res() res: Response,
+  ) {
     const simulations = []
-    
+
     for (const quantity of priceSimulationDto.quantities) {
       const result = await this.pricingService.calculatePrice(
         priceSimulationDto.editionId,

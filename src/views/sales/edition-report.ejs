@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+        }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { margin-bottom: 30px; }
+        .header h1 { margin: 0; color: #333; }
+        
+        /* フィルタフォーム */
+        .filter-form { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 30px;
+        }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 5px; color: #555; }
+        .form-group input, .form-group select { 
+            padding: 8px 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        /* サマリーカード */
+        .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        .summary-card { 
+            background: linear-gradient(135deg, #6f42c1 0%, #d63384 100%);
+            color: white;
+            padding: 25px; 
+            border-radius: 12px; 
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .summary-card h3 { margin: 0 0 10px 0; font-size: 14px; opacity: 0.9; text-transform: uppercase; }
+        .summary-card .big-number { font-size: 28px; font-weight: bold; margin: 0; }
+        .summary-card .unit { font-size: 12px; opacity: 0.8; margin-top: 5px; }
+        
+        /* チャート */
+        .chart-section { margin-bottom: 40px; }
+        .chart-container { 
+            position: relative;
+            height: 400px; 
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* テーブル */
+        .table-section { margin-bottom: 40px; }
+        .table-section h2 { color: #333; margin-bottom: 20px; }
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .data-table th { 
+            background: #f8f9fa; 
+            color: #495057; 
+            padding: 15px; 
+            text-align: left; 
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .data-table td { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        .data-table tr:hover { background: #f8f9fa; }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .form-row { grid-template-columns: 1fr; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 300px; padding: 10px; }
+            .data-table { font-size: 14px; }
+            .data-table th, .data-table td { padding: 8px; }
+        }
+        
+        /* ナビゲーション */
+        .nav-actions { margin-bottom: 20px; }
+        .nav-actions a { margin-right: 10px; }
+        
+        /* 空データメッセージ */
+        .empty-message {
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #6c757d;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 <%= title %></h1>
+            <p style="color: #6c757d; margin: 5px 0 0 0;">版ID: <%= editionId %></p>
+        </div>
+
+        <!-- ナビゲーション -->
+        <div class="nav-actions">
+            <a href="/sales/reports" class="btn btn-secondary">← 売上レポート</a>
+            <a href="/sales/reports/top-editions" class="btn btn-secondary">売上ランキング</a>
+        </div>
+
+        <!-- フィルターフォーム -->
+        <form class="filter-form" method="GET">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startDate">開始日</label>
+                    <input type="date" name="startDate" id="startDate" value="<%= filters.startDate || '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">終了日</label>
+                    <input type="date" name="endDate" id="endDate" value="<%= filters.endDate || '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="transactionType">販売タイプ</label>
+                    <select name="transactionType" id="transactionType">
+                        <option value="">全て</option>
+                        <option value="event" <%= filters.transactionType === 'event' ? 'selected' : '' %>>イベント</option>
+                        <option value="consignment" <%= filters.transactionType === 'consignment' ? 'selected' : '' %>>委託</option>
+                        <option value="online" <%= filters.transactionType === 'online' ? 'selected' : '' %>>オンライン</option>
+                        <option value="direct" <%= filters.transactionType === 'direct' ? 'selected' : '' %>>直接</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="groupBy">グループ化</label>
+                    <select name="groupBy" id="groupBy">
+                        <option value="day" <%= filters.groupBy === 'day' ? 'selected' : '' %>>日別</option>
+                        <option value="week" <%= filters.groupBy === 'week' ? 'selected' : '' %>>週別</option>
+                        <option value="month" <%= filters.groupBy === 'month' ? 'selected' : '' %>>月別</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn">📈 レポート更新</button>
+        </form>
+
+        <% if (reportData && reportData.summary && reportData.summary.totalTransactions > 0) { %>
+        
+        <!-- サマリー -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>総取引数</h3>
+                <p class="big-number"><%= reportData.summary.totalTransactions %></p>
+                <p class="unit">件</p>
+            </div>
+            <div class="summary-card">
+                <h3>総販売数</h3>
+                <p class="big-number"><%= reportData.summary.totalQuantity %></p>
+                <p class="unit">冊</p>
+            </div>
+            <div class="summary-card">
+                <h3>総売上金額</h3>
+                <p class="big-number">¥<%= reportData.summary.totalAmount.toLocaleString() %></p>
+            </div>
+            <div class="summary-card">
+                <h3>平均取引額</h3>
+                <p class="big-number">¥<%= Math.round(reportData.summary.averageTransactionAmount).toLocaleString() %></p>
+            </div>
+        </div>
+
+        <!-- 期間別売上チャート -->
+        <% if (reportData.byPeriod && reportData.byPeriod.length > 0) { %>
+        <div class="chart-section">
+            <h2>📈 期間別売上推移</h2>
+            <div class="chart-container">
+                <canvas id="periodSalesChart"></canvas>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- チャネル別売上 -->
+        <% if (reportData.byChannel && reportData.byChannel.length > 0) { %>
+        <div class="table-section">
+            <h2>🏪 販売チャネル別実績</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>販売チャネル</th>
+                        <th>販売数</th>
+                        <th>売上金額</th>
+                        <th>取引数</th>
+                        <th>平均取引額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% reportData.byChannel.forEach(channel => { %>
+                    <tr>
+                        <td>
+                            <% if (channel.transactionType === 'event') { %>🎪 イベント
+                            <% } else if (channel.transactionType === 'consignment') { %>🏪 委託
+                            <% } else if (channel.transactionType === 'online') { %>💻 オンライン
+                            <% } else if (channel.transactionType === 'direct') { %>🤝 直接
+                            <% } else { %><%= channel.transactionType %>
+                            <% } %>
+                        </td>
+                        <td><%= channel.totalQuantity.toLocaleString() %>冊</td>
+                        <td style="font-weight: bold; color: #28a745;">¥<%= channel.totalAmount.toLocaleString() %></td>
+                        <td><%= channel.transactionCount %>件</td>
+                        <td>¥<%= Math.round(channel.averageTransactionAmount).toLocaleString() %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
+
+        <!-- 期間別詳細データ -->
+        <% if (reportData.byPeriod && reportData.byPeriod.length > 0) { %>
+        <div class="table-section">
+            <h2>📅 期間別詳細データ</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>期間</th>
+                        <th>販売数</th>
+                        <th>売上金額</th>
+                        <th>取引数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% reportData.byPeriod.forEach(period => { %>
+                    <tr>
+                        <td><%= period.period %></td>
+                        <td><%= period.totalQuantity.toLocaleString() %>冊</td>
+                        <td style="font-weight: bold; color: #28a745;">¥<%= period.totalAmount.toLocaleString() %></td>
+                        <td><%= period.transactionCount %>件</td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
+
+        <% } else { %>
+        <!-- データなしメッセージ -->
+        <div class="empty-message">
+            <h3>📊 売上データがありません</h3>
+            <p>指定された版・期間・条件での販売記録が見つかりませんでした。</p>
+            <p>フィルター条件を変更して再度お試しください。</p>
+        </div>
+        <% } %>
+    </div>
+
+    <script>
+        // 期間別売上チャート
+        <% if (reportData && reportData.byPeriod && reportData.byPeriod.length > 0) { %>
+        const ctx = document.getElementById('periodSalesChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: <%- JSON.stringify(reportData.byPeriod.map(p => p.period)) %>,
+                    datasets: [{
+                        label: '売上金額',
+                        data: <%- JSON.stringify(reportData.byPeriod.map(p => p.totalAmount)) %>,
+                        backgroundColor: 'rgba(111, 66, 193, 0.8)',
+                        borderColor: 'rgb(111, 66, 193)',
+                        borderWidth: 1
+                    }, {
+                        label: '販売数量',
+                        data: <%- JSON.stringify(reportData.byPeriod.map(p => p.totalQuantity)) %>,
+                        backgroundColor: 'rgba(214, 51, 132, 0.8)',
+                        borderColor: 'rgb(214, 51, 132)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '版別売上推移'
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '売上金額 (円)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '販売数量 (冊)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+        <% } %>
+    </script>
+</body>
+</html>

@@ -1,7 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { and, desc, eq, gte, isNull, lte, or } from 'drizzle-orm'
-import { DrizzleService } from '../drizzle/drizzle.service'
 import { editions, pricingRules } from '../db/schema'
+import { DrizzleService } from '../drizzle/drizzle.service'
 
 export interface PricingContext {
   eventId?: number
@@ -39,14 +43,23 @@ export class PricingService {
     const basePrice = edition.basePrice
 
     // 2. 適用可能な価格ルールを取得
-    const applicableRules = await this.getApplicableRules(editionId, quantity, context)
+    const applicableRules = await this.getApplicableRules(
+      editionId,
+      quantity,
+      context,
+    )
 
     // 3. 優先順位順にルールを適用
     let finalPrice = basePrice
     const appliedDiscounts: AppliedDiscount[] = []
 
     for (const rule of applicableRules) {
-      const discount = this.applyPricingRule(basePrice, finalPrice, rule, quantity)
+      const discount = this.applyPricingRule(
+        basePrice,
+        finalPrice,
+        rule,
+        quantity,
+      )
       if (discount.amount > 0) {
         finalPrice -= discount.amount
         appliedDiscounts.push(discount)
@@ -86,35 +99,29 @@ export class PricingService {
     context: PricingContext,
   ) {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD形式
-    
-    let conditions = [
+
+    const conditions = [
       eq(pricingRules.editionId, editionId),
       eq(pricingRules.isActive, true),
     ]
 
     // 日付範囲チェック: validFromが未設定またはtoday以前
     conditions.push(
-      or(
-        isNull(pricingRules.validFrom),
-        lte(pricingRules.validFrom, today)
-      )!
+      or(isNull(pricingRules.validFrom), lte(pricingRules.validFrom, today))!,
     )
 
     // 日付範囲チェック: validUntilが未設定またはtoday以降
     conditions.push(
-      or(
-        isNull(pricingRules.validUntil),
-        gte(pricingRules.validUntil, today)
-      )!
+      or(isNull(pricingRules.validUntil), gte(pricingRules.validUntil, today))!,
     )
-    
+
     // 数量条件
     if (quantity) {
       conditions.push(
         or(
           isNull(pricingRules.minQuantity),
-          lte(pricingRules.minQuantity, quantity)
-        )!
+          lte(pricingRules.minQuantity, quantity),
+        )!,
       )
     }
 
@@ -123,11 +130,11 @@ export class PricingService {
       conditions.push(
         or(
           isNull(pricingRules.eventId),
-          eq(pricingRules.eventId, context.eventId)
-        )!
+          eq(pricingRules.eventId, context.eventId),
+        )!,
       )
     }
-    
+
     const query = this.drizzleService.db
       .select()
       .from(pricingRules)
@@ -149,7 +156,7 @@ export class PricingService {
       discountAmount = Math.max(0, basePrice - rule.price)
     } else if (rule.discountRate !== null) {
       // 割引率の場合: 現在価格に対して割引率を適用
-      discountAmount = Math.floor(currentPrice * rule.discountRate / 100)
+      discountAmount = Math.floor((currentPrice * rule.discountRate) / 100)
     }
 
     return {

@@ -1,8 +1,8 @@
 import { type INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { eq } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { eq } from 'drizzle-orm'
 import { AppModule } from '../../../src/app.module'
 import * as schema from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -141,17 +141,15 @@ describe('価格管理統合機能（Integration）', () => {
 
     it('まとめ買い割引が正しく適用される', async () => {
       // まとめ買い割引ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'bulk_discount',
-          name: '5冊以上15%引き',
-          discountRate: 15,
-          minQuantity: 5,
-          priority: 3,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'bulk_discount',
+        name: '5冊以上15%引き',
+        discountRate: 15,
+        minQuantity: 5,
+        priority: 3,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')
@@ -174,17 +172,15 @@ describe('価格管理統合機能（Integration）', () => {
   describe('販売取引との統合', () => {
     it('販売時に動的価格計算が適用される', async () => {
       // イベント割引ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'event_discount',
-          name: 'イベント特価300円引き',
-          price: 1700,
-          eventId: testEvent.id,
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'event_discount',
+        name: 'イベント特価300円引き',
+        price: 1700,
+        eventId: testEvent.id,
+        priority: 1,
+        isActive: true,
+      })
 
       const salesData = {
         transactionType: 'event',
@@ -226,16 +222,14 @@ describe('価格管理統合機能（Integration）', () => {
 
     it('委託販売価格が適用される', async () => {
       // 委託販売価格ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'consignment',
-          name: '委託販売価格',
-          price: 1800, // 委託価格は通常より少し安く設定
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'consignment',
+        name: '委託販売価格',
+        price: 1800, // 委託価格は通常より少し安く設定
+        priority: 1,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')
@@ -257,16 +251,14 @@ describe('価格管理統合機能（Integration）', () => {
   describe('価格計算の境界条件', () => {
     it('負の最終価格を防ぐ', async () => {
       // 極端な割引ルール作成（価格が負になる可能性）
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'event_discount',
-          name: '極端割引',
-          discountRate: 150, // 150%引き（負の価格になる）
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'event_discount',
+        name: '極端割引',
+        discountRate: 150, // 150%引き（負の価格になる）
+        priority: 1,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')
@@ -283,17 +275,15 @@ describe('価格管理統合機能（Integration）', () => {
 
     it('価格履歴が記録される', async () => {
       // 価格ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'event_discount',
-          name: '履歴テスト割引',
-          price: 1900,
-          eventId: testEvent.id,
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'event_discount',
+        name: '履歴テスト割引',
+        price: 1900,
+        eventId: testEvent.id,
+        priority: 1,
+        isActive: true,
+      })
 
       // 価格計算実行
       await request(app.getHttpServer())
@@ -372,17 +362,15 @@ describe('価格管理統合機能（Integration）', () => {
 
     it('価格シミュレーション機能が動作する', async () => {
       // シミュレーション用価格ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'bulk_discount',
-          name: 'シミュレーション用ルール',
-          discountRate: 20,
-          minQuantity: 10,
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'bulk_discount',
+        name: 'シミュレーション用ルール',
+        discountRate: 20,
+        minQuantity: 10,
+        priority: 1,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/simulate')

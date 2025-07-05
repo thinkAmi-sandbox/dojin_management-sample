@@ -98,18 +98,16 @@ describe('価格管理基本機能（Integration）', () => {
 
     it('単一の割引ルールが適用される', async () => {
       // 1. イベント割引ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'event_discount',
-          name: 'イベント限定100円引き',
-          discountRate: null,
-          price: 900, // 固定価格900円
-          eventId: testEvent.id,
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'event_discount',
+        name: 'イベント限定100円引き',
+        discountRate: null,
+        price: 900, // 固定価格900円
+        eventId: testEvent.id,
+        priority: 1,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')
@@ -127,7 +125,9 @@ describe('価格管理基本機能（Integration）', () => {
       expect(response.body.finalPrice).toBe(900)
       expect(response.body.totalDiscount).toBe(100)
       expect(response.body.appliedDiscounts).toHaveLength(1)
-      expect(response.body.appliedDiscounts[0].ruleName).toBe('イベント限定100円引き')
+      expect(response.body.appliedDiscounts[0].ruleName).toBe(
+        'イベント限定100円引き',
+      )
       expect(response.body.appliedDiscounts[0].ruleType).toBe('event_discount')
       expect(response.body.subtotal).toBe(900)
     })

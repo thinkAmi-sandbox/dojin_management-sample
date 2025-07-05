@@ -147,18 +147,16 @@ describe('価格管理バリデーション・エラーハンドリング（Inte
   describe('期限切れ価格ルールの処理', () => {
     it('期限切れの価格ルールは適用されない', async () => {
       // 期限切れの価格ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'early_bird',
-          name: '期限切れ早期割引',
-          discountRate: 20,
-          validFrom: '2024-01-01',
-          validUntil: '2024-05-31', // 既に期限切れ
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'early_bird',
+        name: '期限切れ早期割引',
+        discountRate: 20,
+        validFrom: '2024-01-01',
+        validUntil: '2024-05-31', // 既に期限切れ
+        priority: 1,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')
@@ -180,17 +178,15 @@ describe('価格管理バリデーション・エラーハンドリング（Inte
 
     it('非アクティブな価格ルールは適用されない', async () => {
       // 非アクティブな価格ルール作成
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'event_discount',
-          name: '非アクティブ割引',
-          price: 1200,
-          eventId: testEvent.id,
-          priority: 1,
-          isActive: false, // 非アクティブ
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'event_discount',
+        name: '非アクティブ割引',
+        price: 1200,
+        eventId: testEvent.id,
+        priority: 1,
+        isActive: false, // 非アクティブ
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')
@@ -214,17 +210,15 @@ describe('価格管理バリデーション・エラーハンドリング（Inte
   describe('まとめ買い割引の最小数量チェック', () => {
     it('最小数量に達していない場合は割引が適用されない', async () => {
       // まとめ買い割引ルール作成（5冊以上で10%引き）
-      await drizzleService.db
-        .insert(schema.pricingRules)
-        .values({
-          editionId: testEdition.id,
-          ruleType: 'bulk_discount',
-          name: '5冊以上10%引き',
-          discountRate: 10,
-          minQuantity: 5, // 最小5冊
-          priority: 1,
-          isActive: true,
-        })
+      await drizzleService.db.insert(schema.pricingRules).values({
+        editionId: testEdition.id,
+        ruleType: 'bulk_discount',
+        name: '5冊以上10%引き',
+        discountRate: 10,
+        minQuantity: 5, // 最小5冊
+        priority: 1,
+        isActive: true,
+      })
 
       const response = await request(app.getHttpServer())
         .post('/api/pricing/calculate')

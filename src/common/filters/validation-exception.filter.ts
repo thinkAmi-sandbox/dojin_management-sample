@@ -1364,11 +1364,14 @@ export class ValidationExceptionFilter implements ExceptionFilter {
             isActive: formData.isActive !== false,
           },
           editions: [
-            { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+            {
+              id: 1,
+              versionName: 'ダミー版',
+              bookTitle: 'ダミー書籍',
+              basePrice: 1000,
+            },
           ], // エラー表示のためのダミーデータ
-          events: [
-            { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
-          ], // エラー表示のためのダミーデータ
+          events: [{ id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' }], // エラー表示のためのダミーデータ
           breadcrumbs: [
             { name: '価格ルール一覧', url: '/pricing-rules' },
             { name: '新規作成', url: null },
@@ -1406,11 +1409,14 @@ export class ValidationExceptionFilter implements ExceptionFilter {
           isActive: formData.isActive !== false,
         },
         editions: [
-          { id: 1, versionName: 'ダミー版', bookTitle: 'ダミー書籍', basePrice: 1000 },
+          {
+            id: 1,
+            versionName: 'ダミー版',
+            bookTitle: 'ダミー書籍',
+            basePrice: 1000,
+          },
         ],
-        events: [
-          { id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' },
-        ],
+        events: [{ id: 1, name: 'ダミーイベント', eventDate: '2024-12-07' }],
         breadcrumbs: id
           ? [
               { name: '価格ルール一覧', url: '/pricing-rules' },

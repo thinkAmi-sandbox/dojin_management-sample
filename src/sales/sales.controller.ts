@@ -12,13 +12,22 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
+import { plainToInstance } from 'class-transformer'
 import type { Response } from 'express'
-import { CreateSalesTransactionDto, UpdateSalesTransactionDto } from './dto'
+import {
+  CreateSalesTransactionDto,
+  SalesReportFilters,
+  UpdateSalesTransactionDto,
+} from './dto'
+import { SalesReportService } from './sales-report.service'
 import { SalesService } from './sales.service'
 
 @Controller('sales')
 export class SalesController {
-  constructor(private readonly salesService: SalesService) {}
+  constructor(
+    private readonly salesService: SalesService,
+    private readonly salesReportService: SalesReportService,
+  ) {}
 
   @Get()
   @Render('sales/index')
@@ -52,6 +61,51 @@ export class SalesController {
   @Redirect('/sales')
   async create(@Body() createSalesTransactionDto: CreateSalesTransactionDto) {
     await this.salesService.createSalesTransaction(createSalesTransactionDto)
+  }
+
+  @Get('reports')
+  @Render('sales/reports')
+  async showReports(@Query() query: Record<string, unknown>) {
+    try {
+      // 手動でDTOに変換（ValidationPipeを回避）
+      const filters = plainToInstance(SalesReportFilters, query)
+      const reportData =
+        await this.salesReportService.generateSalesReport(filters)
+
+      return {
+        title: '売上レポート',
+        reportData,
+        filters,
+        breadcrumbs: [
+          { label: 'ホーム', url: '/' },
+          { label: '販売記録一覧', url: '/sales' },
+          { label: 'レポート', url: null },
+        ],
+      }
+    } catch {
+      // バリデーションエラーの場合でも、空のレポートを表示
+      return {
+        title: '売上レポート',
+        reportData: {
+          summary: {
+            totalTransactions: 0,
+            totalQuantity: 0,
+            totalAmount: 0,
+            averageTransactionAmount: 0,
+          },
+          byEdition: [],
+          byPeriod: [],
+          byChannel: [],
+          byEvent: [],
+        },
+        filters: query || {},
+        breadcrumbs: [
+          { label: 'ホーム', url: '/' },
+          { label: '販売記録一覧', url: '/sales' },
+          { label: 'レポート', url: null },
+        ],
+      }
+    }
   }
 
   @Get(':id')
