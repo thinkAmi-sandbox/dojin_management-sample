@@ -27,14 +27,38 @@ Phase 5では、委託販売の包括的な管理機能を実装します。委�
 
 ## 📊 Phase 5 実装スケジュール（総計：7-11日）
 
-### ⏳ Phase 5-1: 委託契約管理実装（2-3日）
-- [ ] 委託契約管理の統合テスト作成（失敗するテストを先に書く）
-- [ ] Consignmentsテーブルのスキーマ実装
-- [ ] ConsignmentsServiceの実装（テストが通るように実装）
-- [ ] ConsignmentsControllerの実装（テストが通るように実装）
-- [ ] CreateConsignmentDto/UpdateConsignmentDtoの実装
-- [ ] 委託契約管理用ビューファイルの作成
-- [ ] 全統合テストがグリーンになることを確認
+### ✅ Phase 5-1: 委託契約管理実装（2-3日）- 完了：2025年7月5日
+- [x] 委託契約管理の統合テスト作成（失敗するテストを先に書く）
+  - 基本機能テスト2件作成
+  - バリデーションテスト5件作成
+  - 統合テスト5件作成
+  - 合計12件の統合テスト全て成功
+- [x] Consignmentsテーブルのスキーマ実装
+  - 15フィールドの委託契約管理テーブル作成
+  - 保管場所との外部キー制約実装
+  - マイグレーション実行完了
+- [x] ConsignmentsServiceの実装（テストが通るように実装）
+  - CRUD操作の完全実装
+  - 委託在庫状況集計機能実装
+  - 削除時の在庫チェック機能実装
+  - 型定義のexport対応
+- [x] ConsignmentsControllerの実装（テストが通るように実装）
+  - RESTful APIエンドポイント実装
+  - HTTPメソッドオーバーライド対応
+  - ビューレンダリング統合
+- [x] CreateConsignmentDto/UpdateConsignmentDtoの実装
+  - 必須フィールドのバリデーション
+  - 日本語エラーメッセージ統一
+  - PartialTypeによる部分更新対応
+- [x] 委託契約管理用ビューファイルの作成
+  - index.ejs: 委託契約一覧
+  - new.ejs: 新規作成フォーム
+  - show.ejs: 詳細表示（在庫状況含む）
+  - edit.ejs: 編集フォーム
+- [x] 全統合テストがグリーンになることを確認
+  - TypeScriptエラー0件
+  - ビルド成功確認
+  - 型チェック成功確認
 
 ### ⏳ Phase 5-2: 委託販売報告システム実装（2-3日）
 - [ ] 委託販売報告の統合テスト作成（失敗するテストを先に書く）
@@ -84,23 +108,31 @@ export const consignments = pgTable('Consignment', {
 })
 ```
 
-### 委託契約管理サービス実装
+### 委託契約管理サービス実装（実装済み）
 
-#### ConsignmentsService
+#### ConsignmentsService（実装完了版）
 ```typescript
 @Injectable()
 export class ConsignmentsService {
   constructor(
     private readonly drizzleService: DrizzleService,
-    private readonly storageLocationsService: StorageLocationsService,
   ) {}
 
-  async create(createConsignmentDto: CreateConsignmentDto): Promise<Consignment> {
-    // 保管場所を委託タイプに設定
-    await this.storageLocationsService.update(createConsignmentDto.locationId, {
-      type: 'consignment',
-      isConsignment: true,
-    })
+  async create(createConsignmentDto: CreateConsignmentDto): Promise<schema.Consignment> {
+    // 保管場所が委託可能かチェック
+    const location = await this.drizzleService.db
+      .select()
+      .from(schema.storageLocations)
+      .where(eq(schema.storageLocations.id, createConsignmentDto.locationId))
+      .limit(1)
+
+    if (location.length === 0) {
+      throw new NotFoundException('指定された保管場所が見つかりません')
+    }
+
+    if (!location[0].isConsignment || location[0].type !== 'consignment') {
+      throw new BadRequestException('委託先として使用できない保管場所です')
+    }
 
     const [consignment] = await this.drizzleService.db
       .insert(consignments)
@@ -1229,8 +1261,41 @@ describe('Consignment Management Integration Tests', () => {
 - **キャッシュフロー**: 委託売上の正確な把握・予測
 - **パートナー管理**: 委託先との良好な関係構築支援
 
+## 📝 Phase 5-1 実装時の課題と解決策
+
+### 実装中に遭遇した課題
+
+#### 1. 依存性注入エラー
+- **課題**: `Nest can't resolve dependencies of the ConsignmentsController`
+- **原因**: StorageLocationsServiceがConsignmentsControllerに注入できない
+- **解決**: StorageLocationsModuleでサービスをexportし、DrizzleModuleをimport
+
+#### 2. EJSレイアウト重複問題
+- **課題**: ValidationExceptionFilter使用時にHTML構造が重複
+- **原因**: express-ejs-layoutsとの統合問題
+- **解決**: 
+  - ビューファイルでlayoutディレクティブを削除
+  - エラー表示を`errors`オブジェクト形式に統一
+  - コントローラーで初期表示時に空の`errors`オブジェクトを渡す
+
+#### 3. TypeScript型エラー
+- **課題**: ConsignmentsService内の型定義がexportされていない
+- **解決**: 型定義を`export type`として公開し、コントローラーでtype-onlyインポート
+
+#### 4. ValidationExceptionFilterのDate型変換エラー
+- **課題**: formDataの日付フィールドでTypeScriptエラー
+- **解決**: `as string`による型アサーション追加
+
+### TDD実装のメリット
+
+1. **テストファースト**: 12件の統合テストを先に作成し、実装の方向性を明確化
+2. **段階的実装**: RED→GREEN→REFACTORのサイクルで品質向上
+3. **リグレッション防止**: 全テストが常に通ることで既存機能への影響を防止
+4. **ドキュメント代替**: テストが仕様書として機能
+
 ---
 
 **実装予定時期**: Phase 4完了後  
-**最終更新**: 2025年6月28日  
-**次回更新予定**: Phase 5実装開始時
+**Phase 5-1完了**: 2025年7月5日
+**最終更新**: 2025年7月5日  
+**次回更新予定**: Phase 5-2実装開始時
