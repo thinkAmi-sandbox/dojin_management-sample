@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { INestApplication, ValidationPipe, Logger } from '@nestjs/common'
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { ValidationExceptionFilter } from '../../src/common/filters/validation-exception.filter'
 
@@ -16,6 +16,8 @@ export function setupTestApp(app: INestApplication): void {
       transformOptions: {
         enableImplicitConversion: true,
       },
+      whitelist: true,
+      forbidNonWhitelisted: false,
     }),
   )
 

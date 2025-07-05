@@ -297,6 +297,9 @@ export class TestDbUtils {
     reportPeriodStart?: Date
     reportPeriodEnd?: Date
     status?: string
+    reportedAt?: Date
+    settlementMethod?: string
+    settledAt?: Date
   }) {
     const commissionAmount = Math.floor(data.totalSalesAmount * 0.3) // 30%と仮定
     const netAmount = data.totalSalesAmount - commissionAmount
@@ -315,6 +318,9 @@ export class TestDbUtils {
           | 'confirmed'
           | 'adjusted'
           | 'settled',
+        reportedAt: data.reportedAt || new Date(),
+        settlementMethod: data.settlementMethod,
+        settledAt: data.settledAt,
       })
       .returning()
     return salesReport

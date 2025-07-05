@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { and, desc, eq, gte, ne, sql } from 'drizzle-orm'
+import { and, between, desc, eq, gte, lte, ne, sql } from 'drizzle-orm'
 import type { PgTransaction } from 'drizzle-orm/pg-core'
 import * as schema from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
@@ -17,6 +17,37 @@ import type { SettleConsignmentSalesDto } from './dto/settle-consignment-sales.d
 
 export interface ConsignmentSalesWithDetails extends schema.ConsignmentSales {
   details?: schema.ConsignmentSalesDetail[]
+}
+
+export interface SettlementReport {
+  totalReports: number
+  totalSalesAmount: number
+  totalCommissionAmount: number
+  totalNetAmount: number
+  settledAmount: number
+  unsettledAmount: number
+}
+
+export interface MonthlySummary {
+  totalSales: number
+  totalCommission: number
+  netAmount: number
+  reportCount: number
+}
+
+export interface QuarterlySummary {
+  quarter: number
+  year: number
+  months: {
+    month: number
+    totalSales: number
+    totalCommission: number
+    netAmount: number
+    reportCount: number
+  }[]
+  totalSales: number
+  totalCommission: number
+  netAmount: number
 }
 
 @Injectable()
@@ -286,5 +317,238 @@ export class ConsignmentSalesService {
         `委託先在庫が不足しています（版ID: ${editionId}）`,
       )
     }
+  }
+
+  // 一括精算機能
+  async bulkSettle(
+    consignmentId: number,
+    periodStart: Date,
+    periodEnd: Date,
+    settlementMethod: string,
+    notes?: string,
+  ): Promise<number> {
+    return await this.drizzleService.db.transaction(async (tx) => {
+      // 指定期間内の未精算レポートを取得
+      const reportsToSettle = await tx
+        .select()
+        .from(schema.consignmentSales)
+        .where(
+          and(
+            eq(schema.consignmentSales.consignmentId, consignmentId),
+            between(
+              schema.consignmentSales.reportPeriodEnd,
+              periodStart,
+              periodEnd,
+            ),
+            ne(schema.consignmentSales.status, 'settled'),
+          ),
+        )
+
+      // 未確認のレポートがあるかチェック
+      const unconfirmedReports = reportsToSettle.filter(
+        (r) => r.status === 'reported',
+      )
+      if (unconfirmedReports.length > 0) {
+        throw new BadRequestException(
+          '未確認の販売報告があるため一括精算できません',
+        )
+      }
+
+      // 一括精算実行
+      for (const report of reportsToSettle) {
+        await tx
+          .update(schema.consignmentSales)
+          .set({
+            status: 'settled',
+            settledAt: new Date(),
+            settlementMethod,
+            notes: notes
+              ? `${report.notes || ''}\n[一括精算] ${notes}`
+              : report.notes,
+          })
+          .where(eq(schema.consignmentSales.id, report.id))
+      }
+
+      return reportsToSettle.length
+    })
+  }
+
+  // 月次精算サマリー取得
+  async getMonthlySummary(
+    consignmentId: number,
+    year: number,
+    month: number,
+  ): Promise<MonthlySummary> {
+    console.log('getMonthlySummary service called:', { consignmentId, year, month })
+    const startDate = new Date(year, month - 1, 1)
+    const endDate = new Date(year, month, 0)
+    console.log('Date range:', { startDate, endDate })
+
+    const result = await this.drizzleService.db
+      .select({
+        totalSales: sql<number>`CAST(COALESCE(SUM(${schema.consignmentSales.totalSalesAmount}), 0) AS INTEGER)`,
+        totalCommission: sql<number>`CAST(COALESCE(SUM(${schema.consignmentSales.commissionAmount}), 0) AS INTEGER)`,
+        netAmount: sql<number>`CAST(COALESCE(SUM(${schema.consignmentSales.netAmount}), 0) AS INTEGER)`,
+        reportCount: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(schema.consignmentSales)
+      .where(
+        and(
+          eq(schema.consignmentSales.consignmentId, consignmentId),
+          between(schema.consignmentSales.reportPeriodEnd, startDate, endDate),
+        ),
+      )
+
+    console.log('Query result:', result)
+    
+    if (!result || result.length === 0) {
+      return {
+        totalSales: 0,
+        totalCommission: 0,
+        netAmount: 0,
+        reportCount: 0,
+      }
+    }
+    
+    return {
+      totalSales: result[0].totalSales || 0,
+      totalCommission: result[0].totalCommission || 0,
+      netAmount: result[0].netAmount || 0,
+      reportCount: result[0].reportCount || 0,
+    }
+  }
+
+  // 四半期別精算レポート取得
+  async getQuarterlySummary(
+    consignmentId: number,
+    year: number,
+    quarter: number,
+  ): Promise<QuarterlySummary> {
+    const startMonth = (quarter - 1) * 3 + 1
+    const months = []
+
+    for (let i = 0; i < 3; i++) {
+      const month = startMonth + i
+      const monthSummary = await this.getMonthlySummary(
+        consignmentId,
+        year,
+        month,
+      )
+      months.push({
+        month,
+        ...monthSummary,
+      })
+    }
+
+    const totalSales = months.reduce((sum, m) => sum + m.totalSales, 0)
+    const totalCommission = months.reduce(
+      (sum, m) => sum + m.totalCommission,
+      0,
+    )
+    const netAmount = months.reduce((sum, m) => sum + m.netAmount, 0)
+
+    return {
+      quarter,
+      year,
+      months,
+      totalSales,
+      totalCommission,
+      netAmount,
+    }
+  }
+
+  // 精算レポート生成
+  async generateSettlementReport(
+    consignmentId: number,
+    period?: { start: Date; end: Date },
+  ): Promise<SettlementReport> {
+    const whereConditions = [
+      eq(schema.consignmentSales.consignmentId, consignmentId),
+    ]
+
+    if (period) {
+      whereConditions.push(
+        between(
+          schema.consignmentSales.reportPeriodEnd,
+          period.start,
+          period.end,
+        ),
+      )
+    }
+
+    const result = await this.drizzleService.db
+      .select({
+        totalReports: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+        totalSalesAmount: sql<number>`CAST(COALESCE(SUM(${schema.consignmentSales.totalSalesAmount}), 0) AS INTEGER)`,
+        totalCommissionAmount: sql<number>`CAST(COALESCE(SUM(${schema.consignmentSales.commissionAmount}), 0) AS INTEGER)`,
+        totalNetAmount: sql<number>`CAST(COALESCE(SUM(${schema.consignmentSales.netAmount}), 0) AS INTEGER)`,
+        settledAmount: sql<number>`CAST(COALESCE(SUM(CASE WHEN ${schema.consignmentSales.status} = 'settled' THEN ${schema.consignmentSales.netAmount} ELSE 0 END), 0) AS INTEGER)`,
+        unsettledAmount: sql<number>`CAST(COALESCE(SUM(CASE WHEN ${schema.consignmentSales.status} != 'settled' THEN ${schema.consignmentSales.netAmount} ELSE 0 END), 0) AS INTEGER)`,
+      })
+      .from(schema.consignmentSales)
+      .where(and(...whereConditions))
+
+    return {
+      totalReports: result[0].totalReports || 0,
+      totalSalesAmount: result[0].totalSalesAmount || 0,
+      totalCommissionAmount: result[0].totalCommissionAmount || 0,
+      totalNetAmount: result[0].totalNetAmount || 0,
+      settledAmount: result[0].settledAmount || 0,
+      unsettledAmount: result[0].unsettledAmount || 0,
+    }
+  }
+
+  // CSVエクスポート用データ取得
+  async getExportData(
+    consignmentId: number,
+    periodStart: Date,
+    periodEnd: Date,
+  ): Promise<Record<string, unknown>[]> {
+    const reports = await this.drizzleService.db
+      .select({
+        reportPeriod: sql<string>`TO_CHAR(${schema.consignmentSales.reportPeriodStart}, 'YYYY-MM-DD') || ' 〜 ' || TO_CHAR(${schema.consignmentSales.reportPeriodEnd}, 'YYYY-MM-DD')`,
+        totalSalesAmount: schema.consignmentSales.totalSalesAmount,
+        commissionAmount: schema.consignmentSales.commissionAmount,
+        netAmount: schema.consignmentSales.netAmount,
+        status: schema.consignmentSales.status,
+        reportedAt: schema.consignmentSales.reportedAt,
+        settledAt: schema.consignmentSales.settledAt,
+        settlementMethod: schema.consignmentSales.settlementMethod,
+      })
+      .from(schema.consignmentSales)
+      .where(
+        and(
+          eq(schema.consignmentSales.consignmentId, consignmentId),
+          between(
+            schema.consignmentSales.reportPeriodEnd,
+            periodStart,
+            periodEnd,
+          ),
+        ),
+      )
+      .orderBy(desc(schema.consignmentSales.reportPeriodEnd))
+
+    return reports.map((r) => ({
+      報告期間: r.reportPeriod,
+      売上金額: r.totalSalesAmount,
+      手数料: r.commissionAmount,
+      純額: r.netAmount,
+      ステータス: this.getStatusLabel(r.status),
+      報告日: r.reportedAt?.toLocaleDateString('ja-JP'),
+      精算日: r.settledAt?.toLocaleDateString('ja-JP') || '',
+      精算方法: r.settlementMethod || '',
+    }))
+  }
+
+  private getStatusLabel(
+    status: 'reported' | 'confirmed' | 'adjusted' | 'settled',
+  ): string {
+    const statusMap = {
+      reported: '報告済み',
+      confirmed: '確認済み',
+      adjusted: '調整済み',
+      settled: '精算済み',
+    }
+    return statusMap[status]
   }
 }
