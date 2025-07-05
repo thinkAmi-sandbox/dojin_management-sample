@@ -60,10 +60,27 @@ export class SalesService {
               detail.quantity * detail.unitPrice - (detail.discountAmount || 0),
           })
 
-          // 3. 在庫減少処理・移動履歴は今後実装予定
-          // TODO: 在庫連携機能の実装
-          // - 在庫減少処理
-          // - 在庫移動履歴記録
+          // 3. 在庫減少処理
+          if (createSalesTransactionDto.locationId) {
+            await this.updateStockForSale(
+              tx,
+              detail.editionId,
+              createSalesTransactionDto.locationId,
+              detail.quantity,
+            )
+
+            // 4. 在庫移動履歴記録
+            await tx.insert(stockMovements).values({
+              editionId: detail.editionId,
+              fromLocationId: createSalesTransactionDto.locationId,
+              toLocationId: null, // 販売による減少
+              quantity: detail.quantity,
+              movementType: 'sale',
+              referenceType: 'sale',
+              referenceId: transaction.id,
+              reason: `販売による減少 - 取引ID: ${transaction.id}`,
+            })
+          }
         }
       }
 
@@ -257,11 +274,45 @@ export class SalesService {
   }
 
   async remove(id: number): Promise<void> {
-    // 存在確認
-    await this.findOneWithDetails(id)
+    // 存在確認と明細取得
+    const transaction = await this.findOneWithDetails(id)
 
-    await this.drizzleService.db
-      .delete(salesTransactions)
-      .where(eq(salesTransactions.id, id))
+    await this.drizzleService.db.transaction(async (tx) => {
+      // 販売明細から在庫を復元
+      if (transaction.details && transaction.details.length > 0) {
+        for (const detail of transaction.details) {
+          // 在庫を復元
+          if (transaction.locationId) {
+            await tx
+              .update(stocks)
+              .set({
+                quantity: sql`${stocks.quantity} + ${detail.quantity}`,
+                availableQuantity: sql`${stocks.availableQuantity} + ${detail.quantity}`,
+              })
+              .where(
+                and(
+                  eq(stocks.editionId, detail.editionId),
+                  eq(stocks.locationId, transaction.locationId),
+                ),
+              )
+
+            // 返品履歴を記録
+            await tx.insert(stockMovements).values({
+              editionId: detail.editionId,
+              fromLocationId: null,
+              toLocationId: transaction.locationId,
+              quantity: detail.quantity,
+              movementType: 'return',
+              referenceType: 'sale',
+              referenceId: transaction.id,
+              reason: `販売取引削除による返品 - 取引ID: ${transaction.id}`,
+            })
+          }
+        }
+      }
+
+      // 販売取引を削除（カスケードで明細も削除される）
+      await tx.delete(salesTransactions).where(eq(salesTransactions.id, id))
+    })
   }
 }

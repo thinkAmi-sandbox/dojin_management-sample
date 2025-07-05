@@ -379,8 +379,15 @@ pnpm type-check
 Linterを使って、テストコード・プロダクションコードを規約に従った形へと修正します。
 
 ```
-pnpm format 
+pnpm lint
 ```
+
+**YOU MUST**: Lintエラーが0件になるまで修正を行います。
+- 自動修正可能なものは `pnpm format` で修正
+- 手動修正が必要なものは個別に対応
+- どうしても修正できない場合は、eslint-disable コメントで抑制（理由を明記）
+
+詳細なコード品質基準は `docs/code-quality-standards.md` を参照してください。
 
 
 ### 2-4. テストを実行する + ビューファイル作成時の必須手順
@@ -451,7 +458,11 @@ pnpm test:integration
 - [ ] **TypeScript型安全性確認**
   - `pnpm type-check` でエラー0件
   - import文の正確性確認（type-only vs 通常import）
-  - `pnpm lint` でコード品質チェック通過
+- [ ] **コード品質基準達成**
+  - `pnpm lint` でエラー0件（警告は許容）
+  - 未使用変数・未使用インポートの削除
+  - any型の使用禁止（やむを得ない場合はコメントで理由を記載）
+  - async関数には必ずawaitまたは明示的な理由をコメント
 
 **✅マーク基準**: 上記Phase A〜E全てが完了した場合のみ✅マークを付与すること
 

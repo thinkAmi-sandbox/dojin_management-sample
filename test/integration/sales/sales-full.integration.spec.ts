@@ -16,6 +16,7 @@ import {
   editions,
   salesDetails,
   salesTransactions,
+  stocks,
   storageLocations,
 } from '../../../src/db/schema'
 import { DrizzleService } from '../../../src/drizzle/drizzle.service'
@@ -112,6 +113,15 @@ describe('販売管理全機能（Integration）', () => {
       })
       .returning()
     testLocation = newLocation
+
+    // 在庫を作成（販売テスト用）
+    await drizzleService.db.insert(stocks).values({
+      editionId: testEdition.id,
+      locationId: testLocation.id,
+      quantity: 100,
+      availableQuantity: 100,
+      reservedQuantity: 0,
+    })
   })
 
   describe('GET /sales', () => {
