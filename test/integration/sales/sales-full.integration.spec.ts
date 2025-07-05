@@ -28,7 +28,7 @@ describe('販売管理全機能（Integration）', () => {
   let drizzleService: DrizzleService
   let testBook: Book
   let testEdition: Edition
-  let testAuthor: Author
+  let _testAuthor: Author
   let testEvent: Event
   let testLocation: StorageLocation
   let createdSalesId: number
@@ -61,7 +61,7 @@ describe('販売管理全機能（Integration）', () => {
         bio: 'テスト用の執筆者です',
       })
       .returning()
-    testAuthor = newAuthor
+    _testAuthor = newAuthor
 
     const [newBook] = await drizzleService.db
       .insert(books)

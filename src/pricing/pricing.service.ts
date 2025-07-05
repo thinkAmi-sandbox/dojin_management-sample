@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { and, desc, eq, gte, isNull, lte, or } from 'drizzle-orm'
-import { editions, pricingRules } from '../db/schema'
+import { type PricingRule, editions, pricingRules } from '../db/schema'
 import { DrizzleService } from '../drizzle/drizzle.service'
 
 export interface PricingContext {
@@ -140,14 +140,14 @@ export class PricingService {
       .from(pricingRules)
       .where(and(...conditions))
 
-    return query.orderBy(desc(pricingRules.priority))
+    return await query.orderBy(desc(pricingRules.priority))
   }
 
   private applyPricingRule(
     basePrice: number,
     currentPrice: number,
-    rule: any,
-    quantity: number,
+    rule: PricingRule,
+    _quantity: number,
   ): AppliedDiscount {
     let discountAmount = 0
 
@@ -163,7 +163,7 @@ export class PricingService {
       ruleName: rule.name,
       ruleType: rule.ruleType,
       amount: discountAmount,
-      rate: rule.discountRate,
+      rate: rule.discountRate ?? undefined,
     }
   }
 }

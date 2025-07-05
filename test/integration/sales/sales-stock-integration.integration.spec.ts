@@ -149,7 +149,7 @@ describe('Sales Stock Integration', () => {
         ],
       }
 
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post('/sales')
         .send(createSalesData)
         .expect(302)
@@ -295,7 +295,7 @@ describe('Sales Stock Integration', () => {
         ],
       }
 
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post('/sales')
         .send(createSalesData)
         .expect(400)
@@ -432,7 +432,7 @@ describe('Sales Stock Integration', () => {
       }
 
       // 販売取引を作成
-      const createResponse = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post('/sales')
         .send(createSalesData)
         .expect(302)

@@ -99,7 +99,7 @@ export class PricingController {
   // 新規価格ルール作成フォーム
   @Get('pricing-rules/new')
   @Render('pricing-rules/new')
-  async renderNewForm() {
+  renderNewForm() {
     return {
       title: '新規価格ルール作成',
       formData: {},

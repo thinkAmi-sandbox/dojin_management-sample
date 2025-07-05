@@ -9,6 +9,21 @@ import { DrizzleService } from '../../../src/drizzle/drizzle.service'
 import { testDbUtils } from '../../helpers/db-utils'
 import { setupTestApp } from '../setup-test-app'
 
+// レポートAPIレスポンスの型定義
+interface PeriodData {
+  period: string
+  totalQuantity: number
+  totalAmount: number
+  transactionCount: number
+}
+
+interface ChannelData {
+  transactionType: string
+  totalQuantity: number
+  totalAmount: number
+  transactionCount: number
+}
+
 describe('Sales Reports Integration Tests', () => {
   let app: INestApplication
   let drizzleService: DrizzleService
@@ -183,8 +198,8 @@ describe('Sales Reports Integration Tests', () => {
     })
 
     describe('Step 2: バリデーション・フィルタリングテスト（3件）', () => {
-      let testEditions: schema.Edition[] = []
-      let testEvents: schema.Event[] = []
+      let _testEditions: schema.Edition[] = []
+      let _testEvents: schema.Event[] = []
 
       beforeEach(async () => {
         // 複数の版とイベントを作成
@@ -227,7 +242,7 @@ describe('Sales Reports Integration Tests', () => {
           })
           .returning()
 
-        testEditions = [edition1, edition2]
+        _testEditions = [edition1, edition2]
 
         // 複数のイベントを作成
         const [event1] = await drizzleService.db
@@ -252,7 +267,7 @@ describe('Sales Reports Integration Tests', () => {
           })
           .returning()
 
-        testEvents = [event1, event2]
+        _testEvents = [event1, event2]
 
         // 保管場所作成
         const [location] = await drizzleService.db
@@ -356,12 +371,12 @@ describe('Sales Reports Integration Tests', () => {
         expect(response.body.byChannel).toBeDefined()
         expect(
           response.body.byChannel.find(
-            (c: any) => c.transactionType === 'event',
+            (c: ChannelData) => c.transactionType === 'event',
           ),
         ).toBeDefined()
         expect(
           response.body.byChannel.find(
-            (c: any) => c.transactionType === 'consignment',
+            (c: ChannelData) => c.transactionType === 'consignment',
           ),
         ).toBeUndefined()
       })
@@ -563,7 +578,7 @@ describe('Sales Reports Integration Tests', () => {
         expect(response.body.byPeriod.length).toBeGreaterThan(0)
 
         // 売上が多い日（7/20）のデータを確認
-        const july20Data = response.body.byPeriod.find((p: any) =>
+        const july20Data = response.body.byPeriod.find((p: PeriodData) =>
           p.period.includes('2025-07-20'),
         )
         expect(july20Data).toBeDefined()
@@ -587,7 +602,7 @@ describe('Sales Reports Integration Tests', () => {
 
         // イベント販売が最も多いことを確認
         const eventChannel = channelData.find(
-          (c: any) => c.transactionType === 'event',
+          (c: ChannelData) => c.transactionType === 'event',
         )
         expect(eventChannel).toBeDefined()
         expect(eventChannel.totalQuantity).toBe(105) // 50 + 30 + 10 + 15
@@ -595,13 +610,15 @@ describe('Sales Reports Integration Tests', () => {
 
         // その他のチャネルも存在することを確認
         expect(
-          channelData.find((c: any) => c.transactionType === 'online'),
+          channelData.find((c: ChannelData) => c.transactionType === 'online'),
         ).toBeDefined()
         expect(
-          channelData.find((c: any) => c.transactionType === 'consignment'),
+          channelData.find(
+            (c: ChannelData) => c.transactionType === 'consignment',
+          ),
         ).toBeDefined()
         expect(
-          channelData.find((c: any) => c.transactionType === 'direct'),
+          channelData.find((c: ChannelData) => c.transactionType === 'direct'),
         ).toBeDefined()
       })
 
